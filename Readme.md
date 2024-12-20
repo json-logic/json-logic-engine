@@ -14,7 +14,7 @@ Have you ever needed the ability to write a custom set of logic or set of rules 
  
 JSON Logic might be your solution! Designed with a lisp-like syntax, JSON Logic makes it easy to write safe instructions that can be persisted into a database, and shared between the front-end and back-end.
 
-Check out our [Documentation Here](https://jessemitchell.me/json-logic-engine).
+Check out our [Documentation Here](https://json-logic.github.io/json-logic-engine/).
 
 
 The engine supports both synchronous & asynchronous operations, and can use function compilation to keep your logic performant at scale.
