@@ -84,8 +84,6 @@ const defaultMethods = {
   max: (data) => Math.max(...data),
   min: (data) => Math.min(...data),
   in: ([item, array]) => (array || []).includes(item),
-  '>': ([a, b]) => a > b,
-  '<': ([a, b, c]) => (c === undefined ? a < b : a < b && b < c),
   preserve: {
     traverse: false,
     method: declareSync((i) => i, true),
@@ -150,14 +148,66 @@ const defaultMethods = {
     },
     traverse: false
   },
-  '<=': ([a, b, c]) => (c === undefined ? a <= b : a <= b && b <= c),
-  '>=': ([a, b]) => a >= b,
-  // eslint-disable-next-line eqeqeq
-  '==': ([a, b]) => a == b,
-  '===': ([a, b]) => a === b,
-  // eslint-disable-next-line eqeqeq
-  '!=': ([a, b]) => a != b,
-  '!==': ([a, b]) => a !== b,
+  '<': (args) => {
+    if (args.length === 2) return args[0] < args[1]
+    for (let i = 1; i < args.length; i++) {
+      if (args[i - 1] >= args[i]) return false
+    }
+    return true
+  },
+  '<=': (args) => {
+    if (args.length === 2) return args[0] <= args[1]
+    for (let i = 1; i < args.length; i++) {
+      if (args[i - 1] > args[i]) return false
+    }
+    return true
+  },
+  '>': (args) => {
+    if (args.length === 2) return args[0] > args[1]
+    for (let i = 1; i < args.length; i++) {
+      if (args[i - 1] <= args[i]) return false
+    }
+    return true
+  },
+  '>=': (args) => {
+    if (args.length === 2) return args[0] >= args[1]
+    for (let i = 1; i < args.length; i++) {
+      if (args[i - 1] < args[i]) return false
+    }
+    return true
+  },
+  '==': (args) => {
+    // eslint-disable-next-line eqeqeq
+    if (args.length === 2) return args[0] == args[1]
+    for (let i = 1; i < args.length; i++) {
+      // eslint-disable-next-line eqeqeq
+      if (args[i - 1] != args[i]) return false
+    }
+    return true
+  },
+  '===': (args) => {
+    if (args.length === 2) return args[0] === args[1]
+    for (let i = 1; i < args.length; i++) {
+      if (args[i - 1] !== args[i]) return false
+    }
+    return true
+  },
+  '!=': (args) => {
+    // eslint-disable-next-line eqeqeq
+    if (args.length === 2) return args[0] != args[1]
+    for (let i = 1; i < args.length; i++) {
+      // eslint-disable-next-line eqeqeq
+      if (args[i - 1] == args[i]) return false
+    }
+    return true
+  },
+  '!==': (args) => {
+    if (args.length === 2) return args[0] !== args[1]
+    for (let i = 1; i < args.length; i++) {
+      if (args[i - 1] === args[i]) return false
+    }
+    return true
+  },
   xor: ([a, b]) => a ^ b,
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
@@ -641,16 +691,18 @@ Object.assign(defaultMethods.missing_some, {
 // @ts-ignore Allow custom attribute
 defaultMethods['<'].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length === 2) return buildState.compile`(${data[0]} < ${data[1]})`
-  if (data.length === 3) return buildState.compile`(${data[0]} < ${data[1]} && ${data[1]} < ${data[2]})`
-  return false
+  if (data.length < 2) return false
+  let res = buildState.compile`(${data[0]} < ${data[1]})`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} < ${data[i]})`
+  return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['<='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length === 2) return buildState.compile`(${data[0]} <= ${data[1]})`
-  if (data.length === 3) return buildState.compile`(${data[0]} <= ${data[1]} && ${data[1]} <= ${data[2]})`
-  return false
+  if (data.length < 2) return false
+  let res = buildState.compile`(${data[0]} <= ${data[1]})`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} <= ${data[i]})`
+  return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods.min.compile = function (data, buildState) {
@@ -669,26 +721,34 @@ defaultMethods.max.compile = function (data, buildState) {
 // @ts-ignore Allow custom attribute
 defaultMethods['>'].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length !== 2) return false
-  return buildState.compile`(${data[0]} > ${data[1]})`
+  if (data.length < 2) return false
+  let res = buildState.compile`(${data[0]} > ${data[1]})`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} > ${data[i]})`
+  return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['>='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length !== 2) return false
-  return buildState.compile`(${data[0]} >= ${data[1]})`
+  if (data.length < 2) return false
+  let res = buildState.compile`(${data[0]} >= ${data[1]})`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} >= ${data[i]})`
+  return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['=='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length !== 2) return false
-  return buildState.compile`(${data[0]} == ${data[1]})`
+  if (data.length < 2) return false
+  let res = buildState.compile`(${data[0]} == ${data[1]})`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} == ${data[i]})`
+  return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['!='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length !== 2) return false
-  return buildState.compile`(${data[0]} != ${data[1]})`
+  if (data.length < 2) return false
+  let res = buildState.compile`(${data[0]} != ${data[1]})`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} != ${data[i]})`
+  return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods.if.compile = function (data, buildState) {
@@ -711,8 +771,10 @@ defaultMethods.if.compile = function (data, buildState) {
 // @ts-ignore Allow custom attribute
 defaultMethods['==='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length !== 2) return false
-  return buildState.compile`(${data[0]} === ${data[1]})`
+  if (data.length < 2) return false
+  let res = buildState.compile`(${data[0]} === ${data[1]})`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} === ${data[i]})`
+  return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['+'].compile = function (data, buildState) {
