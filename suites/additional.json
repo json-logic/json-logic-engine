@@ -70,5 +70,11 @@
             "start_with": 59
         },
         69
-    ]
+    ],
+    {
+        "description": "Simple Inlineable Val Chained",
+        "rule": { "val": { "cat": ["te", "st"] } },
+        "data": { "test": 1 },
+        "result": 1
+    }
 ]

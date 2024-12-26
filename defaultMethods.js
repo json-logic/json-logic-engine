@@ -319,7 +319,11 @@ const defaultMethods = {
       if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
       else buildState.methods.preventFunctions = a => a
 
-      if (typeof data === 'object' && !Array.isArray(data)) return false
+      if (typeof data === 'object' && !Array.isArray(data)) {
+        // If the input for this function can be inlined, we will do so right here.
+        if (isSyncDeep(data, buildState.engine, buildState) && isDeterministic(data, buildState.engine, buildState) && !buildState.disableInline) data = (buildState.engine.fallback || buildState.engine).run(data, buildState.context, { above: buildState.above })
+        else return false
+      }
       if (Array.isArray(data) && Array.isArray(data[0])) {
         // A very, very specific optimization.
         if (buildState.iteratorCompile && Math.abs(data[0][0] || 0) === 1 && data[1] === 'index') return buildState.compile`index`
