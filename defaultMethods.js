@@ -81,8 +81,20 @@ const defaultMethods = {
     for (let i = 1; i < data.length; i++) res %= +data[i]
     return res
   },
-  max: (data) => Math.max(...data),
-  min: (data) => Math.min(...data),
+  max: (data) => {
+    let maximum = data[0]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] > maximum) maximum = data[i]
+    }
+    return maximum
+  },
+  min: (data) => {
+    let minimum = data[0]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] < minimum) minimum = data[i]
+    }
+    return minimum
+  },
   in: ([item, array]) => (array || []).includes(item),
   preserve: {
     traverse: false,
@@ -703,20 +715,6 @@ defaultMethods['<='].compile = function (data, buildState) {
   let res = buildState.compile`(${data[0]} <= ${data[1]})`
   for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} <= ${data[i]})`
   return res
-}
-// @ts-ignore Allow custom attribute
-defaultMethods.min.compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  return `Math.min(${data
-    .map((i) => buildString(i, buildState))
-    .join(', ')})`
-}
-// @ts-ignore Allow custom attribute
-defaultMethods.max.compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  return `Math.max(${data
-    .map((i) => buildString(i, buildState))
-    .join(', ')})`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['>'].compile = function (data, buildState) {
