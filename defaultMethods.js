@@ -269,16 +269,17 @@ const defaultMethods = {
   },
   // Adding this to spec something out, not to merge it quite yet
   val: {
-    method: (args, context, above) => {
+    method: (args, context, above, engine) => {
       if (Array.isArray(args) && args.length === 1) args = args[0]
+      // A unary optimization
       if (!Array.isArray(args)) {
-        if (args === null || args === undefined) return context
         const result = context[args]
         if (typeof result === 'undefined') return null
         return result
       }
       let result = context
       let start = 0
+      // This block handles scope traversal
       if (Array.isArray(args[0]) && args[0].length === 1) {
         start++
         const climb = +Math.abs(args[0][0])
@@ -292,12 +293,13 @@ const defaultMethods = {
           }
         }
       }
+      // This block handles traversing the path
       for (let i = start; i < args.length; i++) {
-        if (args[i] === null) continue
         if (result === null || result === undefined) return null
         result = result[args[i]]
       }
       if (typeof result === 'undefined') return null
+      if (typeof result === 'function' && !engine.allowFunctions) return null
       return result
     },
     optimizeUnary: true,
@@ -310,9 +312,14 @@ const defaultMethods = {
     },
     compile: (data, buildState) => {
       function wrapNull (data) {
-        if (!chainingSupported) return buildState.compile`(((a) => a === null || a === undefined ? null : a)(${data}))`
-        return buildState.compile`(${data} ?? null)`
+        if (!chainingSupported) return buildState.compile`(methods.preventFunctions(((a) => a === null || a === undefined ? null : a)(${data})))`
+        return buildState.compile`(methods.preventFunctions(${data} ?? null))`
       }
+
+      if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
+      else buildState.methods.preventFunctions = a => a
+
+      if (typeof data === 'object' && !Array.isArray(data)) return false
       if (Array.isArray(data) && Array.isArray(data[0])) {
         // A very, very specific optimization.
         if (buildState.iteratorCompile && Math.abs(data[0][0] || 0) === 1 && data[1] === 'index') return buildState.compile`index`
@@ -445,7 +452,7 @@ const defaultMethods = {
       buildState.methods.push(mapper)
       if (async) {
         if (!isSync(mapper) || selector.includes('await')) {
-          buildState.detectAsync = true
+          buildState.asyncDetected = true
           if (typeof defaultValue !== 'undefined') {
             return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${
               buildState.methods.length - 1
@@ -672,8 +679,8 @@ function createArrayIterativeMethod (name, useTruthy = false) {
       const aboveArray = method.aboveDetected ? buildState.compile`[{ iterator: z, index: x }, context, above]` : buildState.compile`null`
 
       if (async) {
-        if (!isSyncDeep(mapper, buildState.engine, buildState)) {
-          buildState.detectAsync = true
+        if (!isSync(method)) {
+          buildState.asyncDetected = true
           return buildState.compile`await asyncIterators[${name}](${selector} || [], async (i, x, z) => ${method}(i, x, ${aboveArray}))`
         }
       }
