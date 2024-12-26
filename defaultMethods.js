@@ -918,7 +918,6 @@ defaultMethods.get.compile = function (data, buildState) {
 defaultMethods.var.compile = function (data, buildState) {
   let key = data
   let defaultValue = null
-  buildState.varTop = buildState.varTop || new Set()
   if (
     !key ||
     typeof data === 'string' ||
@@ -941,8 +940,6 @@ defaultMethods.var.compile = function (data, buildState) {
     if (key.includes('../')) return false
 
     const pieces = splitPathMemoized(key)
-    const [top] = pieces
-    buildState.varTop.add(top)
 
     if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
     else buildState.methods.preventFunctions = a => a
