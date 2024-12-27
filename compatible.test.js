@@ -40,6 +40,13 @@ for (let i = 0; i < 16; i++) {
   if (i & 8) {
     configurePrecision(engine, Decimal)
     res += ' decimal'
+
+    // Copy in another decimal engine
+    const preciseEngine = (i & 1) ? new AsyncLogicEngine(undefined, { compatible: true }) : new LogicEngine(undefined, { compatible: true })
+    preciseEngine.disableInline = engine.disableInline
+    preciseEngine.disableInterpretedOptimization = engine.disableInterpretedOptimization
+    configurePrecision(preciseEngine, 'precise')
+    engines.push([preciseEngine, res + ' improved'])
   }
   engines.push([engine, res])
 }

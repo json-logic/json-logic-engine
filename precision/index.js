@@ -1,42 +1,6 @@
+import defaultMethods from '../defaultMethods.js'
 
-/**
- * Allows you to configure precision for JSON Logic Engine.
- *
- * Essentially, pass the constructor for `decimal.js` in as the second argument.
- *
- * @example ```js
- * import { LogicEngine, configurePrecision } from 'json-logic-js'
- * import { Decimal } from 'decimal.js' // or decimal.js-light
- *
- * const engine = new LogicEngine()
- * configurePrecision(engine, Decimal)
- * ```
- *
- * The class this mechanism uses requires the following methods to be implemented:
- * - `eq`
- * - `gt`
- * - `gte`
- * - `lt`
- * - `lte`
- * - `plus`
- * - `minus`
- * - `mul`
- * - `div`
- * - `mod`
- * - `toNumber`
- *
- * ### FAQ:
- *
- * Q: Why is this not included in the class?
- *
- * A: This mechanism reimplements a handful of operators. Keeping this method separate makes it possible to tree-shake this code out
- *   if you don't need it.
- *
- * @param {import('../logic.d.ts').default | import('../asyncLogic.d.ts').default} engine
- * @param {*} constructor
- * @param {Boolean} compatible
- */
-export function configurePrecision (engine, constructor, compatible = true) {
+function configurePrecisionDecimalJs (engine, constructor, compatible = true) {
   engine.precision = constructor
 
   engine.truthy = (data) => {
@@ -277,4 +241,122 @@ export function configurePrecision (engine, constructor, compatible = true) {
     },
     traverse: true
   }, { sync: true, deterministic: true })
+}
+
+/**
+ * Allows you to configure precision for JSON Logic Engine.
+ *
+ * You can pass the following in:
+ * - `ieee754` - Uses the IEEE 754 standard for calculations.
+ * - `precise` - Tries to improve accuracy of calculations by scaling numbers during operations.
+ * - A constructor for decimal.js.
+ *
+ * @example ```js
+ * import { LogicEngine, configurePrecision } from 'json-logic-js'
+ * import { Decimal } from 'decimal.js' // or decimal.js-light
+ *
+ * const engine = new LogicEngine()
+ * configurePrecision(engine, Decimal)
+ * ```
+ *
+ * The class this mechanism uses requires the following methods to be implemented:
+ * - `eq`
+ * - `gt`
+ * - `gte`
+ * - `lt`
+ * - `lte`
+ * - `plus`
+ * - `minus`
+ * - `mul`
+ * - `div`
+ * - `mod`
+ * - `toNumber`
+ *
+ * ### FAQ:
+ *
+ * Q: Why is this not included in the class?
+ *
+ * A: This mechanism reimplements a handful of operators. Keeping this method separate makes it possible to tree-shake this code out
+ *   if you don't need it.
+ *
+ * @param {import('../logic.d.ts').default | import('../asyncLogic.d.ts').default} engine
+ * @param {'precise' | 'ieee754' | (...args: any[]) => any} constructor
+ * @param {Boolean} compatible
+ */
+export function configurePrecision (engine, constructor, compatible = true) {
+  if (typeof constructor === 'function') return configurePrecisionDecimalJs(engine, constructor, compatible)
+
+  if (constructor === 'ieee754') {
+    const operators = ['+', '-', '*', '/', '%', '===', '==', '!=', '!==', '>', '>=', '<', '<=']
+    for (const operator of operators) engine.methods[operator] = defaultMethods[operator]
+  }
+
+  if (constructor !== 'precise') throw new Error('Unsupported precision type')
+
+  engine.addMethod('+', (data) => {
+    if (typeof data === 'string') return +data
+    if (typeof data === 'number') return +data
+    let res = 0
+    let overflow = 0
+    for (let i = 0; i < data.length; i++) {
+      const item = +data[i]
+      if (Number.isInteger(data[i])) res += item
+      else {
+        res += item | 0
+        overflow += (item - (item | 0)) * 1e6
+      }
+    }
+    return res + (overflow / 1e6)
+  }, { deterministic: true, sync: true })
+
+  engine.addMethod('*', (data) => {
+    const SCALE_FACTOR = 1e6 // Fixed scale for precision
+    let result = 1
+
+    for (let i = 0; i < data.length; i++) {
+      const item = +data[i]
+      result *= (item * SCALE_FACTOR) | 0
+      result /= SCALE_FACTOR
+    }
+
+    return result
+  }, { deterministic: true, sync: true })
+
+  engine.addMethod('/', (data) => {
+    let res = data[0]
+    for (let i = 1; i < data.length; i++) res /= +data[i]
+    // if the value is really close to 0, we'll just return 0
+    if (Math.abs(res) < 1e-10) return 0
+    return res
+  }, { deterministic: true, sync: true })
+
+  engine.addMethod('-', (data) => {
+    if (typeof data === 'string') return -data
+    if (typeof data === 'number') return -data
+    if (data.length === 1) return -data[0]
+    let res = data[0]
+    let overflow = 0
+    for (let i = 1; i < data.length; i++) {
+      const item = +data[i]
+      if (Number.isInteger(data[i])) res -= item
+      else {
+        res -= item | 0
+        overflow += (item - (item | 0)) * 1e6
+      }
+    }
+    return res - (overflow / 1e6)
+  }, { deterministic: true, sync: true })
+
+  engine.addMethod('%', (data) => {
+    let res = data[0]
+
+    if (data.length === 2) {
+      if (data[0] < 1e6 && data[1] < 1e6) return ((data[0] * 10e3) % (data[1] * 10e3)) / 10e3
+    }
+
+    for (let i = 1; i < data.length; i++) res %= +data[i]
+    // if the value is really close to 0, we'll just return 0
+    if (Math.abs(res) < 1e-10) return 0
+    return res
+  }, { deterministic: true, sync: true })
 }
