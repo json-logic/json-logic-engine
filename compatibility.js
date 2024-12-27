@@ -1,7 +1,9 @@
 import defaultMethods from './defaultMethods.js'
+import { Sync } from './constants.js'
 const oldAll = defaultMethods.all
 
 const all = {
+  [Sync]: defaultMethods.all[Sync],
   method: (args, context, above, engine) => {
     if (Array.isArray(args)) {
       const first = engine.run(args[0], context, above)

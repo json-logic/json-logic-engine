@@ -11,3 +11,4 @@ perf*.js
 *.test.js
 experiments/
 suites/
+precision/

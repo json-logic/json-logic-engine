@@ -53,7 +53,7 @@ export function optimize (logic, engine, above = []) {
     const keys = Object.keys(logic)
     const methodName = keys[0]
 
-    const isData = engine.isData(logic, methodName)
+    const isData = engine.isData(logic, methodName) || (engine.precision && logic instanceof engine.precision)
     if (isData) return () => logic
 
     // If we have a deterministic function, we can just return the result of the evaluation,
