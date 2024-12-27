@@ -141,7 +141,8 @@ export function configurePrecision (engine, constructor, compatible = true) {
   engine.addMethod('===', {
     method: (args) => {
       if (args.length === 2) {
-        if (args[0].eq && args[1].eq) return args[0].eq(args[1])
+        if (args[0].eq && (args[1].eq || typeof args[1] === 'number')) return args[0].eq(args[1])
+        if (args[1].eq && (args[0].eq || typeof args[0] === 'number')) return args[1].eq(args[0])
         return args[0] === args[1]
       }
       for (let i = 1; i < args.length; i++) {
@@ -195,7 +196,8 @@ export function configurePrecision (engine, constructor, compatible = true) {
   engine.addMethod('!==', {
     method: (args) => {
       if (args.length === 2) {
-        if (args[0].eq && args[1].eq) return !args[0].eq(args[1])
+        if (args[0].eq && (args[1].eq || typeof args[1] === 'number')) return !args[0].eq(args[1])
+        if (args[1].eq && (args[0].eq || typeof args[0] === 'number')) return !args[1].eq(args[0])
         return args[0] !== args[1]
       }
       for (let i = 1; i < args.length; i++) {
