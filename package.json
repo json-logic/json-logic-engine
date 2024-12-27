@@ -37,7 +37,8 @@
   },
   "jest": {
     "testPathIgnorePatterns": [
-      "./bench"
+      "./bench",
+      "./precision"
     ]
   },
   "exports": {
