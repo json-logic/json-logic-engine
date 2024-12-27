@@ -303,7 +303,7 @@ export function configurePrecision (engine, constructor, compatible = true) {
       if (Number.isInteger(data[i])) res += item
       else {
         res += item | 0
-        overflow += (item - (item | 0)) * 1e6
+        overflow += +('0.' + item.toString().split('.')[1]) * 1e6
       }
     }
     return res + (overflow / 1e6)
@@ -315,6 +315,12 @@ export function configurePrecision (engine, constructor, compatible = true) {
 
     for (let i = 0; i < data.length; i++) {
       const item = +data[i]
+
+      if (item > 1e6 || result > 1e6) {
+        result *= item
+        continue
+      }
+
       result *= (item * SCALE_FACTOR) | 0
       result /= SCALE_FACTOR
     }
@@ -341,7 +347,7 @@ export function configurePrecision (engine, constructor, compatible = true) {
       if (Number.isInteger(data[i])) res -= item
       else {
         res -= item | 0
-        overflow += (item - (item | 0)) * 1e6
+        overflow += +('0.' + item.toString().split('.')[1]) * 1e6
       }
     }
     return res - (overflow / 1e6)
