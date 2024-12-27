@@ -1,4 +1,34 @@
 
+/**
+ * Allows you to configure precision for JSON Logic Engine.
+ *
+ * Essentially, pass the constructor for `decimal.js` in as the second argument.
+ *
+ * @example ```js
+ * import { LogicEngine, configurePrecision } from 'json-logic-js'
+ * import { Decimal } from 'decimal.js' // or decimal.js-light
+ *
+ * const engine = new LogicEngine()
+ * configurePrecision(engine, Decimal)
+ * ```
+ *
+ * The class this mechanism uses requires the following methods to be implemented:
+ * - `eq`
+ * - `gt`
+ * - `gte`
+ * - `lt`
+ * - `lte`
+ * - `plus`
+ * - `minus`
+ * - `mul`
+ * - `div`
+ * - `mod`
+ * - `toNumber`
+ *
+ * @param {import('../logic.d.ts').default | import('../asyncLogic.d.ts').default} engine
+ * @param {*} constructor
+ * @param {Boolean} compatible
+ */
 export function configurePrecision (engine, constructor, compatible = true) {
   engine.precision = constructor
 

@@ -8,6 +8,7 @@ import Constants from './constants.js'
 import defaultMethods from './defaultMethods.js'
 import { asLogicSync, asLogicAsync } from './asLogic.js'
 import { splitPath, splitPathMemoized } from './utilities/splitPath.js'
+import { configurePrecision } from './precision/index.js'
 
 export { splitPath, splitPathMemoized }
 export { LogicEngine }
@@ -17,5 +18,6 @@ export { Constants }
 export { defaultMethods }
 export { asLogicSync }
 export { asLogicAsync }
+export { configurePrecision }
 
-export default { LogicEngine, AsyncLogicEngine, Compiler, Constants, defaultMethods, asLogicSync, asLogicAsync, splitPath, splitPathMemoized }
+export default { LogicEngine, AsyncLogicEngine, Compiler, Constants, defaultMethods, asLogicSync, asLogicAsync, splitPath, splitPathMemoized, configurePrecision }
