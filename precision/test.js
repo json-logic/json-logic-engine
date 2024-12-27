@@ -1,4 +1,4 @@
-import { AsyncLogicEngine } from '../index.js'
+import { AsyncLogicEngine, LogicEngine } from '../index.js'
 import { Decimal } from 'decimal.js'
 import { configurePrecision } from './index.js'
 import { isDeepStrictEqual } from 'util'
@@ -32,3 +32,16 @@ for (const test of tests) {
 }
 
 console.log(count, 'Wrong')
+
+
+const decimalEngineSync = new LogicEngine(undefined, { compatible: true })
+configurePrecision(decimalEngineSync, Decimal.clone({ precision: 100 }))
+
+console.time('built')
+for (const test of tests) {
+    const f = decimalEngineSync.build(test[0])
+    for (let i = 0; i < 1e5; i++) {
+        f(test[1])
+    }
+}
+console.timeEnd('built')
