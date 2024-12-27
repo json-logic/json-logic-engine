@@ -141,8 +141,7 @@ export function configurePrecision (engine, constructor, compatible = true) {
   engine.addMethod('===', {
     method: (args) => {
       if (args.length === 2) {
-        if (args[0].eq) return args[0].eq(args[1])
-        if (args[1].eq) return args[1].eq(args[0])
+        if (args[0].eq && args[1].eq) return args[0].eq(args[1])
         return args[0] === args[1]
       }
       for (let i = 1; i < args.length; i++) {
@@ -155,11 +154,48 @@ export function configurePrecision (engine, constructor, compatible = true) {
     traverse: true
   }, { sync: true, deterministic: true })
 
-  engine.addMethod('!==', {
+  engine.addMethod('==', {
+    method: (args) => {
+      if (args.length === 2) {
+        if (args[0].eq) return args[0].eq(args[1])
+        if (args[1].eq) return args[1].eq(args[0])
+        // eslint-disable-next-line eqeqeq
+        return args[0] == args[1]
+      }
+      for (let i = 1; i < args.length; i++) {
+        if (args[i - 1].eq && !args[i - 1].eq(args[i])) return false
+        if (args[i].eq && !args[i].eq(args[i - 1])) return false
+        // eslint-disable-next-line eqeqeq
+        if (args[i - 1] != args[i]) return false
+      }
+      return true
+    },
+    traverse: true
+  }, { sync: true, deterministic: true })
+
+  engine.addMethod('!=', {
     method: (args) => {
       if (args.length === 2) {
         if (args[0].eq) return !args[0].eq(args[1])
         if (args[1].eq) return !args[1].eq(args[0])
+        // eslint-disable-next-line eqeqeq
+        return args[0] != args[1]
+      }
+      for (let i = 1; i < args.length; i++) {
+        if (args[i - 1].eq && args[i - 1].eq(args[i])) return false
+        if (args[i].eq && args[i].eq(args[i - 1])) return false
+        // eslint-disable-next-line eqeqeq
+        if (args[i - 1] !== args[i]) return true
+      }
+      return true
+    },
+    traverse: true
+  }, { sync: true, deterministic: true })
+
+  engine.addMethod('!==', {
+    method: (args) => {
+      if (args.length === 2) {
+        if (args[0].eq && args[1].eq) return !args[0].eq(args[1])
         return args[0] !== args[1]
       }
       for (let i = 1; i < args.length; i++) {

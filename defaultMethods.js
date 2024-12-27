@@ -300,6 +300,8 @@ const defaultMethods = {
     }
   },
   substr: ([string, from, end]) => {
+    if (from) from = +from
+    if (end) end = +end
     if (end < 0) {
       const result = string.substr(from)
       return result.substr(0, result.length + end)
