@@ -947,9 +947,6 @@ defaultMethods.var.compile = function (data, buildState) {
 // @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
 defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods.var.optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = true
 
-// @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
-defaultMethods['<'].precise = defaultMethods['<='].precise = defaultMethods['>'].precise = defaultMethods['>='].precise = defaultMethods['=='].precise = defaultMethods['==='].precise = defaultMethods['!='].precise = defaultMethods['!=='].precise = true
-
 export default {
   ...defaultMethods
 }
