@@ -300,14 +300,15 @@ export function configurePrecision (engine, constructor, compatible = true) {
     let overflow = 0
     for (let i = 0; i < data.length; i++) {
       const item = +data[i]
-      if (Number.isInteger(data[i])) res += item
+      if (Number.isInteger(item)) res += item
       else {
         res += item | 0
         overflow += +('0.' + item.toString().split('.')[1]) * 1e6
       }
     }
+
     return res + (overflow / 1e6)
-  }, { deterministic: true, sync: true })
+  }, { deterministic: true, sync: true, optimizeUnary: true })
 
   engine.addMethod('*', (data) => {
     const SCALE_FACTOR = 1e6 // Fixed scale for precision
@@ -344,14 +345,14 @@ export function configurePrecision (engine, constructor, compatible = true) {
     let overflow = 0
     for (let i = 1; i < data.length; i++) {
       const item = +data[i]
-      if (Number.isInteger(data[i])) res -= item
+      if (Number.isInteger(item)) res -= item
       else {
         res -= item | 0
         overflow += +('0.' + item.toString().split('.')[1]) * 1e6
       }
     }
     return res - (overflow / 1e6)
-  }, { deterministic: true, sync: true })
+  }, { deterministic: true, sync: true, optimizeUnary: true })
 
   engine.addMethod('%', (data) => {
     let res = data[0]
