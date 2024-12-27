@@ -25,6 +25,13 @@
  * - `mod`
  * - `toNumber`
  *
+ * ### FAQ:
+ *
+ * Q: Why is this not included in the class?
+ *
+ * A: This mechanism reimplements a handful of operators. Keeping this method separate makes it possible to tree-shake this code out
+ *   if you don't need it.
+ *
  * @param {import('../logic.d.ts').default | import('../asyncLogic.d.ts').default} engine
  * @param {*} constructor
  * @param {Boolean} compatible
