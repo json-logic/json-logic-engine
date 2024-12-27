@@ -2,6 +2,14 @@ import { LogicEngine } from '../index.js'
 import { Decimal } from 'decimal.js'
 import { configurePrecision } from './index.js'
 
+Decimal.prototype.toString = function () {
+  return this.toFixed()
+}
+
+Decimal.prototype.valueOf = function () {
+  return this.toFixed()
+}
+
 const ieee754Engine = new LogicEngine()
 const decimalEngine = new LogicEngine()
 configurePrecision(decimalEngine, Decimal.clone({ precision: 100 }))

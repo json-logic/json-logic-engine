@@ -520,11 +520,25 @@ const defaultMethods = {
   },
   '!': (value, _1, _2, engine) => Array.isArray(value) ? !engine.truthy(value[0]) : !engine.truthy(value),
   '!!': (value, _1, _2, engine) => Boolean(Array.isArray(value) ? engine.truthy(value[0]) : engine.truthy(value)),
-  cat: (arr) => {
-    if (typeof arr === 'string') return arr
-    let res = ''
-    for (let i = 0; i < arr.length; i++) res += arr[i]
-    return res
+  cat: {
+    method: (arr) => {
+      if (typeof arr === 'string') return arr
+      if (!Array.isArray(arr)) return arr.toString()
+      let res = ''
+      for (let i = 0; i < arr.length; i++) res += arr[i].toString()
+      return res
+    },
+    deterministic: true,
+    traverse: true,
+    optimizeUnary: true,
+    compile: (data, buildState) => {
+      if (typeof data === 'string') return JSON.stringify(data)
+      if (typeof data === 'number') return '"' + JSON.stringify(data) + '"'
+      if (!Array.isArray(data)) return false
+      let res = buildState.compile`''`
+      for (let i = 0; i < data.length; i++) res = buildState.compile`${res} + ${data[i]}`
+      return buildState.compile`(${res})`
+    }
   },
   keys: ([obj]) => typeof obj === 'object' ? Object.keys(obj) : [],
   pipe: {
@@ -842,14 +856,6 @@ defaultMethods['*'].compile = function (data, buildState) {
   } else {
     return `(${buildString(data, buildState)}).reduce((a,b) => (+a)*(+b))`
   }
-}
-// @ts-ignore Allow custom attribute
-defaultMethods.cat.compile = function (data, buildState) {
-  if (typeof data === 'string') return JSON.stringify(data)
-  if (!Array.isArray(data)) return false
-  let res = buildState.compile`''`
-  for (let i = 0; i < data.length; i++) res = buildState.compile`${res} + ${data[i]}`
-  return buildState.compile`(${res})`
 }
 
 // @ts-ignore Allow custom attribute

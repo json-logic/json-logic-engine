@@ -154,10 +154,7 @@ class LogicEngine {
       return res
     }
 
-    if (logic && typeof logic === 'object') {
-      if (this.precision && !options.precise && logic.toNumber) return Number(logic)
-      if (Object.keys(logic).length > 0) return this._parse(logic, data, above)
-    }
+    if (logic && typeof logic === 'object' && Object.keys(logic).length > 0) return this._parse(logic, data, above)
 
     return logic
   }

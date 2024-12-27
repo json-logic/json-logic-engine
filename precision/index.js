@@ -17,8 +17,7 @@ export function configurePrecision (engine, constructor) {
       return false
     },
     optimizeUnary: true,
-    deterministic: true,
-    precise: true
+    deterministic: true
   })
 
   engine.addMethod('-', {
@@ -38,8 +37,7 @@ export function configurePrecision (engine, constructor) {
       return false
     },
     optimizeUnary: true,
-    deterministic: true,
-    precise: true
+    deterministic: true
   })
 
   engine.addMethod('*', {
@@ -74,8 +72,7 @@ export function configurePrecision (engine, constructor) {
       }
       return false
     },
-    deterministic: true,
-    precise: true
+    deterministic: true
   })
 
   engine.addMethod('%', {
@@ -92,7 +89,6 @@ export function configurePrecision (engine, constructor) {
       }
       return false
     },
-    deterministic: true,
-    precise: true
+    deterministic: true
   })
 }
