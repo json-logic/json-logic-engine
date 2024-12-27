@@ -32,6 +32,7 @@ class LogicEngine {
     this.disableInline = options.disableInline
     this.disableInterpretedOptimization = options.disableInterpretedOptimization
     this.methods = { ...methods }
+    this.precision = null
 
     this.optimizedMap = new WeakMap()
     this.missesSinceSeen = 0
@@ -67,7 +68,7 @@ class LogicEngine {
     const [func] = Object.keys(logic)
     const data = logic[func]
 
-    if (this.isData(logic, func)) return logic
+    if (this.isData(logic, func) || (this.precision && logic instanceof this.precision)) return logic
 
     if (!this.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
 
@@ -77,9 +78,9 @@ class LogicEngine {
     }
 
     if (typeof this.methods[func] === 'object') {
-      const { method, traverse } = this.methods[func]
+      const { method, traverse, precise } = this.methods[func]
       const shouldTraverse = typeof traverse === 'undefined' ? true : traverse
-      const parsedData = shouldTraverse ? ((!data || typeof data !== 'object') ? [data] : coerceArray(this.run(data, context, { above }))) : data
+      const parsedData = shouldTraverse ? ((!data || typeof data !== 'object') ? [data] : coerceArray(this.run(data, context, { above, precise }))) : data
       return method(parsedData, context, above, this)
     }
 
@@ -123,7 +124,7 @@ class LogicEngine {
    *
    * @param {*} logic The logic to be executed
    * @param {*} data The data being passed in to the logic to be executed against.
-   * @param {{ above?: any }} options Options for the invocation
+   * @param {{ above?: any, precise?: boolean }} options Options for the invocation
    * @returns {*}
    */
   run (logic, data = {}, options = {}) {
@@ -149,11 +150,14 @@ class LogicEngine {
 
     if (Array.isArray(logic)) {
       const res = []
-      for (let i = 0; i < logic.length; i++) res.push(this.run(logic[i], data, { above }))
+      for (let i = 0; i < logic.length; i++) res.push(this.run(logic[i], data, options))
       return res
     }
 
-    if (logic && typeof logic === 'object' && Object.keys(logic).length > 0) return this._parse(logic, data, above)
+    if (logic && typeof logic === 'object') {
+      if (this.precision && !options.precise && logic.toNumber) return Number(logic)
+      if (Object.keys(logic).length > 0) return this._parse(logic, data, above)
+    }
 
     return logic
   }
