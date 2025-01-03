@@ -4,6 +4,8 @@ import { splitPathMemoized } from './utilities/splitPath.js'
 import chainingSupported from './utilities/chainingSupported.js'
 import { Sync, OriginalImpl } from './constants.js'
 
+
+/** @type {Record<'get' | 'missing' | 'missing_some' | 'var', { method: (...args) => any }>} **/ 
 const legacyMethods = {
   get: {
     [Sync]: true,
@@ -157,4 +159,5 @@ const legacyMethods = {
   }
 }
 
-export default legacyMethods
+
+export default {...legacyMethods}
