@@ -346,6 +346,7 @@ const defaultMethods = {
       // A unary optimization
       if (!Array.isArray(args)) {
         if (unFound && !(context && args in context)) return unFound
+        if (context === null || context === undefined) return null
         const result = context[args]
         if (typeof result === 'undefined') return null
         return result
@@ -405,7 +406,7 @@ const defaultMethods = {
       }
       if (Array.isArray(data) && data.length === 1) data = data[0]
       if (data === null) return wrapNull(buildState.compile`context`)
-      if (!Array.isArray(data)) return wrapNull(buildState.compile`context[${data}]`)
+      if (!Array.isArray(data)) return wrapNull(buildState.compile`(context || 0)[${data}]`)
       if (Array.isArray(data)) {
         let res = buildState.compile`context`
         for (let i = 0; i < data.length; i++) {

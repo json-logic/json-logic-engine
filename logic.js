@@ -76,7 +76,7 @@ class LogicEngine {
     // Later on, I could define something to shut this off if var / val are redefined.
     if ((func === 'var' || func === 'val') && this.methods[func][OriginalImpl]) {
       const input = (!data || typeof data !== 'object') ? data : this.run(data, context, { above })
-      return this.methods[func].method(input, context, above, this)
+      return this.methods[func].method(input, context, above, this, null)
     }
 
     if (typeof this.methods[func] === 'function') {

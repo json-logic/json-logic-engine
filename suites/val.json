@@ -43,6 +43,18 @@
         "result": 20
     },
     {
+        "description": "Fetching a value from null returns null",
+        "rule": { "val": "hello" },
+        "data": { "hello" : null },
+        "result": null
+    },
+    {
+        "description": "Fetching a value from a null fetched value returns null",
+        "rule": { "val": ["hello", "world"] },
+        "data": { "hello" : null },
+        "result": null
+    },
+    {
         "description": "Fetches the entire context",
         "rule": { "val": [] },
         "data": { "": 21 },
