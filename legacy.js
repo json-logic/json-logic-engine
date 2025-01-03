@@ -1,7 +1,8 @@
+'use strict'
 import { buildString } from './compiler.js'
 import { splitPathMemoized } from './utilities/splitPath.js'
 import chainingSupported from './utilities/chainingSupported.js'
-import { Sync } from './constants.js'
+import { Sync, OriginalImpl } from './constants.js'
 
 const legacyMethods = {
   get: {
@@ -49,6 +50,7 @@ const legacyMethods = {
     }
   },
   var: {
+    [OriginalImpl]: true,
     [Sync]: true,
     method: (key, context, above, engine) => {
       let b
@@ -132,6 +134,7 @@ const legacyMethods = {
   },
   missing: {
     [Sync]: true,
+    optimizeUnary: false,
     method: (checked, context, above, engine) => {
       return (Array.isArray(checked) ? checked : [checked]).filter((key) => {
         return legacyMethods.var.method(key, context, above, engine) === null
@@ -141,6 +144,7 @@ const legacyMethods = {
   },
   missing_some: {
     [Sync]: true,
+    optimizeUnary: false,
     method: ([needCount, options], context, above, engine) => {
       const missing = legacyMethods.missing.method(options, context, above, engine)
       if (options.length - missing.length >= needCount) {

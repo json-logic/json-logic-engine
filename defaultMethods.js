@@ -2,7 +2,7 @@
 'use strict'
 
 import asyncIterators from './async_iterators.js'
-import { Sync, isSync, Unfound } from './constants.js'
+import { Sync, isSync, Unfound, OriginalImpl } from './constants.js'
 import declareSync from './utilities/declareSync.js'
 import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
@@ -277,7 +277,7 @@ const defaultMethods = {
     },
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy.IDENTITY) return false
+      if (!buildState.engine.truthy[OriginalImpl]) return false
       if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
       return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
     },
@@ -311,7 +311,7 @@ const defaultMethods = {
     traverse: false,
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy.IDENTITY) return false
+      if (!buildState.engine.truthy[OriginalImpl]) return false
       if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
       return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
     }
@@ -337,6 +337,7 @@ const defaultMethods = {
     deterministic: false
   },
   val: {
+    [OriginalImpl]: true,
     method: (args, context, above, engine, /** @type {null | Symbol} */ unFound = null) => {
       if (Array.isArray(args) && args.length === 1) args = args[0]
       // A unary optimization

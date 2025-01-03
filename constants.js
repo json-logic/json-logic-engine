@@ -3,7 +3,7 @@
 
 export const Sync = Symbol.for('json_logic_sync')
 export const Compiled = Symbol.for('json_logic_compiled')
-export const EfficientTop = Symbol.for('json_logic_efficientTop')
+export const OriginalImpl = Symbol.for('json_logic_original')
 export const Unfound = Symbol.for('json_logic_unfound')
 
 /**
@@ -23,6 +23,6 @@ export function isSync (item) {
 
 export default {
   Sync,
-  EfficientTop,
+  OriginalImpl,
   isSync
 }

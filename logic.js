@@ -9,6 +9,7 @@ import omitUndefined from './utilities/omitUndefined.js'
 import { optimize } from './optimizer.js'
 import { applyPatches } from './compatibility.js'
 import { coerceArray } from './utilities/coerceArray.js'
+import { OriginalImpl } from './constants.js'
 
 /**
  * An engine capable of running synchronous JSON Logic.
@@ -70,6 +71,13 @@ class LogicEngine {
     if (this.isData(logic, func)) return logic
 
     if (!this.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+
+    // A small but useful micro-optimization for some of the most common functions.
+    // Later on, I could define something to shut this off if var / val are redefined.
+    if ((func === 'var' || func === 'val') && this.methods[func][OriginalImpl]) {
+      const input = (!data || typeof data !== 'object') ? data : this.run(data, context, { above })
+      return this.methods[func].method(input, context, above, this)
+    }
 
     if (typeof this.methods[func] === 'function') {
       const input = (!data || typeof data !== 'object') ? [data] : coerceArray(this.run(data, context, { above }))
@@ -174,5 +182,5 @@ class LogicEngine {
     return logic
   }
 }
-Object.assign(LogicEngine.prototype.truthy, { IDENTITY: true })
+Object.assign(LogicEngine.prototype.truthy, { [OriginalImpl]: true })
 export default LogicEngine
