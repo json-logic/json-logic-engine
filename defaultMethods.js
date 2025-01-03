@@ -2,7 +2,7 @@
 'use strict'
 
 import asyncIterators from './async_iterators.js'
-import { Sync, isSync } from './constants.js'
+import { Sync, isSync, Unfound } from './constants.js'
 import declareSync from './utilities/declareSync.js'
 import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
@@ -161,6 +161,43 @@ const defaultMethods = {
   xor: ([a, b]) => a ^ b,
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
+  '??': {
+    method: (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (item !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    asyncMethod: async (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (item !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    compile: (data, buildState) => {
+      if (!chainingSupported) return false
+      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' ?? ')})`
+      return `(${buildString(data, buildState)}).reduce((a,b) => a ?? b, null)`
+    },
+    traverse: false
+  },
   or: {
     method: (arr, _1, _2, engine) => {
       // See "executeInLoop" above
@@ -191,11 +228,8 @@ const defaultMethods = {
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
       if (!buildState.engine.truthy.IDENTITY) return false
-      if (Array.isArray(data)) {
-        return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
-      } else {
-        return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
-      }
+      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
+      return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
     },
     traverse: false
   },
@@ -228,11 +262,8 @@ const defaultMethods = {
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
       if (!buildState.engine.truthy.IDENTITY) return false
-      if (Array.isArray(data)) {
-        return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
-      } else {
-        return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
-      }
+      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
+      return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
     }
   },
   substr: ([string, from, end]) => {
@@ -267,12 +298,20 @@ const defaultMethods = {
       }
     }
   },
-  // Adding this to spec something out, not to merge it quite yet
+  exists: {
+    method: (key, context, above, engine) => {
+      const result = defaultMethods.val.method(key, context, above, engine, Unfound)
+      return result !== Unfound
+    },
+    traverse: true,
+    deterministic: false
+  },
   val: {
-    method: (args, context, above, engine) => {
+    method: (args, context, above, engine, /** @type {null | Symbol} */ unFound = null) => {
       if (Array.isArray(args) && args.length === 1) args = args[0]
       // A unary optimization
       if (!Array.isArray(args)) {
+        if (unFound && !(context && args in context)) return unFound
         const result = context[args]
         if (typeof result === 'undefined') return null
         return result
@@ -295,11 +334,12 @@ const defaultMethods = {
       }
       // This block handles traversing the path
       for (let i = start; i < args.length; i++) {
+        if (unFound && !(result && args[i] in result)) return unFound
         if (result === null || result === undefined) return null
         result = result[args[i]]
       }
-      if (typeof result === 'undefined') return null
-      if (typeof result === 'function' && !engine.allowFunctions) return null
+      if (typeof result === 'undefined') return unFound
+      if (typeof result === 'function' && !engine.allowFunctions) return unFound
       return result
     },
     optimizeUnary: true,
