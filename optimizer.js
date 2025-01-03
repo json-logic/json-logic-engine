@@ -20,7 +20,7 @@ function getMethod (logic, engine, methodName, above) {
   }
 
   let args = logic[methodName]
-  if (!args || typeof args !== 'object') args = [args]
+  if ((!args || typeof args !== 'object') && !method.optimizeUnary) args = [args]
 
   if (Array.isArray(args)) {
     const optimizedArgs = args.map(l => optimize(l, engine, above))
@@ -30,9 +30,8 @@ function getMethod (logic, engine, methodName, above) {
     }
   } else {
     const optimizedArgs = optimize(args, engine, above)
-    return (data, abv) => {
-      return called(coerceArray(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs, method.optimizeUnary), data, abv || above, engine)
-    }
+    if (method.optimizeUnary) return (data, abv) => called(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs, data, abv || above, engine)
+    return (data, abv) => called(coerceArray(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs), data, abv || above, engine)
   }
 }
 

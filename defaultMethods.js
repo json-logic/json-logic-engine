@@ -212,6 +212,7 @@ const defaultMethods = {
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
   '??': {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
@@ -249,6 +250,7 @@ const defaultMethods = {
     traverse: false
   },
   or: {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
@@ -284,6 +286,7 @@ const defaultMethods = {
     traverse: false
   },
   and: {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
@@ -419,6 +422,7 @@ const defaultMethods = {
   some: createArrayIterativeMethod('some', true),
   all: createArrayIterativeMethod('every', true),
   none: {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     traverse: false,
     // todo: add async build & build
     method: (val, context, above, engine) => {
@@ -439,7 +443,7 @@ const defaultMethods = {
   },
   merge: (arrays) => (Array.isArray(arrays) ? [].concat(...arrays) : [arrays]),
   every: createArrayIterativeMethod('every'),
-  filter: createArrayIterativeMethod('filter'),
+  filter: createArrayIterativeMethod('filter', true),
   reduce: {
     deterministic: (data, buildState) => {
       return (
@@ -548,11 +552,27 @@ const defaultMethods = {
   },
   '!': (value, _1, _2, engine) => Array.isArray(value) ? !engine.truthy(value[0]) : !engine.truthy(value),
   '!!': (value, _1, _2, engine) => Boolean(Array.isArray(value) ? engine.truthy(value[0]) : engine.truthy(value)),
-  cat: (arr) => {
-    if (typeof arr === 'string') return arr
-    let res = ''
-    for (let i = 0; i < arr.length; i++) res += arr[i]
-    return res
+  cat: {
+    [OriginalImpl]: true,
+    [Sync]: true,
+    method: (arr) => {
+      if (typeof arr === 'string') return arr
+      if (!Array.isArray(arr)) return arr.toString()
+      let res = ''
+      for (let i = 0; i < arr.length; i++) res += arr[i].toString()
+      return res
+    },
+    deterministic: true,
+    traverse: true,
+    optimizeUnary: true,
+    compile: (data, buildState) => {
+      if (typeof data === 'string') return JSON.stringify(data)
+      if (typeof data === 'number') return '"' + JSON.stringify(data) + '"'
+      if (!Array.isArray(data)) return false
+      let res = buildState.compile`''`
+      for (let i = 0; i < data.length; i++) res = buildState.compile`${res} + ${data[i]}`
+      return buildState.compile`(${res})`
+    }
   },
   keys: ([obj]) => typeof obj === 'object' ? Object.keys(obj) : [],
   pipe: {
@@ -673,8 +693,8 @@ function createArrayIterativeMethod (name, useTruthy = false) {
         (await engine.run(selector, context, {
           above
         })) || []
-      return asyncIterators[name](selector, (i, index) => {
-        const result = engine.run(mapper, i, {
+      return asyncIterators[name](selector, async (i, index) => {
+        const result = await engine.run(mapper, i, {
           above: [{ iterator: selector, index }, context, above]
         })
         return useTruthy ? engine.truthy(result) : result
@@ -694,15 +714,16 @@ function createArrayIterativeMethod (name, useTruthy = false) {
 
       const method = build(mapper, mapState)
       const aboveArray = method.aboveDetected ? buildState.compile`[{ iterator: z, index: x }, context, above]` : buildState.compile`null`
+      const useTruthyMethod = useTruthy ? buildState.compile`engine.truthy` : buildState.compile``
 
       if (async) {
         if (!isSync(method)) {
           buildState.asyncDetected = true
-          return buildState.compile`await asyncIterators[${name}](${selector} || [], async (i, x, z) => ${method}(i, x, ${aboveArray}))`
+          return buildState.compile`await asyncIterators[${name}](${selector} || [], async (i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
         }
       }
 
-      return buildState.compile`(${selector} || [])[${name}]((i, x, z) => ${method}(i, x, ${aboveArray}))`
+      return buildState.compile`(${selector} || [])[${name}]((i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
     },
     traverse: false
   }
