@@ -74,14 +74,20 @@
     },
     {
         "description": "Uses the first non-null value from context",
-        "rule": { "??": [{ "val": ["person", "name"] }, { "val": "name" }] },
+        "rule": { "??": [{ "val": ["person", "name"] }, { "val": "name" }, "Unknown Name"] },
         "data": { "person": { "name": "John" }, "name": "Jane" },
         "result": "John"
     },
     {
         "description": "Uses the first non-null value from context (with person undefined)",
-        "rule": { "??": [{ "val": ["person", "name"] }, { "val": "name" }] },
+        "rule": { "??": [{ "val": ["person", "name"] }, { "val": "name" }, "Unknown Name"] },
         "data": { "name": "Jane" },
         "result": "Jane"
+    },
+    {
+        "description": "Uses the first non-null value from context (without any context)",
+        "rule": { "??": [{ "val": ["person", "name"] }, { "val": "name" }, "Unknown Name"] },
+        "data": {},
+        "result": "Unknown Name"
     }
 ]
