@@ -26,6 +26,12 @@
     },
     {
         "description": "Fetches a value from an array",
+        "rule": { "val": [1] },
+        "data": [1, 2],
+        "result": 2
+    },
+    {
+        "description": "Fetches a value from an array in an object",
         "rule": { "val": ["arr", 1] },
         "data": { "arr": [1, 2] },
         "result": 2
