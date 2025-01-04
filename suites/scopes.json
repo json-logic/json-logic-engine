@@ -4,8 +4,8 @@
         "description": "Map can add each number to index",
         "rule": {
             "map": [
-                { "var": "numbers" },
-                { "+": [{ "var": "../index" }, { "var": "" }]}
+                { "val": "numbers" },
+                { "+": [{ "val": [[1], "index"] }, { "val": [] }]}
             ]
         },
         "data": { "numbers": [1,2,3] },
@@ -15,8 +15,8 @@
         "description": "Map can add each number to value from context",
         "rule": {
             "map": [
-                { "var": "numbers" },
-                { "+": [{ "var": "../../value" }, { "var": "" }]}
+                { "val": "numbers" },
+                { "+": [{ "val": [[2], "value"] }, { "val": [] }]}
             ]
         },
         "data": { "numbers": [1,2,3], "value": 10 },
@@ -26,8 +26,8 @@
         "description": "Filter can use parent context to filter",
         "rule": {
             "filter": [
-                { "var": "people" },
-                { "===": [{ "var": "department" }, { "var": "../../department" }] }
+                { "val": "people" },
+                { "===": [{ "val": "department" }, { "val": [[2], "department"] }] }
             ]
         },
         "data": {
@@ -57,8 +57,8 @@
         "description": "Access an escaped key from above",
         "rule": { 
             "map": [
-                { "var": "arr" }, 
-                { "+": [{ "var": "../../\\.\\./" }, { "var": "../../..\\/" }]}
+                { "val": "arr" }, 
+                { "+": [{ "val": [[2], "", "", "/"] }, { "val": [[2], "../"] }]}
             ] 
         },
         "data": { "arr": [1,2,3], "../": 10, "": { "": { "/": 7 }} },

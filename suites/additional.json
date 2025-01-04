@@ -4,7 +4,7 @@
         [
             1,
             {
-                "var": "x"
+                "val": "x"
             },
             3
         ],
@@ -21,11 +21,11 @@
         {
             "if": [
                 {
-                    "var": "x"
+                    "val": "x"
                 },
                 [
                     {
-                        "var": "y"
+                        "val": "y"
                     }
                 ],
                 99
@@ -43,20 +43,20 @@
         {
             "reduce": [
                 {
-                    "var": "integers"
+                    "val": "integers"
                 },
                 {
                     "+": [
                         {
-                            "var": "current"
+                            "val": "current"
                         },
                         {
-                            "var": "accumulator"
+                            "val": "accumulator"
                         }
                     ]
                 },
                 {
-                    "var": "start_with"
+                    "val": "start_with"
                 }
             ]
         },
@@ -70,5 +70,11 @@
             "start_with": 59
         },
         69
-    ]
+    ],
+    {
+        "description": "Simple Inlineable Val Chained",
+        "rule": { "val": { "cat": ["te", "st"] } },
+        "data": { "test": 1 },
+        "result": 1
+    }
 ]

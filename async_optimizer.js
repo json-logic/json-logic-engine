@@ -28,7 +28,7 @@ function getMethod (logic, engine, methodName, above) {
   }
 
   let args = logic[methodName]
-  if (!args || typeof args !== 'object') args = [args]
+  if ((!args || typeof args !== 'object') && !method.optimizeUnary) args = [args]
 
   if (Array.isArray(args)) {
     const optimizedArgs = args.map(l => optimize(l, engine, above))
@@ -50,12 +50,12 @@ function getMethod (logic, engine, methodName, above) {
 
     if (isSync(optimizedArgs) && (method.method || method[Sync])) {
       const called = method.method ? method.method : method
-      return declareSync((data, abv) => called(coerceArray(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs, method.optimizeUnary), data, abv || above, engine), true)
+      if (method.optimizeUnary) return declareSync((data, abv) => called(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs, data, abv || above, engine.fallback), true)
+      return declareSync((data, abv) => called(coerceArray(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs), data, abv || above, engine), true)
     }
 
-    return async (data, abv) => {
-      return called(coerceArray(typeof optimizedArgs === 'function' ? await optimizedArgs(data, abv) : optimizedArgs, method.optimizeUnary), data, abv || above, engine)
-    }
+    if (method.optimizeUnary) return async (data, abv) => called(typeof optimizedArgs === 'function' ? await optimizedArgs(data, abv) : optimizedArgs, data, abv || above, engine)
+    return async (data, abv) => called(coerceArray(typeof optimizedArgs === 'function' ? await optimizedArgs(data, abv) : optimizedArgs), data, abv || above, engine)
   }
 }
 
