@@ -24,14 +24,19 @@ function getMethod (logic, engine, methodName, above) {
 
   if (Array.isArray(args)) {
     const optimizedArgs = args.map(l => optimize(l, engine, above))
+    if (optimizedArgs.every(l => typeof l !== 'function')) return (data, abv) => called(optimizedArgs, data, abv || above, engine)
     return (data, abv) => {
       const evaluatedArgs = optimizedArgs.map(l => typeof l === 'function' ? l(data, abv) : l)
       return called(evaluatedArgs, data, abv || above, engine)
     }
   } else {
-    const optimizedArgs = optimize(args, engine, above)
-    if (method.optimizeUnary) return (data, abv) => called(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs, data, abv || above, engine)
-    return (data, abv) => called(coerceArray(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs), data, abv || above, engine)
+    let optimizedArgs = optimize(args, engine, above)
+    if (method.optimizeUnary) {
+      if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
+      return (data, abv) => called(optimizedArgs, data, abv || above, engine)
+    }
+    if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
+    return (data, abv) => called(coerceArray(optimizedArgs), data, abv || above, engine)
   }
 }
 
