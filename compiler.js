@@ -205,7 +205,7 @@ function buildString (method, buildState = {}) {
     }
 
     let coerce = engine.methods[func].optimizeUnary ? '' : 'coerceArray'
-    if (!coerce && Array.isArray(lower) && lower.length === 1) lower = lower[0]
+    if (!coerce && Array.isArray(lower) && lower.length === 1 && !Array.isArray(lower[0])) lower = lower[0]
     else if (coerce && Array.isArray(lower)) coerce = ''
 
     const argumentsDict = [', context', ', context, above', ', context, above, engine']

@@ -2,12 +2,12 @@
 'use strict'
 
 import asyncIterators from './async_iterators.js'
-import { Sync, isSync } from './constants.js'
+import { Sync, isSync, Unfound, OriginalImpl } from './constants.js'
 import declareSync from './utilities/declareSync.js'
 import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
 import InvalidControlInput from './errors/InvalidControlInput.js'
-import { splitPathMemoized } from './utilities/splitPath.js'
+import legacyMethods from './legacy.js'
 
 function isDeterministic (method, engine, buildState) {
   if (Array.isArray(method)) {
@@ -211,7 +211,46 @@ const defaultMethods = {
   xor: ([a, b]) => a ^ b,
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
+  '??': {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
+    method: (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (item !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    asyncMethod: async (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (item !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    compile: (data, buildState) => {
+      if (!chainingSupported) return false
+      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' ?? ')})`
+      return `(${buildString(data, buildState)}).reduce((a,b) => a ?? b, null)`
+    },
+    traverse: false
+  },
   or: {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
@@ -240,16 +279,14 @@ const defaultMethods = {
     },
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy.IDENTITY) return false
-      if (Array.isArray(data)) {
-        return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
-      } else {
-        return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
-      }
+      if (!buildState.engine.truthy[OriginalImpl]) return false
+      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
+      return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
     },
     traverse: false
   },
   and: {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
@@ -277,12 +314,9 @@ const defaultMethods = {
     traverse: false,
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy.IDENTITY) return false
-      if (Array.isArray(data)) {
-        return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
-      } else {
-        return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
-      }
+      if (!buildState.engine.truthy[OriginalImpl]) return false
+      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
+      return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
     }
   },
   substr: ([string, from, end]) => {
@@ -297,88 +331,103 @@ const defaultMethods = {
     if (i && typeof i === 'object') return Object.keys(i).length
     return 0
   },
-  get: {
-    method: ([data, key, defaultValue], context, above, engine) => {
-      const notFound = defaultValue === undefined ? null : defaultValue
-
-      const subProps = splitPathMemoized(String(key))
-      for (let i = 0; i < subProps.length; i++) {
-        if (data === null || data === undefined) {
-          return notFound
+  exists: {
+    method: (key, context, above, engine) => {
+      const result = defaultMethods.val.method(key, context, above, engine, Unfound)
+      return result !== Unfound
+    },
+    traverse: true,
+    deterministic: false
+  },
+  val: {
+    [OriginalImpl]: true,
+    [Sync]: true,
+    method: (args, context, above, engine, /** @type {null | Symbol} */ unFound = null) => {
+      if (Array.isArray(args) && args.length === 1 && !Array.isArray(args[0])) args = args[0]
+      // A unary optimization
+      if (!Array.isArray(args)) {
+        if (unFound && !(context && args in context)) return unFound
+        if (context === null || context === undefined) return null
+        const result = context[args]
+        if (typeof result === 'undefined') return null
+        return result
+      }
+      let result = context
+      let start = 0
+      // This block handles scope traversal
+      if (Array.isArray(args[0]) && args[0].length === 1) {
+        start++
+        const climb = +Math.abs(args[0][0])
+        let pos = 0
+        for (let i = 0; i < climb; i++) {
+          result = above[pos++]
+          if (i === above.length - 1 && Array.isArray(result)) {
+            above = result
+            result = result[0]
+            pos = 1
+          }
         }
-        // Descending into context
-        data = data[subProps[i]]
-        if (data === undefined) {
-          return notFound
-        }
       }
-      if (engine.allowFunctions || typeof data[key] !== 'function') {
-        return data
+      // This block handles traversing the path
+      for (let i = start; i < args.length; i++) {
+        if (unFound && !(result && args[i] in result)) return unFound
+        if (result === null || result === undefined) return null
+        result = result[args[i]]
       }
-    }
-  },
-  var: (key, context, above, engine) => {
-    let b
-    if (Array.isArray(key)) {
-      b = key[1]
-      key = key[0]
-    }
-    let iter = 0
-    while (
-      typeof key === 'string' &&
-      key.startsWith('../') &&
-      iter < above.length
-    ) {
-      context = above[iter++]
-      key = key.substring(3)
-      // A performance optimization that allows you to pass the previous above array without spreading it as the last argument
-      if (iter === above.length && Array.isArray(context)) {
-        iter = 0
-        above = context
-        context = above[iter++]
+      if (typeof result === 'undefined') return unFound
+      if (typeof result === 'function' && !engine.allowFunctions) return unFound
+      return result
+    },
+    optimizeUnary: true,
+    deterministic: (data, buildState) => {
+      if (buildState.insideIterator) {
+        if (Array.isArray(data) && Array.isArray(data[0]) && Math.abs(data[0][0]) >= 2) return false
+        return true
       }
-    }
+      return false
+    },
+    compile: (data, buildState) => {
+      function wrapNull (data) {
+        if (!chainingSupported) return buildState.compile`(methods.preventFunctions(((a) => a === null || a === undefined ? null : a)(${data})))`
+        return buildState.compile`(methods.preventFunctions(${data} ?? null))`
+      }
 
-    const notFound = b === undefined ? null : b
-    if (typeof key === 'undefined' || key === '' || key === null) {
-      if (engine.allowFunctions || typeof context !== 'function') {
-        return context
+      if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
+      else buildState.methods.preventFunctions = a => a
+
+      if (typeof data === 'object' && !Array.isArray(data)) {
+        // If the input for this function can be inlined, we will do so right here.
+        if (isSyncDeep(data, buildState.engine, buildState) && isDeterministic(data, buildState.engine, buildState) && !buildState.engine.disableInline) data = (buildState.engine.fallback || buildState.engine).run(data, buildState.context, { above: buildState.above })
+        else return false
       }
-      return null
-    }
-    const subProps = splitPathMemoized(String(key))
-    for (let i = 0; i < subProps.length; i++) {
-      if (context === null || context === undefined) {
-        return notFound
+      if (Array.isArray(data) && Array.isArray(data[0])) {
+        // A very, very specific optimization.
+        if (buildState.iteratorCompile && Math.abs(data[0][0] || 0) === 1 && data[1] === 'index') return buildState.compile`index`
+        return false
       }
-      // Descending into context
-      context = context[subProps[i]]
-      if (context === undefined) {
-        return notFound
+      if (Array.isArray(data) && data.length === 1) data = data[0]
+      if (data === null) return wrapNull(buildState.compile`context`)
+      if (!Array.isArray(data)) {
+        if (chainingSupported) return wrapNull(buildState.compile`context?.[${data}]`)
+        return wrapNull(buildState.compile`(context || 0)[${data}]`)
       }
-    }
-    if (engine.allowFunctions || typeof context !== 'function') {
-      return context
-    }
-    return null
-  },
-  missing: (checked, context, above, engine) => {
-    return (Array.isArray(checked) ? checked : [checked]).filter((key) => {
-      return defaultMethods.var(key, context, above, engine) === null
-    })
-  },
-  missing_some: ([needCount, options], context, above, engine) => {
-    const missing = defaultMethods.missing(options, context, above, engine)
-    if (options.length - missing.length >= needCount) {
-      return []
-    } else {
-      return missing
+      if (Array.isArray(data)) {
+        let res = buildState.compile`context`
+        for (let i = 0; i < data.length; i++) {
+          if (data[i] === null) continue
+          if (chainingSupported) res = buildState.compile`${res}?.[${data[i]}]`
+          else res = buildState.compile`(${res}|| 0)[${data[i]}]`
+        }
+        return wrapNull(buildState.compile`(${res})`)
+      }
+      return false
     }
   },
   map: createArrayIterativeMethod('map'),
   some: createArrayIterativeMethod('some', true),
   all: createArrayIterativeMethod('every', true),
   none: {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     traverse: false,
     // todo: add async build & build
     method: (val, context, above, engine) => {
@@ -399,7 +448,7 @@ const defaultMethods = {
   },
   merge: (arrays) => (Array.isArray(arrays) ? [].concat(...arrays) : [arrays]),
   every: createArrayIterativeMethod('every'),
-  filter: createArrayIterativeMethod('filter'),
+  filter: createArrayIterativeMethod('filter', true),
   reduce: {
     deterministic: (data, buildState) => {
       return (
@@ -429,7 +478,7 @@ const defaultMethods = {
       buildState.methods.push(mapper)
       if (async) {
         if (!isSync(mapper) || selector.includes('await')) {
-          buildState.detectAsync = true
+          buildState.asyncDetected = true
           if (typeof defaultValue !== 'undefined') {
             return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${
               buildState.methods.length - 1
@@ -508,11 +557,30 @@ const defaultMethods = {
   },
   '!': (value, _1, _2, engine) => Array.isArray(value) ? !engine.truthy(value[0]) : !engine.truthy(value),
   '!!': (value, _1, _2, engine) => Boolean(Array.isArray(value) ? engine.truthy(value[0]) : engine.truthy(value)),
-  cat: (arr) => {
-    if (typeof arr === 'string') return arr
-    let res = ''
-    for (let i = 0; i < arr.length; i++) res += arr[i]
-    return res
+  cat: {
+    [OriginalImpl]: true,
+    [Sync]: true,
+    method: (arr) => {
+      if (typeof arr === 'string') return arr
+      if (!Array.isArray(arr)) return arr.toString()
+      let res = ''
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] === null || arr[i] === undefined) continue
+        res += arr[i]
+      }
+      return res
+    },
+    deterministic: true,
+    traverse: true,
+    optimizeUnary: true,
+    compile: (data, buildState) => {
+      if (typeof data === 'string') return JSON.stringify(data)
+      if (typeof data === 'number') return '"' + JSON.stringify(data) + '"'
+      if (!Array.isArray(data)) return false
+      let res = buildState.compile`''`
+      for (let i = 0; i < data.length; i++) res = buildState.compile`${res} + ${data[i]}`
+      return buildState.compile`(${res})`
+    }
   },
   keys: ([obj]) => typeof obj === 'object' ? Object.keys(obj) : [],
   pipe: {
@@ -633,8 +701,8 @@ function createArrayIterativeMethod (name, useTruthy = false) {
         (await engine.run(selector, context, {
           above
         })) || []
-      return asyncIterators[name](selector, (i, index) => {
-        const result = engine.run(mapper, i, {
+      return asyncIterators[name](selector, async (i, index) => {
+        const result = await engine.run(mapper, i, {
           above: [{ iterator: selector, index }, context, above]
         })
         return useTruthy ? engine.truthy(result) : result
@@ -654,15 +722,16 @@ function createArrayIterativeMethod (name, useTruthy = false) {
 
       const method = build(mapper, mapState)
       const aboveArray = method.aboveDetected ? buildState.compile`[{ iterator: z, index: x }, context, above]` : buildState.compile`null`
+      const useTruthyMethod = useTruthy ? buildState.compile`engine.truthy` : buildState.compile``
 
       if (async) {
-        if (!isSyncDeep(mapper, buildState.engine, buildState)) {
-          buildState.detectAsync = true
-          return buildState.compile`await asyncIterators[${name}](${selector} || [], async (i, x, z) => ${method}(i, x, ${aboveArray}))`
+        if (!isSync(method)) {
+          buildState.asyncDetected = true
+          return buildState.compile`await asyncIterators[${name}](${selector} || [], async (i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
         }
       }
 
-      return buildState.compile`(${selector} || [])[${name}]((i, x, z) => ${method}(i, x, ${aboveArray}))`
+      return buildState.compile`(${selector} || [])[${name}]((i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
     },
     traverse: false
   }
@@ -678,16 +747,7 @@ Object.keys(defaultMethods).forEach((item) => {
       ? true
       : defaultMethods[item].deterministic
 })
-// @ts-ignore Allow custom attribute
-defaultMethods.var.deterministic = (data, buildState) => {
-  return buildState.insideIterator && !String(data).includes('../../')
-}
-Object.assign(defaultMethods.missing, {
-  deterministic: false
-})
-Object.assign(defaultMethods.missing_some, {
-  deterministic: false
-})
+
 // @ts-ignore Allow custom attribute
 defaultMethods['<'].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
@@ -871,84 +931,11 @@ defaultMethods['!!'].compile = function (data, buildState) {
   return `(!!engine.truthy(${data}))`
 }
 defaultMethods.none.deterministic = defaultMethods.some.deterministic
-defaultMethods.get.compile = function (data, buildState) {
-  let defaultValue = null
-  let key = data
-  let obj = null
-  if (Array.isArray(data) && data.length <= 3) {
-    obj = data[0]
-    key = data[1]
-    defaultValue = typeof data[2] === 'undefined' ? null : data[2]
-
-    // Bail out if the key is dynamic; dynamic keys are not really optimized by this block.
-    if (key && typeof key === 'object') return false
-
-    key = key.toString()
-    const pieces = splitPathMemoized(key)
-    if (!chainingSupported) {
-      return `(((a,b) => (typeof a === 'undefined' || a === null) ? b : a)(${pieces.reduce(
-        (text, i) => {
-          return `(${text}||0)[${JSON.stringify(i)}]`
-        },
-        `(${buildString(obj, buildState)}||0)`
-      )}, ${buildString(defaultValue, buildState)}))`
-    }
-    return `((${buildString(obj, buildState)})${pieces
-      .map((i) => `?.[${buildString(i, buildState)}]`)
-      .join('')} ?? ${buildString(defaultValue, buildState)})`
-  }
-  return false
-}
-// @ts-ignore Allow custom attribute
-defaultMethods.var.compile = function (data, buildState) {
-  let key = data
-  let defaultValue = null
-  buildState.varTop = buildState.varTop || new Set()
-  if (
-    !key ||
-    typeof data === 'string' ||
-    typeof data === 'number' ||
-    (Array.isArray(data) && data.length <= 2)
-  ) {
-    if (Array.isArray(data)) {
-      key = data[0]
-      defaultValue = typeof data[1] === 'undefined' ? null : data[1]
-    }
-
-    if (key === '../index' && buildState.iteratorCompile) return 'index'
-
-    // this counts the number of var accesses to determine if they're all just using this override.
-    // this allows for a small optimization :)
-    if (typeof key === 'undefined' || key === null || key === '') return 'context'
-    if (typeof key !== 'string' && typeof key !== 'number') return false
-
-    key = key.toString()
-    if (key.includes('../')) return false
-
-    const pieces = splitPathMemoized(key)
-    const [top] = pieces
-    buildState.varTop.add(top)
-
-    if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
-    else buildState.methods.preventFunctions = a => a
-
-    // support older versions of node
-    if (!chainingSupported) {
-      return `(methods.preventFunctions(((a,b) => (typeof a === 'undefined' || a === null) ? b : a)(${pieces.reduce(
-        (text, i) => `(${text}||0)[${JSON.stringify(i)}]`,
-        '(context||0)'
-      )}, ${buildString(defaultValue, buildState)})))`
-    }
-    return `(methods.preventFunctions(context${pieces
-      .map((i) => `?.[${JSON.stringify(i)}]`)
-      .join('')} ?? ${buildString(defaultValue, buildState)}))`
-  }
-  return false
-}
 
 // @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
-defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods.var.optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = true
+defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = true
 
 export default {
-  ...defaultMethods
+  ...defaultMethods,
+  ...legacyMethods
 }

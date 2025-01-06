@@ -3,7 +3,7 @@
 
 import defaultMethods from './defaultMethods.js'
 import LogicEngine from './logic.js'
-import { isSync } from './constants.js'
+import { isSync, OriginalImpl } from './constants.js'
 import declareSync from './utilities/declareSync.js'
 import { buildAsync } from './compiler.js'
 import omitUndefined from './utilities/omitUndefined.js'
@@ -74,6 +74,13 @@ class AsyncLogicEngine {
 
     if (this.isData(logic, func)) return logic
     if (!this.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+
+    // A small but useful micro-optimization for some of the most common functions.
+    // Later on, I could define something to shut this off if var / val are redefined.
+    if ((func === 'var' || func === 'val') && this.methods[func][OriginalImpl]) {
+      const input = (!data || typeof data !== 'object') ? data : this.fallback.run(data, context, { above })
+      return this.methods[func].method(input, context, above, this)
+    }
 
     if (typeof this.methods[func] === 'function') {
       const input = (!data || typeof data !== 'object') ? [data] : await this.run(data, context, { above })
@@ -210,5 +217,5 @@ class AsyncLogicEngine {
     return logic
   }
 }
-Object.assign(AsyncLogicEngine.prototype.truthy, { IDENTITY: true })
+Object.assign(AsyncLogicEngine.prototype.truthy, { [OriginalImpl]: true })
 export default AsyncLogicEngine
