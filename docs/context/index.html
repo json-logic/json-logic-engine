@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.6.3">
 <title data-rh="true">Context Operators | JSON Logic Engine</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://jessemitchell.me/json-logic-engine/docs/context"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Context Operators | JSON Logic Engine"><meta data-rh="true" name="description" content="Context Operators"><meta data-rh="true" property="og:description" content="Context Operators"><link data-rh="true" rel="icon" href="/json-logic-engine/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://jessemitchell.me/json-logic-engine/docs/context"><link data-rh="true" rel="alternate" href="https://jessemitchell.me/json-logic-engine/docs/context" hreflang="en"><link data-rh="true" rel="alternate" href="https://jessemitchell.me/json-logic-engine/docs/context" hreflang="x-default"><link rel="stylesheet" href="/json-logic-engine/assets/css/styles.fe35d9b5.css">
-<script src="/json-logic-engine/assets/js/runtime~main.7c968783.js" defer="defer"></script>
+<script src="/json-logic-engine/assets/js/runtime~main.83e633aa.js" defer="defer"></script>
 <script src="/json-logic-engine/assets/js/main.87938683.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -22,9 +22,7 @@
 <!-- -->
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="var">var<a href="#var" class="hash-link" aria-label="Direct link to var" title="Direct link to var">​</a></h2>
 <blockquote>
-<p>[!WARNING]
-This operator has now been deprecated in favor of <code>val</code>. This operator will continue to work,
-But is considered a legacy operator.</p>
+<p>⚠️ This operator has been deprecated. It will continue to work, but is considered a legacy operator. Consider: <code>val</code></p>
 </blockquote>
 <p>By just using <code>&#x27;&#x27;</code> as the input for var, you can get the current value that is in scope, regardless of its type.</p>
 <p>Additionally, these operators support handlebars style data traversal inside of higher order operators.</p>
@@ -33,17 +31,15 @@ But is considered a legacy operator.</p>
 <!-- -->
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="missing">Missing<a href="#missing" class="hash-link" aria-label="Direct link to Missing" title="Direct link to Missing">​</a></h2>
 <blockquote>
-<p>[!WARNING]
-This operator has now been deprecated in favor of <code>val</code>. This operator will continue to work,
-But is considered a legacy operator.</p>
+<p>⚠️ This operator has been deprecated. It will continue to work, but is considered a legacy operator.
+Consider: <code>exists</code></p>
 </blockquote>
 <p>Returns an array of the values that are &quot;missing&quot;</p>
 <!-- -->
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="missing-some">Missing Some<a href="#missing-some" class="hash-link" aria-label="Direct link to Missing Some" title="Direct link to Missing Some">​</a></h2>
 <blockquote>
-<p>[!WARNING]
-This operator has now been deprecated in favor of <code>val</code>. This operator will continue to work,
-But is considered a legacy operator.</p>
+<p>⚠️ This operator has been deprecated. It will continue to work, but is considered a legacy operator.
+Consider: <code>exists</code></p>
 </blockquote>
 <p>From <code>json-logic-js</code>, passing in the number of required variables &amp; the variable names, if it has enough of them, it&#x27;ll return an empty array, otherwise it&#x27;ll return the items that are missing.</p>
 </div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/TotalTechGeek/json-logic-engine-documentation/edit/master/website/docs/context.mdx" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/json-logic-engine/docs/misc"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Miscellaneous Operators</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/json-logic-engine/docs/higher"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Higher Order Operators</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#val" class="table-of-contents__link toc-highlight">val</a></li><li><a href="#exists" class="table-of-contents__link toc-highlight">exists</a></li><li><a href="#var" class="table-of-contents__link toc-highlight">var</a></li><li><a href="#missing" class="table-of-contents__link toc-highlight">Missing</a></li><li><a href="#missing-some" class="table-of-contents__link toc-highlight">Missing Some</a></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Related</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/TotalTechGeek" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2025 JSON-Logic-Engine Built with Docusaurus.</div></div></div></footer></div>
