@@ -35,7 +35,7 @@ function getMethod (logic, engine, methodName, above) {
       if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
       return (data, abv) => called(optimizedArgs, data, abv || above, engine)
     }
-    if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
+    if (typeof optimizedArgs === 'function') return (data, abv) => called(coerceArray(optimizedArgs(data, abv)), data, abv || above, engine)
     return (data, abv) => called(coerceArray(optimizedArgs), data, abv || above, engine)
   }
 }
