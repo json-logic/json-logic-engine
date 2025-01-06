@@ -1,6 +1,6 @@
 import { LogicEngine } from './index.js'
 const x = new LogicEngine()
-const f = x.build({ '<': [{ var: '' }, 10] })
+const f = x.build({ '<': [{ val: [] }, 10] })
 console.time('Logic Built')
 for (let i = 0; i < 1e6; i++) {
   f(i % 20)

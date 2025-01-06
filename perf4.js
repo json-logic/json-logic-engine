@@ -4,7 +4,7 @@ import { LogicEngine } from './index.js'
 const optimized = new LogicEngine()
 const unoptimized = new LogicEngine(undefined, { disableInterpretedOptimization: true })
 
-const dynamicRule = { '+': [1, 2, 3, { var: 'a' }] }
+const dynamicRule = { '+': [1, 2, 3, { val: 'a' }] }
 const staticRule = { '+': [1, 2, 3, 4] }
 
 console.time('Optimized, Same Object, Dynamic')
@@ -35,7 +35,7 @@ console.log('----')
 
 console.time('Optimized, Different Object, Dynamic')
 for (let i = 0; i < 1e6; i++) {
-  optimized.run({ '+': [1, 2, 3, { var: 'a' }] }, { a: i })
+  optimized.run({ '+': [1, 2, 3, { val: 'a' }] }, { a: i })
 }
 console.timeEnd('Optimized, Different Object, Dynamic')
 
@@ -49,7 +49,7 @@ console.timeEnd('Optimized, Different Object, Static')
 
 console.time('Unoptimized, Different Object, Dynamic')
 for (let i = 0; i < 1e6; i++) {
-  unoptimized.run({ '+': [1, 2, 3, { var: 'a' }] }, { a: i })
+  unoptimized.run({ '+': [1, 2, 3, { val: 'a' }] }, { a: i })
 }
 console.timeEnd('Unoptimized, Different Object, Dynamic')
 

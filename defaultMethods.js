@@ -341,8 +341,9 @@ const defaultMethods = {
   },
   val: {
     [OriginalImpl]: true,
+    [Sync]: true,
     method: (args, context, above, engine, /** @type {null | Symbol} */ unFound = null) => {
-      if (Array.isArray(args) && args.length === 1) args = args[0]
+      if (Array.isArray(args) && args.length === 1 && !Array.isArray(args[0])) args = args[0]
       // A unary optimization
       if (!Array.isArray(args)) {
         if (unFound && !(context && args in context)) return unFound
@@ -406,7 +407,10 @@ const defaultMethods = {
       }
       if (Array.isArray(data) && data.length === 1) data = data[0]
       if (data === null) return wrapNull(buildState.compile`context`)
-      if (!Array.isArray(data)) return wrapNull(buildState.compile`(context || 0)[${data}]`)
+      if (!Array.isArray(data)) {
+        if (chainingSupported) return wrapNull(buildState.compile`context?.[${data}]`)
+        return wrapNull(buildState.compile`(context || 0)[${data}]`)
+      }
       if (Array.isArray(data)) {
         let res = buildState.compile`context`
         for (let i = 0; i < data.length; i++) {
@@ -560,7 +564,10 @@ const defaultMethods = {
       if (typeof arr === 'string') return arr
       if (!Array.isArray(arr)) return arr.toString()
       let res = ''
-      for (let i = 0; i < arr.length; i++) res += arr[i].toString()
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] === null || arr[i] === undefined) continue
+        res += arr[i]
+      }
       return res
     },
     deterministic: true,
