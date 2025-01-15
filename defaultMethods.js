@@ -54,6 +54,7 @@ const defaultMethods = {
   '+': (data) => {
     if (typeof data === 'string') return +data
     if (typeof data === 'number') return +data
+    if (typeof data === 'boolean') return +data
     let res = 0
     for (let i = 0; i < data.length; i++) res += +data[i]
     return res
@@ -64,20 +65,21 @@ const defaultMethods = {
     return res
   },
   '/': (data) => {
-    let res = data[0]
+    let res = +data[0]
     for (let i = 1; i < data.length; i++) res /= +data[i]
     return res
   },
   '-': (data) => {
     if (typeof data === 'string') return -data
     if (typeof data === 'number') return -data
+    if (typeof data === 'boolean') return -data
     if (data.length === 1) return -data[0]
     let res = data[0]
     for (let i = 1; i < data.length; i++) res -= +data[i]
     return res
   },
   '%': (data) => {
-    let res = data[0]
+    let res = +data[0]
     for (let i = 1; i < data.length; i++) res %= +data[i]
     return res
   },

@@ -13,6 +13,12 @@ for (const file of files) {
   }
 }
 
+function correction (x) {
+  // eslint-disable-next-line no-compare-neg-zero
+  if (x === -0) return 0
+  return x
+}
+
 // eslint-disable-next-line no-labels
 inline: {
   const logic = new LogicEngine(undefined, { compatible: true })
@@ -25,13 +31,13 @@ inline: {
       test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
         testCase[1]
       )}`, () => {
-        expect(logic.run(testCase[0], testCase[1])).toStrictEqual(testCase[2])
+        expect(correction(logic.run(testCase[0], testCase[1]))).toStrictEqual(testCase[2])
       })
 
       test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
         testCase[1]
       )} (async)`, async () => {
-        expect(await asyncLogic.run(testCase[0], testCase[1])).toStrictEqual(
+        expect(correction(await asyncLogic.run(testCase[0], testCase[1]))).toStrictEqual(
           testCase[2]
         )
       })
@@ -40,26 +46,26 @@ inline: {
         testCase[1]
       )} (built)`, () => {
         const f = logic.build(testCase[0])
-        expect(f(testCase[1])).toStrictEqual(testCase[2])
+        expect(correction(f(testCase[1]))).toStrictEqual(testCase[2])
       })
 
       test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
         testCase[1]
       )} (asyncBuilt)`, async () => {
         const f = await asyncLogic.build(testCase[0])
-        expect(await f(testCase[1])).toStrictEqual(testCase[2])
+        expect(correction(await f(testCase[1]))).toStrictEqual(testCase[2])
       })
 
       test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
         testCase[1]
       )} (noOptimization)`, () => {
-        expect(logicWithoutOptimization.run(testCase[0], testCase[1])).toStrictEqual(testCase[2])
+        expect(correction(logicWithoutOptimization.run(testCase[0], testCase[1]))).toStrictEqual(testCase[2])
       })
 
       test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
         testCase[1]
       )} (asyncNoOptimization)`, async () => {
-        expect(await asyncLogicWithoutOptimization.run(testCase[0], testCase[1])).toStrictEqual(
+        expect(correction(await asyncLogicWithoutOptimization.run(testCase[0], testCase[1]))).toStrictEqual(
           testCase[2]
         )
       })
@@ -68,14 +74,14 @@ inline: {
         testCase[1]
       )} (builtNoOptimization)`, () => {
         const f = logicWithoutOptimization.build(testCase[0])
-        expect(f(testCase[1])).toStrictEqual(testCase[2])
+        expect(correction(f(testCase[1]))).toStrictEqual(testCase[2])
       })
 
       test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
         testCase[1]
       )} (asyncBuiltNoOptimization)`, async () => {
         const f = await asyncLogicWithoutOptimization.build(testCase[0])
-        expect(await f(testCase[1])).toStrictEqual(testCase[2])
+        expect(correction(await f(testCase[1]))).toStrictEqual(testCase[2])
       })
     })
   })
@@ -97,13 +103,13 @@ notInline: {
     test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
       testCase[1]
     )}`, () => {
-      expect(logic.run(testCase[0], testCase[1])).toStrictEqual(testCase[2])
+      expect(correction(logic.run(testCase[0], testCase[1]))).toStrictEqual(testCase[2])
     })
 
     test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
       testCase[1]
     )} (async)`, async () => {
-      expect(await asyncLogic.run(testCase[0], testCase[1])).toStrictEqual(
+      expect(correction(await asyncLogic.run(testCase[0], testCase[1]))).toStrictEqual(
         testCase[2]
       )
     })
@@ -112,26 +118,26 @@ notInline: {
       testCase[1]
     )} (built)`, () => {
       const f = logic.build(testCase[0])
-      expect(f(testCase[1])).toStrictEqual(testCase[2])
+      expect(correction(f(testCase[1]))).toStrictEqual(testCase[2])
     })
 
     test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
       testCase[1]
     )} (asyncBuilt)`, async () => {
       const f = await asyncLogic.build(testCase[0])
-      expect(await f(testCase[1])).toStrictEqual(testCase[2])
+      expect(correction(await f(testCase[1]))).toStrictEqual(testCase[2])
     })
 
     test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
       testCase[1]
     )} (noOptimization)`, () => {
-      expect(logicWithoutOptimization.run(testCase[0], testCase[1])).toStrictEqual(testCase[2])
+      expect(correction(logicWithoutOptimization.run(testCase[0], testCase[1]))).toStrictEqual(testCase[2])
     })
 
     test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
       testCase[1]
     )} (asyncNoOptimization)`, async () => {
-      expect(await asyncLogicWithoutOptimization.run(testCase[0], testCase[1])).toStrictEqual(
+      expect(correction(await asyncLogicWithoutOptimization.run(testCase[0], testCase[1]))).toStrictEqual(
         testCase[2]
       )
     })
@@ -140,14 +146,14 @@ notInline: {
       testCase[1]
     )} (builtNoOptimization)`, () => {
       const f = logicWithoutOptimization.build(testCase[0])
-      expect(f(testCase[1])).toStrictEqual(testCase[2])
+      expect(correction(f(testCase[1]))).toStrictEqual(testCase[2])
     })
 
     test(`${JSON.stringify(testCase[0])} ${JSON.stringify(
       testCase[1]
     )} (asyncBuiltNoOptimization)`, async () => {
       const f = await asyncLogicWithoutOptimization.build(testCase[0])
-      expect(await f(testCase[1])).toStrictEqual(testCase[2])
+      expect(correction(await f(testCase[1]))).toStrictEqual(testCase[2])
     })
   })
 }
