@@ -58,5 +58,11 @@
       },
       "result": 149212,
       "description": "Max with Logic Chaining (Complex)"
+  },
+  {
+    "description": "Addition Chained w/ Merge",
+    "rule": { "+": { "merge": [{ "val": "x" }, { "val": "y" }] }},
+    "result": 6,
+    "data": { "x": [1, 2], "y": 3 }
   }
 ]

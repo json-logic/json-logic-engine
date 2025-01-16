@@ -450,7 +450,18 @@ const defaultMethods = {
       return result ? buildState.compile`!(${result})` : false
     }
   },
-  merge: (arrays) => (Array.isArray(arrays) ? [].concat(...arrays) : [arrays]),
+  merge: (args) => {
+    if (!Array.isArray(args)) return [args]
+    const result = []
+    for (let i = 0; i < args.length; i++) {
+      if (Array.isArray(args[i])) {
+        for (let j = 0; j < args[i].length; j++) {
+          result.push(args[i][j])
+        }
+      } else result.push(args[i])
+    }
+    return result
+  },
   every: createArrayIterativeMethod('every'),
   filter: createArrayIterativeMethod('filter', true),
   reduce: {
