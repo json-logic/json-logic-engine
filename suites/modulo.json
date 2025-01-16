@@ -141,6 +141,18 @@
         "data": null
     },
     {
+        "description": "Modulo Operator with Single Operand, Direct (Empty String)",
+        "rule": { "%": "" },
+        "result": 0,
+        "data": null
+    },
+    {
+        "description": "Modulo Operator with a Single Operand, Direct (null)",
+        "rule": { "%": null },
+        "result": 0,
+        "data": null
+    },
+    {
         "description": "Modulo with val",
         "rule": { "%": [{ "val": "x" }, { "val": "y" }] },
         "data": { "x": 11, "y": 6 },

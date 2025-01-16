@@ -112,7 +112,7 @@ function isDeepSync (method, engine) {
 
   if (Array.isArray(method)) return method.every(i => isDeepSync(i, engine))
 
-  if (typeof method === 'object') {
+  if (method && typeof method === 'object') {
     const func = Object.keys(method)[0]
 
     const lower = method[func]

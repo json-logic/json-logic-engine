@@ -49,6 +49,12 @@
         "data": null
     },
     {
+        "description": "Multiply with Multiple Value Types (3)",
+        "rule": { "*": ["1", null] },
+        "result": 0,
+        "data": null
+    },
+    {
         "description": "Multiply with Single Operand (Number)",
         "rule": { "*": [1] },
         "result": 1,
@@ -118,6 +124,18 @@
     {
         "description": "Multiply Operator with Single Operand, Direct (false)",
         "rule": { "*": false },
+        "result": 0,
+        "data": null
+    },
+    {
+        "description": "Multiply Operator with Single Operand, Direct (Empty String)",
+        "rule": { "*": "" },
+        "result": 0,
+        "data": null
+    },
+    {
+        "description": "Multiply Operator with a Single Operand, Direct (null)",
+        "rule": { "*": null },
         "result": 0,
         "data": null
     },

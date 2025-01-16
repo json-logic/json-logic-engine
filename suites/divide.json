@@ -130,6 +130,18 @@
         "data": null
     },
     {
+        "description": "Divide Operator with Single Operand, Direct (Empty String)",
+        "rule": { "/": "" },
+        "result": 0,
+        "data": null
+    },
+    {
+        "description": "Divide Operator with a Single Operand, Direct (null)",
+        "rule": { "/": null },
+        "result": 0,
+        "data": null
+    },
+    {
         "description": "Divide with val",
         "rule": { "/": [{ "val": "x" }, { "val": "y" }] },
         "data": { "x": 8, "y": 2 },

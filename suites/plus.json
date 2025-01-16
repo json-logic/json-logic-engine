@@ -38,7 +38,7 @@
     },
     {
         "description": "Addition with Multiple Value Types",
-        "rule": { "+": [1, "2", 3, "4", true, false] },
+        "rule": { "+": [1, "2", 3, "4", "", true, false, null] },
         "result": 11,
         "data": null
     },
@@ -114,6 +114,18 @@
     {
         "description": "Plus Operator with Single Operand, Direct (false)",
         "rule": { "+": false },
+        "result": 0,
+        "data": null
+    },
+    {
+        "description": "Plus Operator with Single Operand, Direct (Empty String)",
+        "rule": { "+": "" },
+        "result": 0,
+        "data": null
+    },
+    {
+        "description": "Plus Operator with a Single Operand, Direct (null)",
+        "rule": { "+": null },
         "result": 0,
         "data": null
     },

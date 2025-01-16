@@ -52,6 +52,7 @@ function isSyncDeep (method, engine, buildState) {
 
 const defaultMethods = {
   '+': (data) => {
+    if (!data) return 0
     if (typeof data === 'string') return +data
     if (typeof data === 'number') return +data
     if (typeof data === 'boolean') return +data
@@ -70,6 +71,7 @@ const defaultMethods = {
     return res
   },
   '-': (data) => {
+    if (!data) return 0
     if (typeof data === 'string') return -data
     if (typeof data === 'number') return -data
     if (typeof data === 'boolean') return -data
