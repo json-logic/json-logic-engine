@@ -93,11 +93,17 @@
         "decimal": true
     },
     {
-        "description": "Plus Operator with Single Operand, Direct (String .5)",
-        "rule": { "+": ".5" },
+        "description": "Plus Operator with Single Operand, Direct (String 0.5)",
+        "rule": { "+": "0.5" },
         "result": 0.5,
         "data": null,
         "decimal": true
+    },
+    {
+        "description": "Plus Operator with Single Operand, Direct (String 1e2)",
+        "rule": { "+": "1e2" },
+        "result": 100,
+        "data": null
     },
     {
         "description": "Plus Operator with Single Operand, Direct (String 0)",

@@ -767,16 +767,16 @@ Object.keys(defaultMethods).forEach((item) => {
 defaultMethods['<'].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} < ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} < ${data[i]})`
+  let res = buildState.compile`(${data[0]} < (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev < ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['<='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} <= ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} <= ${data[i]})`
+  let res = buildState.compile`(${data[0]} <= (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev <= ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
@@ -797,32 +797,32 @@ defaultMethods.max.compile = function (data, buildState) {
 defaultMethods['>'].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} > ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} > ${data[i]})`
+  let res = buildState.compile`(${data[0]} > (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev > ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['>='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} >= ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} >= ${data[i]})`
+  let res = buildState.compile`(${data[0]} >= (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev >= ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['=='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} == ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} == ${data[i]})`
+  let res = buildState.compile`(${data[0]} == (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev == ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['!='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} != ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} != ${data[i]})`
+  let res = buildState.compile`(${data[0]} != (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev != ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
