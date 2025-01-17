@@ -112,7 +112,7 @@ function isDeepSync (method, engine) {
 
   if (Array.isArray(method)) return method.every(i => isDeepSync(i, engine))
 
-  if (typeof method === 'object') {
+  if (method && typeof method === 'object') {
     const func = Object.keys(method)[0]
 
     const lower = method[func]
@@ -307,7 +307,7 @@ function processBuiltString (method, str, buildState) {
     str = str.replace(`__%%%${x}%%%__`, item)
   })
 
-  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { const result = ${str}; return result }`
+  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { let prev; const result = ${str}; return result }`
   // console.log(str)
   // console.log(final)
   // eslint-disable-next-line no-eval

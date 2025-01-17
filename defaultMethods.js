@@ -52,8 +52,10 @@ function isSyncDeep (method, engine, buildState) {
 
 const defaultMethods = {
   '+': (data) => {
+    if (!data) return 0
     if (typeof data === 'string') return +data
     if (typeof data === 'number') return +data
+    if (typeof data === 'boolean') return +data
     let res = 0
     for (let i = 0; i < data.length; i++) res += +data[i]
     return res
@@ -64,20 +66,22 @@ const defaultMethods = {
     return res
   },
   '/': (data) => {
-    let res = data[0]
+    let res = +data[0]
     for (let i = 1; i < data.length; i++) res /= +data[i]
     return res
   },
   '-': (data) => {
+    if (!data) return 0
     if (typeof data === 'string') return -data
     if (typeof data === 'number') return -data
+    if (typeof data === 'boolean') return -data
     if (data.length === 1) return -data[0]
     let res = data[0]
     for (let i = 1; i < data.length; i++) res -= +data[i]
     return res
   },
   '%': (data) => {
-    let res = data[0]
+    let res = +data[0]
     for (let i = 1; i < data.length; i++) res %= +data[i]
     return res
   },
@@ -446,7 +450,18 @@ const defaultMethods = {
       return result ? buildState.compile`!(${result})` : false
     }
   },
-  merge: (arrays) => (Array.isArray(arrays) ? [].concat(...arrays) : [arrays]),
+  merge: (args) => {
+    if (!Array.isArray(args)) return [args]
+    const result = []
+    for (let i = 0; i < args.length; i++) {
+      if (Array.isArray(args[i])) {
+        for (let j = 0; j < args[i].length; j++) {
+          result.push(args[i][j])
+        }
+      } else result.push(args[i])
+    }
+    return result
+  },
   every: createArrayIterativeMethod('every'),
   filter: createArrayIterativeMethod('filter', true),
   reduce: {
@@ -752,16 +767,16 @@ Object.keys(defaultMethods).forEach((item) => {
 defaultMethods['<'].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} < ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} < ${data[i]})`
+  let res = buildState.compile`(${data[0]} < (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev < ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['<='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} <= ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} <= ${data[i]})`
+  let res = buildState.compile`(${data[0]} <= (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev <= ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
@@ -782,32 +797,32 @@ defaultMethods.max.compile = function (data, buildState) {
 defaultMethods['>'].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} > ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} > ${data[i]})`
+  let res = buildState.compile`(${data[0]} > (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev > ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['>='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} >= ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} >= ${data[i]})`
+  let res = buildState.compile`(${data[0]} >= (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev >= ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['=='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} == ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} == ${data[i]})`
+  let res = buildState.compile`(${data[0]} == (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev == ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['!='].compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} != ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} != ${data[i]})`
+  let res = buildState.compile`(${data[0]} != (prev = ${data[1]}))`
+  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev != ${data[i]})`
   return res
 }
 // @ts-ignore Allow custom attribute
