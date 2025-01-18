@@ -277,7 +277,15 @@ const defaultMethods = {
     },
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy[OriginalImpl]) return false
+      if (!buildState.engine.truthy[OriginalImpl]) {
+        let res = buildState.compile``
+        if (Array.isArray(data) && data.length) {
+          for (let i = 0; i < data.length; i++) res = buildState.compile`${res} engine.truthy(prev = ${data[i]}) ? prev : `
+          res = buildState.compile`${res} prev`
+          return res
+        }
+        return false
+      }
       if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
       return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
     },
@@ -314,7 +322,15 @@ const defaultMethods = {
     traverse: false,
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy[OriginalImpl]) return false
+      if (!buildState.engine.truthy[OriginalImpl]) {
+        let res = buildState.compile``
+        if (Array.isArray(data) && data.length) {
+          for (let i = 0; i < data.length; i++) res = buildState.compile`${res} !engine.truthy(prev = ${data[i]}) ? prev : `
+          res = buildState.compile`${res} prev`
+          return res
+        }
+        return false
+      }
       if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
       return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
     }
