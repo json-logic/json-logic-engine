@@ -962,14 +962,6 @@ defaultMethods['*'].compile = function (data, buildState) {
   if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
   return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)))`
 }
-// @ts-ignore Allow custom attribute
-defaultMethods.cat.compile = function (data, buildState) {
-  if (typeof data === 'string') return JSON.stringify(data)
-  if (!Array.isArray(data)) return false
-  let res = buildState.compile`''`
-  for (let i = 0; i < data.length; i++) res = buildState.compile`${res} + ${data[i]}`
-  return buildState.compile`(${res})`
-}
 
 // @ts-ignore Allow custom attribute
 defaultMethods['!'].compile = function (
