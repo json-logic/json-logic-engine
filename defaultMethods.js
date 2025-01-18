@@ -931,13 +931,13 @@ function numberCoercion (i, buildState) {
 defaultMethods['+'].compile = function (data, buildState) {
   if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
   if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `(+${buildString(data, buildState)})`
-  return `([].concat(${buildString(data, buildState)})).reduce((a,b) => (+a)+(+precoerceNumber(b)), 0)`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.reduce((a,b) => (+a)+(+precoerceNumber(b)), 0) : +precoerceNumber(prev))`
 }
 
 // @ts-ignore Allow custom attribute
 defaultMethods['%'].compile = function (data, buildState) {
   if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' % ')})`
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+a)%(+precoerceNumber(b)))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))%(+precoerceNumber(b)))`
 }
 
 // @ts-ignore Allow custom attribute
@@ -949,24 +949,18 @@ defaultMethods.in.compile = function (data, buildState) {
 // @ts-ignore Allow custom attribute
 defaultMethods['-'].compile = function (data, buildState) {
   if (Array.isArray(data)) return `${data.length === 1 ? '-' : ''}(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
-  if (typeof data === 'string' || typeof data === 'number') {
-    return `(-${buildString(data, buildState)})`
-  } else {
-    return `((a=>(a.length===1?a[0]=-a[0]:a)&0||a)([].concat(${buildString(
-      data,
-      buildState
-    )}))).reduce((a,b) => (+a)-(+b))`
-  }
+  if (typeof data === 'string' || typeof data === 'number') return `(-${buildString(data, buildState)})`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 1 ? -precoerceNumber(prev[0]) : prev.reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' / ')})`
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+a)/(+b))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b)))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
   if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+a)*(+b))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods.cat.compile = function (data, buildState) {
