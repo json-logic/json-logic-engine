@@ -887,36 +887,27 @@ defaultMethods['==='].compile = function (data, buildState) {
   for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} === ${data[i]})`
   return res
 }
+
+/**
+ * Transforms the operands of the arithmetic operation to numbers.
+ */
+function numberCoercion (i, buildState) {
+  if (Array.isArray(i)) return 'NaN'
+  if (typeof i === 'string' || typeof i === 'number' || typeof i === 'boolean') return `(+${buildString(i, buildState)})`
+  return `(+precoerceNumber(${buildString(i, buildState)}))`
+}
+
 // @ts-ignore Allow custom attribute
 defaultMethods['+'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => {
-        // Todo: Actually make this correct, this is a decent optimization but
-        // does not coerce the built string.
-        if (Array.isArray(i)) return 'NaN'
-        return `(+${buildString(i, buildState)})`
-      })
-      .join(' + ')})`
-  } else if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
-    return `(+${buildString(data, buildState)})`
-  } else {
-    return `([].concat(${buildString(
-      data,
-      buildState
-    )})).reduce((a,b) => (+a)+(+b), 0)`
-  }
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
+  if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `(+${buildString(data, buildState)})`
+  return `([].concat(${buildString(data, buildState)})).reduce((a,b) => (+a)+(+precoerceNumber(b)), 0)`
 }
 
 // @ts-ignore Allow custom attribute
 defaultMethods['%'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' % ')})`
-  } else {
-    return `(${buildString(data, buildState)}).reduce((a,b) => (+a)%(+b))`
-  }
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' % ')})`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+a)%(+precoerceNumber(b)))`
 }
 
 // @ts-ignore Allow custom attribute
@@ -927,11 +918,7 @@ defaultMethods.in.compile = function (data, buildState) {
 
 // @ts-ignore Allow custom attribute
 defaultMethods['-'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `${data.length === 1 ? '-' : ''}(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' - ')})`
-  }
+  if (Array.isArray(data)) return `${data.length === 1 ? '-' : ''}(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
   if (typeof data === 'string' || typeof data === 'number') {
     return `(-${buildString(data, buildState)})`
   } else {
@@ -943,23 +930,13 @@ defaultMethods['-'].compile = function (data, buildState) {
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' / ')})`
-  } else {
-    return `(${buildString(data, buildState)}).reduce((a,b) => (+a)/(+b))`
-  }
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' / ')})`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+a)/(+b))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' * ')})`
-  } else {
-    return `(${buildString(data, buildState)}).reduce((a,b) => (+a)*(+b))`
-  }
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+a)*(+b))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods.cat.compile = function (data, buildState) {

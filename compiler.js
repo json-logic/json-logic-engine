@@ -11,7 +11,7 @@ import {
 import asyncIterators from './async_iterators.js'
 import { coerceArray } from './utilities/coerceArray.js'
 import { countArguments } from './utilities/countArguments.js'
-import { downgrade } from './utilities/downgrade.js'
+import { downgrade, precoerceNumber } from './utilities/downgrade.js'
 
 /**
  * Provides a simple way to compile logic into a function that can be run.
@@ -194,7 +194,7 @@ function buildString (method, buildState = {}) {
     }
 
     let lower = method[func]
-    if (!lower || typeof lower !== 'object') lower = [lower]
+    if ((!lower || typeof lower !== 'object') && (typeof engine.methods[func].traverse === 'undefined' || engine.methods[func].traverse)) lower = [lower]
 
     if (engine.methods[func] && engine.methods[func].compile) {
       let str = engine.methods[func].compile(lower, buildState)
@@ -308,12 +308,12 @@ function processBuiltString (method, str, buildState) {
     str = str.replace(`__%%%${x}%%%__`, item)
   })
 
-  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { let prev; const result = ${str}; return result }`
+  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { let prev; const result = ${str}; return result }`
   // console.log(str)
   // console.log(final)
   // eslint-disable-next-line no-eval
   return Object.assign(
-    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade), {
+    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber), {
       [Sync]: !buildState.asyncDetected,
       aboveDetected: typeof str === 'string' && str.includes(', above')
     })

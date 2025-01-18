@@ -160,6 +160,12 @@
         "data": null
     },
     {
+        "description": "Addition with Array from context produces NaN",
+        "rule": { "+": [{ "val": "x" }, 1] },
+        "result": { "error": "NaN" },
+        "data": { "x": [1] }
+    },
+    {
         "description": "Addition with Object produces NaN",
         "rule": { "+": [{ "val": "x" }, 1] },
         "result": { "error": "NaN" },
