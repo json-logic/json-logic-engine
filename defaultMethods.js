@@ -111,7 +111,7 @@ const defaultMethods = {
     if (type === 'NaN') return Number.NaN
     return { error: type }
   },
-  throws: (item) => {
+  panic: (item) => {
     if (Array.isArray(item)) item = item[0]
     if (Number.isNaN(item)) throw new Error('NaN was returned from expression')
     if (item && item.error) throw item.error
@@ -967,7 +967,7 @@ defaultMethods['!!'].compile = function (data, buildState) {
 defaultMethods.none.deterministic = defaultMethods.some.deterministic
 
 // @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
-defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = defaultMethods.error.optimizeUnary = defaultMethods.throws.optimizeUnary = true
+defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = defaultMethods.error.optimizeUnary = defaultMethods.panic.optimizeUnary = true
 
 export default {
   ...defaultMethods,
