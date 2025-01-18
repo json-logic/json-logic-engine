@@ -66,12 +66,19 @@ const defaultMethods = {
   },
   '*': (data) => {
     let res = 1
-    for (let i = 0; i < data.length; i++) res *= +data[i]
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res *= +data[i]
+    }
     return res
   },
   '/': (data) => {
+    if (data[0] && typeof data[0] === 'object') return Number.NaN
     let res = +data[0]
-    for (let i = 1; i < data.length; i++) res /= +data[i]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res /= +data[i]
+    }
     return res
   },
   '-': (data) => {
@@ -79,14 +86,22 @@ const defaultMethods = {
     if (typeof data === 'string') return -data
     if (typeof data === 'number') return -data
     if (typeof data === 'boolean') return -data
+    if (typeof data === 'object' && !Array.isArray(data)) return Number.NaN
     if (data.length === 1) return -data[0]
     let res = data[0]
-    for (let i = 1; i < data.length; i++) res -= +data[i]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res -= +data[i]
+    }
     return res
   },
   '%': (data) => {
+    if (data[0] && typeof data[0] === 'object') return Number.NaN
     let res = +data[0]
-    for (let i = 1; i < data.length; i++) res %= +data[i]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res %= +data[i]
+    }
     return res
   },
   error: (type) => {
