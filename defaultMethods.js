@@ -247,49 +247,6 @@ const defaultMethods = {
   xor: ([a, b]) => a ^ b,
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
-  '??': {
-    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    method: (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
-
-      let item
-      for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (downgrade(item) !== null && item !== undefined) return item
-      }
-
-      if (item === undefined) return null
-      return item
-    },
-    asyncMethod: async (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
-
-      let item
-      for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (downgrade(item) !== null && item !== undefined) return item
-      }
-
-      if (item === undefined) return null
-      return item
-    },
-    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
-    compile: (data, buildState) => {
-      if (!chainingSupported) return false
-      if (Array.isArray(data) && data.length) {
-        return `(${data.map((i, x) => {
-        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return buildString(i, buildState)
-        return 'downgrade(' + buildString(i, buildState) + ')'
-      }).join(' ?? ')})`
-      }
-      return `(${buildString(data, buildState)}).reduce((a,b) => downgrade(a) ?? b, null)`
-    },
-    traverse: false
-  },
   or: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
@@ -326,6 +283,8 @@ const defaultMethods = {
     },
     traverse: false
   },
+  '??': defineCoalesce(),
+  try: defineCoalesce(downgrade),
   and: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
@@ -716,6 +675,60 @@ const defaultMethods = {
       )
       return result
     }
+  }
+}
+
+/**
+ * Defines separate coalesce methods
+ */
+function defineCoalesce (func) {
+  let downgrade
+  if (func) downgrade = func
+  else downgrade = (a) => a
+
+  return {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
+    method: (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (downgrade(item) !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    asyncMethod: async (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (downgrade(item) !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    compile: (data, buildState) => {
+      if (!chainingSupported) return false
+      const funcCall = func ? 'downgrade' : ''
+      if (Array.isArray(data) && data.length) {
+        return `(${data.map((i, x) => {
+        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return buildString(i, buildState)
+        return `${funcCall}(` + buildString(i, buildState) + ')'
+      }).join(' ?? ')})`
+      }
+      return `(${buildString(data, buildState)}).reduce((a,b) => ${funcCall}(a) ?? b, null)`
+    },
+    traverse: false
   }
 }
 
