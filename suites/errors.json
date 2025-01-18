@@ -11,5 +11,17 @@
         "rule": { "!!": { "error": "Some error" } },
         "result": true,
         "data": null
+    },
+    {
+        "description": "Coalesce an error",
+        "rule": { "??": [{ "error": "Some error" }, 1] },
+        "result": 1,
+        "data": null
+    },
+    {
+        "description": "Coalesce an emitted error",
+        "rule": { "??": [{ "+": [{ "val": "hello" }]}, 1] },
+        "result": 1,
+        "data": { "hello": "world" }
     }
 ]

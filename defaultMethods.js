@@ -8,6 +8,7 @@ import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
 import InvalidControlInput from './errors/InvalidControlInput.js'
 import legacyMethods from './legacy.js'
+import { downgrade } from './utilities/downgrade.js'
 
 function isDeterministic (method, engine, buildState) {
   if (Array.isArray(method)) {
@@ -255,7 +256,7 @@ const defaultMethods = {
       let item
       for (let i = 0; i < arr.length; i++) {
         item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (item !== null && item !== undefined) return item
+        if (downgrade(item) !== null && item !== undefined) return item
       }
 
       if (item === undefined) return null
@@ -269,7 +270,7 @@ const defaultMethods = {
       let item
       for (let i = 0; i < arr.length; i++) {
         item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (item !== null && item !== undefined) return item
+        if (downgrade(item) !== null && item !== undefined) return item
       }
 
       if (item === undefined) return null
@@ -278,8 +279,13 @@ const defaultMethods = {
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
       if (!chainingSupported) return false
-      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' ?? ')})`
-      return `(${buildString(data, buildState)}).reduce((a,b) => a ?? b, null)`
+      if (Array.isArray(data) && data.length) {
+        return `(${data.map((i, x) => {
+        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return buildString(i, buildState)
+        return 'downgrade(' + buildString(i, buildState) + ')'
+      }).join(' ?? ')})`
+      }
+      return `(${buildString(data, buildState)}).reduce((a,b) => downgrade(a) ?? b, null)`
     },
     traverse: false
   },
