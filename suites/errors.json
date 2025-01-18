@@ -1,0 +1,15 @@
+[
+    "# Some error tests",
+    {
+        "description": "NaN is Truthy",
+        "rule": { "!!": { "error": "NaN" } },
+        "result": true,
+        "data": null
+    },
+    {
+        "description": "Arbitrary error is Truthy",
+        "rule": { "!!": { "error": "Some error" } },
+        "result": true,
+        "data": null
+    }
+]

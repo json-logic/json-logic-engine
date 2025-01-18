@@ -138,7 +138,25 @@
     {
         "description": "Addition with val",
         "rule": { "+": [{ "val": "x" }, { "val": "y" }] },
-        "data": { "x": 1, "y": 2 },
-        "result": 3
+        "result": 3,
+        "data": { "x": 1, "y": 2 }
+    },
+    {
+        "description": "Addition with NaN",
+        "rule": { "+": [{ "error": "NaN" }, 1] },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Addition with string produces NaN",
+        "rule": { "+": ["Hey", 1] },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Addition with Array produces NaN",
+        "rule": { "+": [[1], 1] },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]

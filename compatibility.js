@@ -24,6 +24,7 @@ const all = {
 
 function truthy (value) {
   if (Array.isArray(value) && value.length === 0) return false
+  if (Number.isNaN(value)) return true
   return value
 }
 

@@ -56,8 +56,12 @@ const defaultMethods = {
     if (typeof data === 'string') return +data
     if (typeof data === 'number') return +data
     if (typeof data === 'boolean') return +data
+    if (typeof data === 'object' && !Array.isArray(data)) return Number.NaN
     let res = 0
-    for (let i = 0; i < data.length; i++) res += +data[i]
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res += +data[i]
+    }
     return res
   },
   '*': (data) => {
@@ -84,6 +88,11 @@ const defaultMethods = {
     let res = +data[0]
     for (let i = 1; i < data.length; i++) res %= +data[i]
     return res
+  },
+  error: (type) => {
+    if (Array.isArray(type)) type = type[0]
+    if (type === 'NaN') return Number.NaN
+    return { error: type }
   },
   max: (data) => Math.max(...data),
   min: (data) => Math.min(...data),
@@ -855,9 +864,14 @@ defaultMethods['==='].compile = function (data, buildState) {
 defaultMethods['+'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
     return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
+      .map((i) => {
+        // Todo: Actually make this correct, this is a decent optimization but
+        // does not coerce the built string.
+        if (Array.isArray(i)) return 'NaN'
+        return `(+${buildString(i, buildState)})`
+      })
       .join(' + ')})`
-  } else if (typeof data === 'string' || typeof data === 'number') {
+  } else if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
     return `(+${buildString(data, buildState)})`
   } else {
     return `([].concat(${buildString(
@@ -943,12 +957,12 @@ defaultMethods.not = defaultMethods['!']
 // @ts-ignore Allow custom attribute
 defaultMethods['!!'].compile = function (data, buildState) {
   if (Array.isArray(data)) return buildState.compile`(!!engine.truthy(${data[0]}))`
-  return `(!!engine.truthy(${data}))`
+  return buildState.compile`(!!engine.truthy(${data}))`
 }
 defaultMethods.none.deterministic = defaultMethods.some.deterministic
 
 // @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
-defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = true
+defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = defaultMethods.error.optimizeUnary = true
 
 export default {
   ...defaultMethods,

@@ -146,5 +146,23 @@
         "rule": { "/": [{ "val": "x" }, { "val": "y" }] },
         "data": { "x": 8, "y": 2 },
         "result": 4
+    },
+    {
+        "description": "Divide by Zero",
+        "rule": { "/": [0, 0] },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Divide by NaN",
+        "rule": { "/": [1, { "error": "NaN" }] },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Divide with String produces NaN",
+        "rule": { "/": [1, "a"] },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]

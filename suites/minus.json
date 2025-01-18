@@ -114,5 +114,17 @@
         "rule": { "-": [{ "val": "x" }, { "val": "y" }] },
         "data": { "x": 1, "y": 2 },
         "result": -1
+    },
+    {
+        "description": "Subtraction with NaN",
+        "rule": { "-": [{ "error": "NaN" }, 1] },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Subtraction with string produces NaN",
+        "rule": { "-": ["Hey", 1] },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]
