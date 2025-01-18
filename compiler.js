@@ -308,7 +308,7 @@ function processBuiltString (method, str, buildState) {
     str = str.replace(`__%%%${x}%%%__`, item)
   })
 
-  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { let prev; const result = ${str}; return result }`
+  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { ${str.includes('prev') ? 'let prev;' : ''} const result = ${str}; return result }`
   // console.log(str)
   // console.log(final)
   // eslint-disable-next-line no-eval

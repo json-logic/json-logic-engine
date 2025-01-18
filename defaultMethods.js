@@ -404,12 +404,12 @@ const defaultMethods = {
     },
     compile: (data, buildState) => {
       function wrapNull (data) {
-        if (!chainingSupported) return buildState.compile`(methods.preventFunctions(((a) => a === null || a === undefined ? null : a)(${data})))`
-        return buildState.compile`(methods.preventFunctions(${data} ?? null))`
+        let res
+        if (!chainingSupported) res = buildState.compile`(((a) => a === null || a === undefined ? null : a)(${data}))`
+        else res = buildState.compile`(${data} ?? null)`
+        if (!buildState.engine.allowFunctions) res = buildState.compile`(typeof (prev = ${res}) === 'function' ? null : prev)`
+        return res
       }
-
-      if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
-      else buildState.methods.preventFunctions = a => a
 
       if (typeof data === 'object' && !Array.isArray(data)) {
         // If the input for this function can be inlined, we will do so right here.

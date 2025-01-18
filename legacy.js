@@ -116,19 +116,20 @@ const legacyMethods = {
 
         const pieces = splitPathMemoized(key)
 
-        if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
-        else buildState.methods.preventFunctions = a => a
-
         // support older versions of node
         if (!chainingSupported) {
-          return `(methods.preventFunctions(((a,b) => (typeof a === 'undefined' || a === null) ? b : a)(${pieces.reduce(
+          const res = `((((a,b) => (typeof a === 'undefined' || a === null) ? b : a)(${pieces.reduce(
               (text, i) => `(${text}||0)[${JSON.stringify(i)}]`,
               '(context||0)'
             )}, ${buildString(defaultValue, buildState)})))`
+          if (buildState.engine.allowFunctions) return res
+          return `(typeof (prev = ${res}) === 'function' ? null : prev)`
         }
-        return `(methods.preventFunctions(context${pieces
+        const res = `(context${pieces
             .map((i) => `?.[${JSON.stringify(i)}]`)
-            .join('')} ?? ${buildString(defaultValue, buildState)}))`
+            .join('')} ?? ${buildString(defaultValue, buildState)})`
+        if (buildState.engine.allowFunctions) return res
+        return `(typeof (prev = ${res}) === 'function' ? null : prev)`
       }
       return false
     }
