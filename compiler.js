@@ -310,7 +310,7 @@ function processBuiltString (method, str, buildState) {
 
   const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { let prev; const result = ${str}; return result }`
   // console.log(str)
-  console.log(final)
+  // console.log(final)
   // eslint-disable-next-line no-eval
   return Object.assign(
     (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade), {
