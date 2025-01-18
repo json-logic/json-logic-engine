@@ -170,5 +170,17 @@
         "rule": { "+": [{ "val": "x" }, 1] },
         "result": { "error": "NaN" },
         "data": { "x": {} }
+    },
+    {
+        "description": "Plus Operator with Single Operand, Invalid String Produces NaN",
+        "rule": { "+": "Hello" },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Plus Operator with Single Operand, Array Input Produces NaN",
+        "rule": { "+": [[1]] },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]

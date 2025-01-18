@@ -23,5 +23,11 @@
         "rule": { "??": [{ "+": [{ "val": "hello" }]}, 1] },
         "result": 1,
         "data": { "hello": "world" }
+    },
+    {
+        "description": "Errors are just data",
+        "rule": { "??": [{ "val": "x" }, 1]},
+        "data": { "x": { "error": "Some error" }},
+        "result": 1
     }
 ]

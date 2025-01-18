@@ -169,5 +169,11 @@
         "rule": { "%": ["Hey", 1] },
         "result": { "error": "NaN" },
         "data": null
+    },
+    {
+        "description": "Modulo with array produces NaN",
+        "rule": { "%": [[1], 1] },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]

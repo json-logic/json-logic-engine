@@ -164,5 +164,11 @@
         "rule": { "/": [1, "a"] },
         "result": { "error": "NaN" },
         "data": null
+    },
+    {
+        "description": "Divide with Array produces NaN",
+        "rule": { "/": [1, [1]] },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]
