@@ -8,7 +8,6 @@ import declareSync from './utilities/declareSync.js'
 import { buildAsync } from './compiler.js'
 import omitUndefined from './utilities/omitUndefined.js'
 import { optimize } from './async_optimizer.js'
-import { applyPatches } from './compatibility.js'
 import { coerceArray } from './utilities/coerceArray.js'
 
 /**
@@ -24,7 +23,7 @@ class AsyncLogicEngine {
    * - In mainline: empty arrays are falsey; in our implementation, they are truthy.
    *
    * @param {Object} methods An object that stores key-value pairs between the names of the commands & the functions they execute.
-   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: boolean, permissive?: boolean, compatible?: boolean }} options
+   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: boolean, permissive?: boolean }} options
    */
   constructor (
     methods = defaultMethods,
@@ -37,8 +36,6 @@ class AsyncLogicEngine {
     this.disableInterpretedOptimization = options.disableInterpretedOptimization
     this.async = true
     this.fallback = new LogicEngine(methods, options)
-
-    if (options.compatible) applyPatches(this)
 
     this.optimizedMap = new WeakMap()
     this.missesSinceSeen = 0
@@ -58,6 +55,8 @@ class AsyncLogicEngine {
    * @returns
    */
   truthy (value) {
+    if (Array.isArray(value) && value.length === 0) return false
+    if (Number.isNaN(value)) return true
     return value
   }
 
@@ -216,5 +215,4 @@ class AsyncLogicEngine {
     return logic
   }
 }
-Object.assign(AsyncLogicEngine.prototype.truthy, { [OriginalImpl]: true })
 export default AsyncLogicEngine

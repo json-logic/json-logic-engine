@@ -52,6 +52,7 @@ function isSyncDeep (method, engine, buildState) {
   return true
 }
 
+const oldAll = createArrayIterativeMethod('every', true)
 const defaultMethods = {
   '+': (data) => {
     if (!data) return 0
@@ -278,17 +279,13 @@ const defaultMethods = {
     },
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy[OriginalImpl]) {
-        let res = buildState.compile``
-        if (Array.isArray(data) && data.length) {
-          for (let i = 0; i < data.length; i++) res = buildState.compile`${res} engine.truthy(prev = ${data[i]}) ? prev : `
-          res = buildState.compile`${res} prev`
-          return res
-        }
-        return false
+      let res = buildState.compile``
+      if (Array.isArray(data) && data.length) {
+        for (let i = 0; i < data.length; i++) res = buildState.compile`${res} engine.truthy(prev = ${data[i]}) ? prev : `
+        res = buildState.compile`${res} prev`
+        return res
       }
-      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
-      return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
+      return false
     },
     lazy: true
   },
@@ -323,17 +320,13 @@ const defaultMethods = {
     lazy: true,
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy[OriginalImpl]) {
-        let res = buildState.compile``
-        if (Array.isArray(data) && data.length) {
-          for (let i = 0; i < data.length; i++) res = buildState.compile`${res} !engine.truthy(prev = ${data[i]}) ? prev : `
-          res = buildState.compile`${res} prev`
-          return res
-        }
-        return false
+      let res = buildState.compile``
+      if (Array.isArray(data) && data.length) {
+        for (let i = 0; i < data.length; i++) res = buildState.compile`${res} !engine.truthy(prev = ${data[i]}) ? prev : `
+        res = buildState.compile`${res} prev`
+        return res
       }
-      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
-      return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
+      return false
     }
   },
   substr: ([string, from, end]) => {
@@ -441,7 +434,25 @@ const defaultMethods = {
   },
   map: createArrayIterativeMethod('map'),
   some: createArrayIterativeMethod('some', true),
-  all: createArrayIterativeMethod('every', true),
+  all: {
+    [Sync]: oldAll[Sync],
+    method: (args, context, above, engine) => {
+      if (Array.isArray(args)) {
+        const first = engine.run(args[0], context, above)
+        if (Array.isArray(first) && first.length === 0) return false
+      }
+      return oldAll.method(args, context, above, engine)
+    },
+    asyncMethod: async (args, context, above, engine) => {
+      if (Array.isArray(args)) {
+        const first = await engine.run(args[0], context, above)
+        if (Array.isArray(first) && first.length === 0) return false
+      }
+      return oldAll.asyncMethod(args, context, above, engine)
+    },
+    deterministic: oldAll.deterministic,
+    lazy: oldAll.lazy
+  },
   none: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     lazy: true,
@@ -450,12 +461,7 @@ const defaultMethods = {
       return !defaultMethods.some.method(val, context, above, engine)
     },
     asyncMethod: async (val, context, above, engine) => {
-      return !(await defaultMethods.some.asyncMethod(
-        val,
-        context,
-        above,
-        engine
-      ))
+      return !(await defaultMethods.some.asyncMethod(val, context, above, engine))
     },
     compile: (data, buildState) => {
       const result = defaultMethods.some.compile(data, buildState)

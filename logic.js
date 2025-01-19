@@ -7,7 +7,6 @@ import { build } from './compiler.js'
 import declareSync from './utilities/declareSync.js'
 import omitUndefined from './utilities/omitUndefined.js'
 import { optimize } from './optimizer.js'
-import { applyPatches } from './compatibility.js'
 import { coerceArray } from './utilities/coerceArray.js'
 import { OriginalImpl } from './constants.js'
 
@@ -17,14 +16,9 @@ import { OriginalImpl } from './constants.js'
 class LogicEngine {
   /**
    * Creates a new instance of the Logic Engine.
-   *
-   * "compatible" applies a few patches to make it compatible with the preferences of mainline JSON Logic.
-   * The main changes are:
-   * - In mainline: "all" will return false if the array is empty; by default, we return true.
-   * - In mainline: empty arrays are falsey; in our implementation, they are truthy.
-   *
+  *
    * @param {Object} methods An object that stores key-value pairs between the names of the commands & the functions they execute.
-   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean, permissive?: boolean, compatible?: boolean }} options
+   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean, permissive?: boolean }} options
    */
   constructor (
     methods = defaultMethods,
@@ -36,8 +30,6 @@ class LogicEngine {
 
     this.optimizedMap = new WeakMap()
     this.missesSinceSeen = 0
-
-    if (options.compatible) applyPatches(this)
 
     /** @type {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean }} */
     this.options = { disableInline: options.disableInline, disableInterpretedOptimization: options.disableInterpretedOptimization }
@@ -54,6 +46,8 @@ class LogicEngine {
    * @returns
    */
   truthy (value) {
+    if (Array.isArray(value) && value.length === 0) return false
+    if (Number.isNaN(value)) return true
     return value
   }
 
@@ -186,5 +180,4 @@ class LogicEngine {
     return logic
   }
 }
-Object.assign(LogicEngine.prototype.truthy, { [OriginalImpl]: true })
 export default LogicEngine
