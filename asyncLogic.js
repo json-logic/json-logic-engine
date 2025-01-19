@@ -173,10 +173,10 @@ class AsyncLogicEngine {
     // END OPTIMIZER BLOCK //
 
     if (Array.isArray(logic)) {
-      const res = []
+      const res = new Array(logic.length)
       // Note: In the past, it used .map and Promise.all; this can be changed in the future
       // if we want it to run concurrently.
-      for (let i = 0; i < logic.length; i++) res.push(await this.run(logic[i], data, { above }))
+      for (let i = 0; i < logic.length; i++) res[i] = await this.run(logic[i], data, { above })
       return res
     }
 

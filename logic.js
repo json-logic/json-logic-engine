@@ -154,8 +154,8 @@ class LogicEngine {
     // END OPTIMIZER BLOCK //
 
     if (Array.isArray(logic)) {
-      const res = []
-      for (let i = 0; i < logic.length; i++) res.push(this.run(logic[i], data, { above }))
+      const res = new Array(logic.length)
+      for (let i = 0; i < logic.length; i++) res[i] = this.run(logic[i], data, { above })
       return res
     }
 
