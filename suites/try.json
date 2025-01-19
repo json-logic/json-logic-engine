@@ -1,0 +1,21 @@
+[
+    "# Collection of Tests for Try",
+    {
+        "description": "Coalesce an error",
+        "rule": { "try": [{ "error": "Some error" }, 1] },
+        "result": 1,
+        "data": null
+    },
+    {
+        "description": "Coalesce an error emitted from an operator",
+        "rule": { "try": [{ "/": [0, 0]}, 1] },
+        "result": 1,
+        "data": { "hello": "world" }
+    },
+    {
+        "description": "Coalesce an error pulled from context; errors are just data.",
+        "rule": { "try": [{ "val": "x" }, 1]},
+        "data": { "x": { "error": "Some error" }},
+        "result": 1
+    }
+]

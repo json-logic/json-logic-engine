@@ -1,0 +1,20 @@
+[
+    {
+        "description": "Can promote a soft error to a hard error with panic",
+        "rule": { "panic": { "error": "Some error" } },
+        "error": true,
+        "data": null
+    },
+    {
+        "description": "Panic with an error emitted from an operator",
+        "rule": { "panic": [{ "/": [1, 0] }] },
+        "error": true,
+        "data": null
+    },
+    {
+        "description": "Panic with an error pulled from context",
+        "rule": { "panic": [{ "val": "x" }] },
+        "error": true,
+        "data": { "x": { "error": "Some error" } }
+    }
+]
