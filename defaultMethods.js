@@ -433,7 +433,20 @@ const defaultMethods = {
     }
   },
   map: createArrayIterativeMethod('map'),
-  some: createArrayIterativeMethod('some', true),
+  some: {
+    ...createArrayIterativeMethod('some', true),
+    method: (input, context, above, engine) => {
+      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      let [selector, mapper] = input
+
+      selector = engine.run(selector, context, { above }) || []
+
+      for (let i = 0; i < selector.length; i++) {
+        if (engine.truthy(engine.run(mapper, selector[i], { above: [selector, context, above] }))) return true
+      }
+      return false
+    }
+  },
   all: {
     [Sync]: oldAll[Sync],
     method: (args, context, above, engine) => {
@@ -441,7 +454,13 @@ const defaultMethods = {
         const first = engine.run(args[0], context, above)
         if (Array.isArray(first) && first.length === 0) return false
       }
-      return oldAll.method(args, context, above, engine)
+      let [selector, mapper] = args
+      selector = engine.run(selector, context, { above }) || []
+
+      for (let i = 0; i < selector.length; i++) {
+        if (!engine.truthy(engine.run(mapper, selector[i], { above: [selector, context, above] }))) return false
+      }
+      return true
     },
     asyncMethod: async (args, context, above, engine) => {
       if (Array.isArray(args)) {
@@ -456,13 +475,8 @@ const defaultMethods = {
   none: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     lazy: true,
-    // todo: add async build & build
-    method: (val, context, above, engine) => {
-      return !defaultMethods.some.method(val, context, above, engine)
-    },
-    asyncMethod: async (val, context, above, engine) => {
-      return !(await defaultMethods.some.asyncMethod(val, context, above, engine))
-    },
+    method: (val, context, above, engine) => !defaultMethods.some.method(val, context, above, engine),
+    asyncMethod: async (val, context, above, engine) => !(await defaultMethods.some.asyncMethod(val, context, above, engine)),
     compile: (data, buildState) => {
       const result = defaultMethods.some.compile(data, buildState)
       return result ? buildState.compile`!(${result})` : false
@@ -480,7 +494,6 @@ const defaultMethods = {
     }
     return result
   },
-  every: createArrayIterativeMethod('every'),
   filter: createArrayIterativeMethod('filter', true),
   reduce: {
     deterministic: (data, buildState) => {
@@ -768,26 +781,21 @@ function createArrayIterativeMethod (name, useTruthy = false) {
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw new InvalidControlInput(input)
       let [selector, mapper] = input
-      selector =
-        engine.run(selector, context, {
-          above
-        }) || []
+
+      selector = engine.run(selector, context, { above }) || []
 
       return selector[name]((i, index) => {
-        const result = engine.run(mapper, i, {
-          above: [{ iterator: selector, index }, context, above]
-        })
+        if (!mapper || typeof mapper !== 'object') return useTruthy ? engine.truthy(mapper) : mapper
+        const result = engine.run(mapper, i, { above: [{ iterator: selector, index }, context, above] })
         return useTruthy ? engine.truthy(result) : result
       })
     },
     asyncMethod: async (input, context, above, engine) => {
       if (!Array.isArray(input)) throw new InvalidControlInput(input)
       let [selector, mapper] = input
-      selector =
-        (await engine.run(selector, context, {
-          above
-        })) || []
+      selector = (await engine.run(selector, context, { above })) || []
       return asyncIterators[name](selector, async (i, index) => {
+        if (!mapper || typeof mapper !== 'object') return useTruthy ? engine.truthy(mapper) : mapper
         const result = await engine.run(mapper, i, {
           above: [{ iterator: selector, index }, context, above]
         })
@@ -822,6 +830,8 @@ function createArrayIterativeMethod (name, useTruthy = false) {
     lazy: true
   }
 }
+
+defaultMethods.every = defaultMethods.all
 defaultMethods['?:'] = defaultMethods.if
 // declare all of the functions here synchronous
 Object.keys(defaultMethods).forEach((item) => {
