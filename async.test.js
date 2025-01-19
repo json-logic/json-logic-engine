@@ -547,6 +547,33 @@ modes.forEach((logic) => {
       })
       expect(answer).toStrictEqual([1, 3])
     })
+
+    test('async ??', async () => {
+      logic.addMethod('asyncAdd', async ([a, b]) => a + b, { sync: false })
+
+      const answer = await logic.run({
+        '??': [
+          null,
+          { asyncAdd: [{ val: [] }, 2] }
+        ]
+      }, 1)
+
+      expect(answer).toStrictEqual(3)
+    })
+
+    test('async reduce', async () => {
+      logic.addMethod('asyncAdd', async ([a, b]) => a + b, { sync: false })
+
+      const answer = await logic.build({
+        reduce: [
+          [1, 2, 3],
+          { asyncAdd: [{ val: 'accumulator' }, { val: 'current' }] },
+          0
+        ]
+      })
+
+      expect(await answer()).toStrictEqual(6)
+    })
   })
 
   describe('eachKey', () => {
