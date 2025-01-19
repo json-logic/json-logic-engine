@@ -19,11 +19,12 @@ const all = {
     return oldAll.asyncMethod(args, context, above, engine)
   },
   deterministic: oldAll.deterministic,
-  traverse: oldAll.traverse
+  lazy: oldAll.lazy
 }
 
 function truthy (value) {
   if (Array.isArray(value) && value.length === 0) return false
+  if (Number.isNaN(value)) return true
   return value
 }
 

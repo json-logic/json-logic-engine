@@ -8,6 +8,7 @@ import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
 import InvalidControlInput from './errors/InvalidControlInput.js'
 import legacyMethods from './legacy.js'
+import { downgrade } from './utilities/downgrade.js'
 
 function isDeterministic (method, engine, buildState) {
   if (Array.isArray(method)) {
@@ -20,11 +21,12 @@ function isDeterministic (method, engine, buildState) {
     if (engine.isData(method, func)) return true
     if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
 
-    if (engine.methods[func].traverse === false) {
+    if (engine.methods[func].lazy) {
       return typeof engine.methods[func].deterministic === 'function'
         ? engine.methods[func].deterministic(lower, buildState)
         : engine.methods[func].deterministic
     }
+
     return typeof engine.methods[func].deterministic === 'function'
       ? engine.methods[func].deterministic(lower, buildState)
       : engine.methods[func].deterministic &&
@@ -43,7 +45,7 @@ function isSyncDeep (method, engine, buildState) {
     const lower = method[func]
     if (engine.isData(method, func)) return true
     if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
-    if (engine.methods[func].traverse === false) return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync]
+    if (engine.methods[func].lazy) return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync]
     return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync] && isSyncDeep(lower, engine, buildState)
   }
 
@@ -56,18 +58,29 @@ const defaultMethods = {
     if (typeof data === 'string') return +data
     if (typeof data === 'number') return +data
     if (typeof data === 'boolean') return +data
+    if (typeof data === 'object' && !Array.isArray(data)) return Number.NaN
     let res = 0
-    for (let i = 0; i < data.length; i++) res += +data[i]
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res += +data[i]
+    }
     return res
   },
   '*': (data) => {
     let res = 1
-    for (let i = 0; i < data.length; i++) res *= +data[i]
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res *= +data[i]
+    }
     return res
   },
   '/': (data) => {
+    if (data[0] && typeof data[0] === 'object') return Number.NaN
     let res = +data[0]
-    for (let i = 1; i < data.length; i++) res /= +data[i]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res /= +data[i]
+    }
     return res
   },
   '-': (data) => {
@@ -75,21 +88,41 @@ const defaultMethods = {
     if (typeof data === 'string') return -data
     if (typeof data === 'number') return -data
     if (typeof data === 'boolean') return -data
+    if (typeof data === 'object' && !Array.isArray(data)) return Number.NaN
+    if (data[0] && typeof data[0] === 'object') return Number.NaN
     if (data.length === 1) return -data[0]
     let res = data[0]
-    for (let i = 1; i < data.length; i++) res -= +data[i]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res -= +data[i]
+    }
     return res
   },
   '%': (data) => {
+    if (data[0] && typeof data[0] === 'object') return Number.NaN
     let res = +data[0]
-    for (let i = 1; i < data.length; i++) res %= +data[i]
+    for (let i = 1; i < data.length; i++) {
+      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      res %= +data[i]
+    }
     return res
+  },
+  error: (type) => {
+    if (Array.isArray(type)) type = type[0]
+    if (type === 'NaN') return Number.NaN
+    return { error: type }
+  },
+  panic: (item) => {
+    if (Array.isArray(item)) item = item[0]
+    if (Number.isNaN(item)) throw new Error('NaN was returned from expression')
+    if (item && item.error) throw item.error
+    return item
   },
   max: (data) => Math.max(...data),
   min: (data) => Math.min(...data),
   in: ([item, array]) => (array || []).includes(item),
   preserve: {
-    traverse: false,
+    lazy: true,
     method: declareSync((i) => i, true),
     [Sync]: () => true
   },
@@ -150,7 +183,7 @@ const defaultMethods = {
 
       return engine.run(onFalse, context, { above })
     },
-    traverse: false
+    lazy: true
   },
   '<': (args) => {
     if (args.length === 2) return args[0] < args[1]
@@ -215,44 +248,6 @@ const defaultMethods = {
   xor: ([a, b]) => a ^ b,
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
-  '??': {
-    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    method: (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
-
-      let item
-      for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (item !== null && item !== undefined) return item
-      }
-
-      if (item === undefined) return null
-      return item
-    },
-    asyncMethod: async (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
-
-      let item
-      for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (item !== null && item !== undefined) return item
-      }
-
-      if (item === undefined) return null
-      return item
-    },
-    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
-    compile: (data, buildState) => {
-      if (!chainingSupported) return false
-      if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' ?? ')})`
-      return `(${buildString(data, buildState)}).reduce((a,b) => a ?? b, null)`
-    },
-    traverse: false
-  },
   or: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
@@ -283,12 +278,22 @@ const defaultMethods = {
     },
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy[OriginalImpl]) return false
+      if (!buildState.engine.truthy[OriginalImpl]) {
+        let res = buildState.compile``
+        if (Array.isArray(data) && data.length) {
+          for (let i = 0; i < data.length; i++) res = buildState.compile`${res} engine.truthy(prev = ${data[i]}) ? prev : `
+          res = buildState.compile`${res} prev`
+          return res
+        }
+        return false
+      }
       if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
       return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
     },
-    traverse: false
+    lazy: true
   },
+  '??': defineCoalesce(),
+  try: defineCoalesce(downgrade),
   and: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
@@ -315,10 +320,18 @@ const defaultMethods = {
       }
       return item
     },
-    traverse: false,
+    lazy: true,
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!buildState.engine.truthy[OriginalImpl]) return false
+      if (!buildState.engine.truthy[OriginalImpl]) {
+        let res = buildState.compile``
+        if (Array.isArray(data) && data.length) {
+          for (let i = 0; i < data.length; i++) res = buildState.compile`${res} !engine.truthy(prev = ${data[i]}) ? prev : `
+          res = buildState.compile`${res} prev`
+          return res
+        }
+        return false
+      }
       if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' && ')})`
       return `(${buildString(data, buildState)}).reduce((a,b) => a&&b, true)`
     }
@@ -340,7 +353,6 @@ const defaultMethods = {
       const result = defaultMethods.val.method(key, context, above, engine, Unfound)
       return result !== Unfound
     },
-    traverse: true,
     deterministic: false
   },
   val: {
@@ -392,12 +404,12 @@ const defaultMethods = {
     },
     compile: (data, buildState) => {
       function wrapNull (data) {
-        if (!chainingSupported) return buildState.compile`(methods.preventFunctions(((a) => a === null || a === undefined ? null : a)(${data})))`
-        return buildState.compile`(methods.preventFunctions(${data} ?? null))`
+        let res
+        if (!chainingSupported) res = buildState.compile`(((a) => a === null || a === undefined ? null : a)(${data}))`
+        else res = buildState.compile`(${data} ?? null)`
+        if (!buildState.engine.allowFunctions) res = buildState.compile`(typeof (prev = ${res}) === 'function' ? null : prev)`
+        return res
       }
-
-      if (!buildState.engine.allowFunctions) buildState.methods.preventFunctions = a => typeof a === 'function' ? null : a
-      else buildState.methods.preventFunctions = a => a
 
       if (typeof data === 'object' && !Array.isArray(data)) {
         // If the input for this function can be inlined, we will do so right here.
@@ -432,7 +444,7 @@ const defaultMethods = {
   all: createArrayIterativeMethod('every', true),
   none: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    traverse: false,
+    lazy: true,
     // todo: add async build & build
     method: (val, context, above, engine) => {
       return !defaultMethods.some.method(val, context, above, engine)
@@ -568,7 +580,7 @@ const defaultMethods = {
         defaultValue
       )
     },
-    traverse: false
+    lazy: true
   },
   '!': (value, _1, _2, engine) => Array.isArray(value) ? !engine.truthy(value[0]) : !engine.truthy(value),
   '!!': (value, _1, _2, engine) => Boolean(Array.isArray(value) ? engine.truthy(value[0]) : engine.truthy(value)),
@@ -586,7 +598,6 @@ const defaultMethods = {
       return res
     },
     deterministic: true,
-    traverse: true,
     optimizeUnary: true,
     compile: (data, buildState) => {
       if (typeof data === 'string') return JSON.stringify(data)
@@ -599,7 +610,7 @@ const defaultMethods = {
   },
   keys: ([obj]) => typeof obj === 'object' ? Object.keys(obj) : [],
   pipe: {
-    traverse: false,
+    lazy: true,
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (args, context, above, engine) => {
       if (!Array.isArray(args)) throw new Error('Data for pipe must be an array')
@@ -626,7 +637,7 @@ const defaultMethods = {
     }
   },
   eachKey: {
-    traverse: false,
+    lazy: true,
     [Sync]: (data, buildState) => isSyncDeep(Object.values(data[Object.keys(data)[0]]), buildState.engine, buildState),
     method: (object, context, above, engine) => {
       const result = Object.keys(object).reduce((accumulator, key) => {
@@ -679,6 +690,60 @@ const defaultMethods = {
       )
       return result
     }
+  }
+}
+
+/**
+ * Defines separate coalesce methods
+ */
+function defineCoalesce (func) {
+  let downgrade
+  if (func) downgrade = func
+  else downgrade = (a) => a
+
+  return {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
+    method: (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (downgrade(item) !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    asyncMethod: async (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (downgrade(item) !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    compile: (data, buildState) => {
+      if (!chainingSupported) return false
+      const funcCall = func ? 'downgrade' : ''
+      if (Array.isArray(data) && data.length) {
+        return `(${data.map((i, x) => {
+        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return buildString(i, buildState)
+        return `${funcCall}(` + buildString(i, buildState) + ')'
+      }).join(' ?? ')})`
+      }
+      return `(${buildString(data, buildState)}).reduce((a,b) => ${funcCall}(a) ?? b, null)`
+    },
+    lazy: true
   }
 }
 
@@ -748,7 +813,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
 
       return buildState.compile`(${selector} || [])[${name}]((i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
     },
-    traverse: false
+    lazy: true
   }
 }
 defaultMethods['?:'] = defaultMethods.if
@@ -851,31 +916,27 @@ defaultMethods['==='].compile = function (data, buildState) {
   for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} === ${data[i]})`
   return res
 }
+
+/**
+ * Transforms the operands of the arithmetic operation to numbers.
+ */
+function numberCoercion (i, buildState) {
+  if (Array.isArray(i)) return 'NaN'
+  if (typeof i === 'string' || typeof i === 'number' || typeof i === 'boolean') return `(+${buildString(i, buildState)})`
+  return `(+precoerceNumber(${buildString(i, buildState)}))`
+}
+
 // @ts-ignore Allow custom attribute
 defaultMethods['+'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' + ')})`
-  } else if (typeof data === 'string' || typeof data === 'number') {
-    return `(+${buildString(data, buildState)})`
-  } else {
-    return `([].concat(${buildString(
-      data,
-      buildState
-    )})).reduce((a,b) => (+a)+(+b), 0)`
-  }
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
+  if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `(+${buildString(data, buildState)})`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.reduce((a,b) => (+a)+(+precoerceNumber(b)), 0) : +precoerceNumber(prev))`
 }
 
 // @ts-ignore Allow custom attribute
 defaultMethods['%'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' % ')})`
-  } else {
-    return `(${buildString(data, buildState)}).reduce((a,b) => (+a)%(+b))`
-  }
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' % ')})`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))%(+precoerceNumber(b)))`
 }
 
 // @ts-ignore Allow custom attribute
@@ -886,47 +947,19 @@ defaultMethods.in.compile = function (data, buildState) {
 
 // @ts-ignore Allow custom attribute
 defaultMethods['-'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `${data.length === 1 ? '-' : ''}(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' - ')})`
-  }
-  if (typeof data === 'string' || typeof data === 'number') {
-    return `(-${buildString(data, buildState)})`
-  } else {
-    return `((a=>(a.length===1?a[0]=-a[0]:a)&0||a)([].concat(${buildString(
-      data,
-      buildState
-    )}))).reduce((a,b) => (+a)-(+b))`
-  }
+  if (Array.isArray(data)) return `${data.length === 1 ? '-' : ''}(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
+  if (typeof data === 'string' || typeof data === 'number') return `(-${buildString(data, buildState)})`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 1 ? -precoerceNumber(prev[0]) : prev.reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' / ')})`
-  } else {
-    return `(${buildString(data, buildState)}).reduce((a,b) => (+a)/(+b))`
-  }
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' / ')})`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b)))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
-  if (Array.isArray(data)) {
-    return `(${data
-      .map((i) => `(+${buildString(i, buildState)})`)
-      .join(' * ')})`
-  } else {
-    return `(${buildString(data, buildState)}).reduce((a,b) => (+a)*(+b))`
-  }
-}
-// @ts-ignore Allow custom attribute
-defaultMethods.cat.compile = function (data, buildState) {
-  if (typeof data === 'string') return JSON.stringify(data)
-  if (!Array.isArray(data)) return false
-  let res = buildState.compile`''`
-  for (let i = 0; i < data.length; i++) res = buildState.compile`${res} + ${data[i]}`
-  return buildState.compile`(${res})`
+  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)))`
 }
 
 // @ts-ignore Allow custom attribute
@@ -943,12 +976,12 @@ defaultMethods.not = defaultMethods['!']
 // @ts-ignore Allow custom attribute
 defaultMethods['!!'].compile = function (data, buildState) {
   if (Array.isArray(data)) return buildState.compile`(!!engine.truthy(${data[0]}))`
-  return `(!!engine.truthy(${data}))`
+  return buildState.compile`(!!engine.truthy(${data}))`
 }
 defaultMethods.none.deterministic = defaultMethods.some.deterministic
 
 // @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
-defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = true
+defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = defaultMethods.error.optimizeUnary = defaultMethods.panic.optimizeUnary = true
 
 export default {
   ...defaultMethods,

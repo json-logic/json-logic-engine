@@ -16,6 +16,7 @@ for (const file of files) {
 function correction (x) {
   // eslint-disable-next-line no-compare-neg-zero
   if (x === -0) return 0
+  if (Number.isNaN(x)) return { error: 'NaN' }
   return x
 }
 
