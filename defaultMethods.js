@@ -78,7 +78,7 @@ const defaultMethods = {
     if (data[0] && typeof data[0] === 'object') return Number.NaN
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      if ((data[i] && typeof data[i] === 'object') || !data[i]) return Number.NaN
       res /= +data[i]
     }
     return res
@@ -953,8 +953,14 @@ defaultMethods['-'].compile = function (data, buildState) {
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' / ')})`
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b)))`
+  if (Array.isArray(data)) {
+    return `(${data.map((i, x) => {
+    let res = numberCoercion(i, buildState)
+    if (x) res = `(${res}||NaN)`
+    return res
+  }).join(' / ')})`
+  }
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b) || NaN))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {

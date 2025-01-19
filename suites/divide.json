@@ -170,5 +170,17 @@
         "rule": { "/": [1, [1]] },
         "result": { "error": "NaN" },
         "data": null
+    },
+    {
+        "description": "Any division by zero should return NaN",
+        "rule": { "/": [1, 0] },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Any division by zero should return NaN (2)",
+        "rule": { "/": [8, 2, 0] },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]
