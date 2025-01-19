@@ -88,7 +88,7 @@ export function isDeterministic (method, engine, buildState) {
     if (lower === undefined) return true
     if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
 
-    if (engine.methods[func].traverse === false) {
+    if (engine.methods[func].lazy) {
       return typeof engine.methods[func].deterministic === 'function'
         ? engine.methods[func].deterministic(lower, buildState)
         : engine.methods[func].deterministic
@@ -119,7 +119,7 @@ function isDeepSync (method, engine) {
     const lower = method[func]
     if (!isSync(engine.methods[func])) return false
 
-    if (engine.methods[func].traverse === false) {
+    if (engine.methods[func].lazy) {
       if (typeof engine.methods[func][Sync] === 'function' && engine.methods[func][Sync](method, { engine })) return true
       return false
     }
@@ -194,7 +194,7 @@ function buildString (method, buildState = {}) {
     }
 
     let lower = method[func]
-    if ((!lower || typeof lower !== 'object') && (typeof engine.methods[func].traverse === 'undefined' || engine.methods[func].traverse)) lower = [lower]
+    if ((!lower || typeof lower !== 'object') && (!engine.methods[func].lazy)) lower = [lower]
 
     if (engine.methods[func] && engine.methods[func].compile) {
       let str = engine.methods[func].compile(lower, buildState)
@@ -220,7 +220,7 @@ function buildString (method, buildState = {}) {
       const argCount = countArguments(asyncDetected ? engine.methods[func].asyncMethod : engine.methods[func].method)
       const argumentsNeeded = argumentsDict[argCount - 1] || argumentsDict[2]
 
-      if (engine.methods[func] && (typeof engine.methods[func].traverse === 'undefined' ? true : engine.methods[func].traverse)) {
+      if (engine.methods[func] && !engine.methods[func].lazy) {
         return makeAsync(`engine.methods["${func}"]${asyncDetected ? '.asyncMethod' : '.method'}(${coerce}(` + buildString(lower, buildState) + ')' + argumentsNeeded + ')')
       } else {
         notTraversed.push(lower)

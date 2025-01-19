@@ -21,11 +21,12 @@ function isDeterministic (method, engine, buildState) {
     if (engine.isData(method, func)) return true
     if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
 
-    if (engine.methods[func].traverse === false) {
+    if (engine.methods[func].lazy) {
       return typeof engine.methods[func].deterministic === 'function'
         ? engine.methods[func].deterministic(lower, buildState)
         : engine.methods[func].deterministic
     }
+
     return typeof engine.methods[func].deterministic === 'function'
       ? engine.methods[func].deterministic(lower, buildState)
       : engine.methods[func].deterministic &&
@@ -44,7 +45,7 @@ function isSyncDeep (method, engine, buildState) {
     const lower = method[func]
     if (engine.isData(method, func)) return true
     if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
-    if (engine.methods[func].traverse === false) return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync]
+    if (engine.methods[func].lazy) return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync]
     return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync] && isSyncDeep(lower, engine, buildState)
   }
 
@@ -121,7 +122,7 @@ const defaultMethods = {
   min: (data) => Math.min(...data),
   in: ([item, array]) => (array || []).includes(item),
   preserve: {
-    traverse: false,
+    lazy: true,
     method: declareSync((i) => i, true),
     [Sync]: () => true
   },
@@ -182,7 +183,7 @@ const defaultMethods = {
 
       return engine.run(onFalse, context, { above })
     },
-    traverse: false
+    lazy: true
   },
   '<': (args) => {
     if (args.length === 2) return args[0] < args[1]
@@ -289,7 +290,7 @@ const defaultMethods = {
       if (Array.isArray(data) && data.length) return `(${data.map((i) => buildString(i, buildState)).join(' || ')})`
       return `(${buildString(data, buildState)}).reduce((a,b) => a||b, false)`
     },
-    traverse: false
+    lazy: true
   },
   '??': defineCoalesce(),
   try: defineCoalesce(downgrade),
@@ -319,7 +320,7 @@ const defaultMethods = {
       }
       return item
     },
-    traverse: false,
+    lazy: true,
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
       if (!buildState.engine.truthy[OriginalImpl]) {
@@ -352,7 +353,6 @@ const defaultMethods = {
       const result = defaultMethods.val.method(key, context, above, engine, Unfound)
       return result !== Unfound
     },
-    traverse: true,
     deterministic: false
   },
   val: {
@@ -444,7 +444,7 @@ const defaultMethods = {
   all: createArrayIterativeMethod('every', true),
   none: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    traverse: false,
+    lazy: true,
     // todo: add async build & build
     method: (val, context, above, engine) => {
       return !defaultMethods.some.method(val, context, above, engine)
@@ -580,7 +580,7 @@ const defaultMethods = {
         defaultValue
       )
     },
-    traverse: false
+    lazy: true
   },
   '!': (value, _1, _2, engine) => Array.isArray(value) ? !engine.truthy(value[0]) : !engine.truthy(value),
   '!!': (value, _1, _2, engine) => Boolean(Array.isArray(value) ? engine.truthy(value[0]) : engine.truthy(value)),
@@ -598,7 +598,6 @@ const defaultMethods = {
       return res
     },
     deterministic: true,
-    traverse: true,
     optimizeUnary: true,
     compile: (data, buildState) => {
       if (typeof data === 'string') return JSON.stringify(data)
@@ -611,7 +610,7 @@ const defaultMethods = {
   },
   keys: ([obj]) => typeof obj === 'object' ? Object.keys(obj) : [],
   pipe: {
-    traverse: false,
+    lazy: true,
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (args, context, above, engine) => {
       if (!Array.isArray(args)) throw new Error('Data for pipe must be an array')
@@ -638,7 +637,7 @@ const defaultMethods = {
     }
   },
   eachKey: {
-    traverse: false,
+    lazy: true,
     [Sync]: (data, buildState) => isSyncDeep(Object.values(data[Object.keys(data)[0]]), buildState.engine, buildState),
     method: (object, context, above, engine) => {
       const result = Object.keys(object).reduce((accumulator, key) => {
@@ -744,7 +743,7 @@ function defineCoalesce (func) {
       }
       return `(${buildString(data, buildState)}).reduce((a,b) => ${funcCall}(a) ?? b, null)`
     },
-    traverse: false
+    lazy: true
   }
 }
 
@@ -814,7 +813,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
 
       return buildState.compile`(${selector} || [])[${name}]((i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
     },
-    traverse: false
+    lazy: true
   }
 }
 defaultMethods['?:'] = defaultMethods.if

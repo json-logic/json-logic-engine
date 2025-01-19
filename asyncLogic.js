@@ -89,9 +89,8 @@ class AsyncLogicEngine {
     }
 
     if (typeof this.methods[func] === 'object') {
-      const { asyncMethod, method, traverse } = this.methods[func]
-      const shouldTraverse = typeof traverse === 'undefined' ? true : traverse
-      const parsedData = shouldTraverse ? ((!data || typeof data !== 'object') ? [data] : coerceArray(await this.run(data, context, { above }))) : data
+      const { asyncMethod, method, lazy } = this.methods[func]
+      const parsedData = !lazy ? ((!data || typeof data !== 'object') ? [data] : coerceArray(await this.run(data, context, { above }))) : data
       const result = await (asyncMethod || method)(parsedData, context, above, this)
       return Array.isArray(result) ? Promise.all(result) : result
     }
@@ -102,7 +101,7 @@ class AsyncLogicEngine {
   /**
    *
    * @param {String} name The name of the method being added.
-   * @param {((args: any, context: any, above: any[], engine: AsyncLogicEngine) => any) | { traverse?: Boolean, method?: (args: any, context: any, above: any[], engine: AsyncLogicEngine) => any, asyncMethod?: (args: any, context: any, above: any[], engine: AsyncLogicEngine) => Promise<any>, deterministic?: Function | Boolean }} method
+   * @param {((args: any, context: any, above: any[], engine: AsyncLogicEngine) => any) | { lazy?: Boolean, traverse?: Boolean, method?: (args: any, context: any, above: any[], engine: AsyncLogicEngine) => any, asyncMethod?: (args: any, context: any, above: any[], engine: AsyncLogicEngine) => Promise<any>, deterministic?: Function | Boolean }} method
    * @param {{ deterministic?: Boolean, async?: Boolean, sync?: Boolean, optimizeUnary?: boolean }} annotations This is used by the compiler to help determine if it can optimize the function being generated.
    */
   addMethod (
@@ -115,9 +114,9 @@ class AsyncLogicEngine {
     if (typeof async !== 'undefined') sync = !async
 
     if (typeof method === 'function') {
-      if (async) method = { asyncMethod: method, traverse: true }
-      else method = { method, traverse: true }
-    } else method = { ...method }
+      if (async) method = { asyncMethod: method, lazy: false }
+      else method = { method, lazy: false }
+    } else method = { ...method, lazy: typeof method.traverse !== 'undefined' ? !method.traverse : method.lazy }
 
     Object.assign(method, omitUndefined({ deterministic, optimizeUnary }))
     // @ts-ignore

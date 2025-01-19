@@ -19,7 +19,7 @@ const all = {
     return oldAll.asyncMethod(args, context, above, engine)
   },
   deterministic: oldAll.deterministic,
-  traverse: oldAll.traverse
+  lazy: oldAll.lazy
 }
 
 function truthy (value) {
