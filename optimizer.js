@@ -14,7 +14,7 @@ function getMethod (logic, engine, methodName, above) {
   const method = engine.methods[methodName]
   const called = method.method ? method.method : method
 
-  if (method.traverse === false) {
+  if (method.lazy) {
     const args = logic[methodName]
     return (data, abv) => called(args, data, abv || above, engine)
   }
@@ -30,7 +30,7 @@ function getMethod (logic, engine, methodName, above) {
       return called(evaluatedArgs, data, abv || above, engine)
     }
   } else {
-    let optimizedArgs = optimize(args, engine, above)
+    const optimizedArgs = optimize(args, engine, above)
     if (method.optimizeUnary) {
       if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
       return (data, abv) => called(optimizedArgs, data, abv || above, engine)

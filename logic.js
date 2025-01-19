@@ -64,8 +64,7 @@ class LogicEngine {
    * @param {*} above The context above (can be used for handlebars-style data traversal.)
    * @returns {{ result: *, func: string }}
    */
-  _parse (logic, context, above) {
-    const [func] = Object.keys(logic)
+  _parse (logic, context, above, func) {
     const data = logic[func]
 
     if (this.isData(logic, func)) return logic
@@ -85,9 +84,8 @@ class LogicEngine {
     }
 
     if (typeof this.methods[func] === 'object') {
-      const { method, traverse } = this.methods[func]
-      const shouldTraverse = typeof traverse === 'undefined' ? true : traverse
-      const parsedData = shouldTraverse ? ((!data || typeof data !== 'object') ? [data] : coerceArray(this.run(data, context, { above }))) : data
+      const { method, lazy } = this.methods[func]
+      const parsedData = !lazy ? ((!data || typeof data !== 'object') ? [data] : coerceArray(this.run(data, context, { above }))) : data
       return method(parsedData, context, above, this)
     }
 
@@ -97,12 +95,12 @@ class LogicEngine {
   /**
    *
    * @param {String} name The name of the method being added.
-   * @param {((args: any, context: any, above: any[], engine: LogicEngine) => any) |{ traverse?: Boolean, method: (args: any, context: any, above: any[], engine: LogicEngine) => any, deterministic?: Function | Boolean }} method
+   * @param {((args: any, context: any, above: any[], engine: LogicEngine) => any) |{ lazy?: Boolean, traverse?: Boolean, method: (args: any, context: any, above: any[], engine: LogicEngine) => any, deterministic?: Function | Boolean }} method
    * @param {{ deterministic?: Boolean, optimizeUnary?: Boolean }} annotations This is used by the compiler to help determine if it can optimize the function being generated.
    */
   addMethod (name, method, { deterministic, optimizeUnary } = {}) {
-    if (typeof method === 'function') method = { method, traverse: true }
-    else method = { ...method }
+    if (typeof method === 'function') method = { method, lazy: false }
+    else method = { ...method, lazy: typeof method.traverse !== 'undefined' ? !method.traverse : method.lazy }
     Object.assign(method, omitUndefined({ deterministic, optimizeUnary }))
     this.methods[name] = declareSync(method)
   }
@@ -156,12 +154,18 @@ class LogicEngine {
     // END OPTIMIZER BLOCK //
 
     if (Array.isArray(logic)) {
-      const res = []
-      for (let i = 0; i < logic.length; i++) res.push(this.run(logic[i], data, { above }))
+      const res = new Array(logic.length)
+      for (let i = 0; i < logic.length; i++) res[i] = this.run(logic[i], data, { above })
       return res
     }
 
-    if (logic && typeof logic === 'object' && Object.keys(logic).length > 0) return this._parse(logic, data, above)
+    if (logic && typeof logic === 'object') {
+      const keys = Object.keys(logic)
+      if (keys.length > 0) {
+        const func = keys[0]
+        return this._parse(logic, data, above, func)
+      }
+    }
 
     return logic
   }

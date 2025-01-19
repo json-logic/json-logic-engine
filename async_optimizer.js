@@ -17,7 +17,7 @@ function getMethod (logic, engine, methodName, above) {
   const method = engine.methods[methodName]
   const called = method.asyncMethod ? method.asyncMethod : method.method ? method.method : method
 
-  if (method.traverse === false) {
+  if (method.lazy) {
     if (typeof method[Sync] === 'function' && method[Sync](logic, { engine })) {
       const called = method.method ? method.method : method
       return declareSync((data, abv) => called(logic[methodName], data, abv || above, engine.fallback), true)

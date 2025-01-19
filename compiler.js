@@ -11,6 +11,7 @@ import {
 import asyncIterators from './async_iterators.js'
 import { coerceArray } from './utilities/coerceArray.js'
 import { countArguments } from './utilities/countArguments.js'
+import { downgrade, precoerceNumber } from './utilities/downgrade.js'
 
 /**
  * Provides a simple way to compile logic into a function that can be run.
@@ -87,7 +88,7 @@ export function isDeterministic (method, engine, buildState) {
     if (lower === undefined) return true
     if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
 
-    if (engine.methods[func].traverse === false) {
+    if (engine.methods[func].lazy) {
       return typeof engine.methods[func].deterministic === 'function'
         ? engine.methods[func].deterministic(lower, buildState)
         : engine.methods[func].deterministic
@@ -118,7 +119,7 @@ function isDeepSync (method, engine) {
     const lower = method[func]
     if (!isSync(engine.methods[func])) return false
 
-    if (engine.methods[func].traverse === false) {
+    if (engine.methods[func].lazy) {
       if (typeof engine.methods[func][Sync] === 'function' && engine.methods[func][Sync](method, { engine })) return true
       return false
     }
@@ -193,7 +194,7 @@ function buildString (method, buildState = {}) {
     }
 
     let lower = method[func]
-    if (!lower || typeof lower !== 'object') lower = [lower]
+    if ((!lower || typeof lower !== 'object') && (!engine.methods[func].lazy)) lower = [lower]
 
     if (engine.methods[func] && engine.methods[func].compile) {
       let str = engine.methods[func].compile(lower, buildState)
@@ -219,7 +220,7 @@ function buildString (method, buildState = {}) {
       const argCount = countArguments(asyncDetected ? engine.methods[func].asyncMethod : engine.methods[func].method)
       const argumentsNeeded = argumentsDict[argCount - 1] || argumentsDict[2]
 
-      if (engine.methods[func] && (typeof engine.methods[func].traverse === 'undefined' ? true : engine.methods[func].traverse)) {
+      if (engine.methods[func] && !engine.methods[func].lazy) {
         return makeAsync(`engine.methods["${func}"]${asyncDetected ? '.asyncMethod' : '.method'}(${coerce}(` + buildString(lower, buildState) + ')' + argumentsNeeded + ')')
       } else {
         notTraversed.push(lower)
@@ -307,12 +308,12 @@ function processBuiltString (method, str, buildState) {
     str = str.replace(`__%%%${x}%%%__`, item)
   })
 
-  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { let prev; const result = ${str}; return result }`
+  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { ${str.includes('prev') ? 'let prev;' : ''} const result = ${str}; return result }`
   // console.log(str)
   // console.log(final)
   // eslint-disable-next-line no-eval
   return Object.assign(
-    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray), {
+    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber), {
       [Sync]: !buildState.asyncDetected,
       aboveDetected: typeof str === 'string' && str.includes(', above')
     })
