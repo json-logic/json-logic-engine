@@ -8,8 +8,8 @@ const files = fs.readdirSync('./suites')
 for (const file of files) {
   if (file.endsWith('.json')) {
     tests.push(...JSON.parse(fs.readFileSync(`./suites/${file}`).toString()).filter(i => typeof i !== 'string').map(i => {
-      if (Array.isArray(i)) return i
-      return [i.rule, i.data || {}, i.result]
+      if (Array.isArray(i)) return { rule: i[0], data: i[1] || null, result: i[2], description: JSON.stringify(i[0]) }
+      return i
     }))
   }
 }
@@ -47,23 +47,23 @@ for (let i = 0; i < 8; i++) {
 describe('All of the compatible tests', () => {
   for (const testCase of tests) {
     for (const engine of engines) {
-      test(`${engine[1]} ${JSON.stringify(testCase[0])} ${JSON.stringify(
-        testCase[1]
+      test(`${engine[1]} ${JSON.stringify(testCase.rule)} ${JSON.stringify(
+        testCase.data
       )}`, async () => {
-        let result = await engine[0].run(testCase[0], testCase[1])
+        let result = await engine[0].run(testCase.rule, testCase.data)
         if ((result || 0).toNumber) result = Number(result)
         if (Array.isArray(result)) result = result.map(i => (i || 0).toNumber ? Number(i) : i)
-        expect(correction(result)).toStrictEqual(testCase[2])
+        expect(correction(result)).toStrictEqual(testCase.result)
       })
 
-      test(`${engine[1]} ${JSON.stringify(testCase[0])} ${JSON.stringify(
-        testCase[1]
+      test(`${engine[1]} ${JSON.stringify(testCase.rule)} ${JSON.stringify(
+        testCase.data
       )} (built)`, async () => {
-        const f = await engine[0].build(testCase[0])
-        let result = await f(testCase[1])
+        const f = await engine[0].build(testCase.rule)
+        let result = await f(testCase.data)
         if ((result || 0).toNumber) result = Number(result)
         if (Array.isArray(result)) result = result.map(i => i.toNumber ? Number(i) : i)
-        expect(correction(result)).toStrictEqual(testCase[2])
+        expect(correction(result)).toStrictEqual(testCase.result)
       })
     }
   }
