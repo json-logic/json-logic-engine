@@ -90,13 +90,11 @@
   {
       "description": "{\"var\":[{\"?:\":[{\"<\":[{\"var\":\"temp\"},110]},\"pie.filling\",\"pie.eta\"]}]}",
       "rule": {
-          "val": {
-            "?:": [
-                { "<": [ {"val": "temp"}, 110 ] },
-                ["pie", "filling"],
-                ["pie", "eta"]
-            ]
-        }
+        "?:": [
+            { "<": [ {"val": "temp"}, 110 ] },
+            { "val": ["pie", "filling"] },
+            { "val": ["pie", "eta"] }
+        ]
       },
       "data": { "temp": 100, "pie": {"filling": "apple", "eta": "60s"} },
       "result": "apple"
