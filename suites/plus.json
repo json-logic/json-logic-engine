@@ -182,5 +182,17 @@
         "rule": { "+": [[1]] },
         "result": { "error": "NaN" },
         "data": null
+    },
+    {
+        "description": "Plus Operator with Single Operand, Object Input Produces NaN",
+        "rule": { "+": [{}] },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    {
+        "description": "Plus Operator with Single Operand, Direct Object Input Produces NaN",
+        "rule": { "+": {} },
+        "result": { "error": "NaN" },
+        "data": null
     }
 ]
