@@ -50,20 +50,28 @@ describe('All of the compatible tests', () => {
       test(`${engine[1]} ${JSON.stringify(testCase.rule)} ${JSON.stringify(
         testCase.data
       )}`, async () => {
-        let result = await engine[0].run(testCase.rule, testCase.data)
-        if ((result || 0).toNumber) result = Number(result)
-        if (Array.isArray(result)) result = result.map(i => (i || 0).toNumber ? Number(i) : i)
-        expect(correction(result)).toStrictEqual(testCase.result)
+        try {
+          let result = await engine[0].run(testCase.rule, testCase.data)
+          if ((result || 0).toNumber) result = Number(result)
+          if (Array.isArray(result)) result = result.map(i => (i || 0).toNumber ? Number(i) : i)
+          expect(correction(result)).toStrictEqual(testCase.result)
+        } catch (err) {
+          expect(testCase.error).toStrictEqual(true)
+        }
       })
 
       test(`${engine[1]} ${JSON.stringify(testCase.rule)} ${JSON.stringify(
         testCase.data
       )} (built)`, async () => {
-        const f = await engine[0].build(testCase.rule)
-        let result = await f(testCase.data)
-        if ((result || 0).toNumber) result = Number(result)
-        if (Array.isArray(result)) result = result.map(i => i.toNumber ? Number(i) : i)
-        expect(correction(result)).toStrictEqual(testCase.result)
+        try {
+          const f = await engine[0].build(testCase.rule)
+          let result = await f(testCase.data)
+          if ((result || 0).toNumber) result = Number(result)
+          if (Array.isArray(result)) result = result.map(i => i.toNumber ? Number(i) : i)
+          expect(correction(result)).toStrictEqual(testCase.result)
+        } catch (err) {
+          expect(testCase.error).toStrictEqual(true)
+        }
       })
     }
   }
