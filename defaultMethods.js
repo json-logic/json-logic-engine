@@ -2,7 +2,7 @@
 'use strict'
 
 import asyncIterators from './async_iterators.js'
-import { Sync, isSync, Unfound, OriginalImpl } from './constants.js'
+import { Sync, isSync, Unfound, OriginalImpl, Compiled } from './constants.js'
 import declareSync from './utilities/declareSync.js'
 import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
@@ -845,22 +845,6 @@ Object.keys(defaultMethods).forEach((item) => {
 })
 
 // @ts-ignore Allow custom attribute
-defaultMethods['<'].compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} < (prev = ${data[1]}))`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev < ${data[i]})`
-  return res
-}
-// @ts-ignore Allow custom attribute
-defaultMethods['<='].compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} <= (prev = ${data[1]}))`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev <= ${data[i]})`
-  return res
-}
-// @ts-ignore Allow custom attribute
 defaultMethods.min.compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
   return `Math.min(${data
@@ -874,38 +858,19 @@ defaultMethods.max.compile = function (data, buildState) {
     .map((i) => buildString(i, buildState))
     .join(', ')})`
 }
-// @ts-ignore Allow custom attribute
-defaultMethods['>'].compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} > (prev = ${data[1]}))`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev > ${data[i]})`
-  return res
+
+for (const op of ['>', '<', '>=', '<=', '==', '!=', '!==', '===']) {
+  const opStr = { [Compiled]: op }
+  // @ts-ignore Allow custom attribute
+  defaultMethods[op].compile = function (data, buildState) {
+    if (!Array.isArray(data)) return false
+    if (data.length < 2) return false
+    let res = buildState.compile`(${data[0]} ${opStr} (prev = ${data[1]}))`
+    for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev ${opStr} ${data[i]})`
+    return res
+  }
 }
-// @ts-ignore Allow custom attribute
-defaultMethods['>='].compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} >= (prev = ${data[1]}))`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev >= ${data[i]})`
-  return res
-}
-// @ts-ignore Allow custom attribute
-defaultMethods['=='].compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} == (prev = ${data[1]}))`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev == ${data[i]})`
-  return res
-}
-// @ts-ignore Allow custom attribute
-defaultMethods['!='].compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} != (prev = ${data[1]}))`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev != ${data[i]})`
-  return res
-}
+
 // @ts-ignore Allow custom attribute
 defaultMethods.if.compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
@@ -923,14 +888,6 @@ defaultMethods.if.compile = function (data, buildState) {
   }
 
   return buildState.compile`(${res} ${onFalse})`
-}
-// @ts-ignore Allow custom attribute
-defaultMethods['==='].compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  if (data.length < 2) return false
-  let res = buildState.compile`(${data[0]} === ${data[1]})`
-  for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && ${data[i - 1]} === ${data[i]})`
-  return res
 }
 
 /**
