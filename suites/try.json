@@ -13,6 +13,12 @@
         "data": { "hello": "world" }
     },
     {
+        "description": "Try is variadic",
+        "rule": { "try": [{ "error": "Some error" }, { "/": [0, 0] }, 2] },
+        "result": 2,
+        "data": null
+    },
+    {
         "description": "Panics if none of the values are valid",
         "rule": { "try": [{ "error": "Some error" }, { "error": "Some other error" }] },
         "error": true,
@@ -21,6 +27,12 @@
     {
         "description": "Panics if none of the values are valid (2)",
         "rule": { "try": [{ "error": "Some error" }, { "/": [0, 0] }] },
+        "error": true,
+        "data": null
+    },
+    {
+        "description": "Panics if none of the values are valid (3)",
+        "rule": { "try": [{ "/": [0, 0] }, { "/": [1, 0] }, { "/": [2, 0] }] },
         "error": true,
         "data": null
     },
@@ -66,11 +78,34 @@
         "description": "The context switches for the try coalescing to the previous error",
         "rule": {
             "try": [
+                { "error": "Some error" },
+                { "val": [] }
+            ]
+        },
+        "result": { "error": "Some error"},
+        "data": null
+    },
+    {
+        "description": "The context switches for the try coalescing to the previous error (2)",
+        "rule": {
+            "try": [
                 { "if": [true, { "error": "Some error" }, null] },
                 { "val": [] }
             ]
         },
         "result": { "error": "Some error"},
+        "data": null
+    },
+    {
+        "description": "The context switches for the try coalescing to the previous error (3)",
+        "rule": {
+            "try": [
+                { "error": "A" },
+                { "error": "B" },
+                { "val": [] }
+            ]
+        },
+        "result": { "error": "B" },
         "data": null
     },
     {
