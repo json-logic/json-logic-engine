@@ -1,4 +1,5 @@
 // @ts-check
+// istanbul ignore file
 'use strict'
 // Old Interface for json-logic-js being mapped onto json-logic-engine
 import LogicEngine from './logic.js'
