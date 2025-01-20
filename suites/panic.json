@@ -22,5 +22,11 @@
         "rule": { "map": [[1, 2, 3], { "panic": [{ "/": [0,0] }] }] },
         "error": true,
         "data": null
+    },
+    {
+        "description": "Panic if the user is not an admin",
+        "rule": { "panic": [{ "if": [{"val": ["user", "admin"]}, true, { "error": "Not an admin" }] }] },
+        "data": { "user": { "admin": false } },
+        "error": true
     }
 ]
