@@ -15,6 +15,6 @@ export function downgrade (item) {
  */
 export function precoerceNumber (item) {
   if (!item) return item
-  if (typeof item === 'object') throw new Error('Cannot coerce object to number')
+  if (typeof item === 'object') throw new Error('NaN')
   return item
 }
