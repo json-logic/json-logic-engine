@@ -243,7 +243,6 @@ const defaultMethods = {
     }
     return true
   },
-  xor: ([a, b]) => a ^ b,
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
   or: {
@@ -927,7 +926,7 @@ defaultMethods.if.compile = function (data, buildState) {
  * Transforms the operands of the arithmetic operation to numbers.
  */
 function numberCoercion (i, buildState) {
-  if (Array.isArray(i)) return 'precoerceNumber(NaN)'
+  if (Array.isArray(i)) return precoerceNumber(NaN)
 
   if (typeof i === 'number' || typeof i === 'boolean') return '+' + buildString(i, buildState)
   if (typeof i === 'string') return '+' + precoerceNumber(+i)
@@ -971,6 +970,7 @@ defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
     return `(${data.map((i, x) => {
     let res = numberCoercion(i, buildState)
+    if (x && res === '+0') precoerceNumber(NaN)
     if (x) res = `precoerceNumber(${res} || NaN)`
     return res
   }).join(' / ')})`

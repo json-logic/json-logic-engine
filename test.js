@@ -316,8 +316,7 @@ modes.forEach((logic) => {
         '>=': (a, b) => a >= b,
         '<=': (a, b) => a <= b,
         or: (a, b) => a || b,
-        and: (a, b) => a && b,
-        xor: (a, b) => a ^ b
+        and: (a, b) => a && b
       }
       Object.keys(operators).forEach((i) => {
         vectors.forEach((vector) => {
