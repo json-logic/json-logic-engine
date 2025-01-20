@@ -279,14 +279,14 @@ describe('Various Test Cases', () => {
 
   it('should throw on a soft error when panic is used', async () => {
     const rule = {
-      panic: { '+': 'hi' }
+      try: { '+': 'hi' }
     }
 
     for (const engine of normalEngines) await testEngine(engine, rule, {}, Error)
     for (const engine of permissiveEngines) await testEngine(engine, rule, {}, Error)
 
     const rule2 = {
-      panic: { error: 'Yeet' }
+      try: { error: 'Yeet' }
     }
 
     for (const engine of normalEngines) await testEngine(engine, rule2, {}, Error)

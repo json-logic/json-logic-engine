@@ -1,0 +1,14 @@
+[
+    {
+        "description": "Creates an error object",
+        "rule": { "error": "hello" },
+        "data": null,
+        "error": true
+    },
+    {
+        "description": "NaN creates an error object or measured equivalent (equivalence class test)",
+        "rule": { "error": "NaN" },
+        "data": null,
+        "error": true
+    }
+]

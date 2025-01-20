@@ -148,19 +148,19 @@
     {
         "description": "Multiply with NaN",
         "rule": { "*": [{ "error": "NaN" }, 1] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     },
     {
         "description": "Multiply with string produces NaN",
         "rule": { "*": ["Hey", 1] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     },
     {
         "description": "Multiply with Array produces NaN",
         "rule": { "*": [[1], 1] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     }
 ]
