@@ -17,5 +17,17 @@
         "rule": { "try": [{ "val": "x" }, 1]},
         "data": { "x": { "error": "Some error" }},
         "result": 1
+    },
+    {
+        "description": "Panics if none of the values are valid",
+        "rule": { "try": [{ "error": "Some error" }, { "error": "Some other error" }] },
+        "error": true,
+        "data": null
+    },
+    {
+        "description": "Panics if none of the values are valid (2)",
+        "rule": { "try": [{ "error": "Some error" }, { "/": [0, 0] }] },
+        "error": true,
+        "data": null
     }
 ]

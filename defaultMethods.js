@@ -290,7 +290,7 @@ const defaultMethods = {
     lazy: true
   },
   '??': defineCoalesce(),
-  try: defineCoalesce(downgrade),
+  try: defineCoalesce(downgrade, true),
   and: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
@@ -715,7 +715,7 @@ const defaultMethods = {
 /**
  * Defines separate coalesce methods
  */
-function defineCoalesce (func) {
+function defineCoalesce (func, panic) {
   let downgrade
   if (func) downgrade = func
   else downgrade = (a) => a
@@ -734,6 +734,7 @@ function defineCoalesce (func) {
       }
 
       if (item === undefined) return null
+      if (panic) throw item
       return item
     },
     asyncMethod: async (arr, _1, _2, engine) => {
@@ -748,6 +749,7 @@ function defineCoalesce (func) {
       }
 
       if (item === undefined) return null
+      if (panic) throw item
       return item
     },
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
@@ -756,8 +758,10 @@ function defineCoalesce (func) {
       const funcCall = func ? 'downgrade' : ''
       if (Array.isArray(data) && data.length) {
         return `(${data.map((i, x) => {
-        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return buildString(i, buildState)
-        return `${funcCall}(` + buildString(i, buildState) + ')'
+          const built = buildString(i, buildState)
+        if (panic && x === data.length - 1) return `(typeof ((prev = ${built}) || 0).error !== 'undefined' || Number.isNaN(prev) ? (() => { throw prev.error })() : prev)`
+        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return built
+        return `${funcCall}(` + built + ')'
       }).join(' ?? ')})`
       }
       return `(${buildString(data, buildState)}).reduce((a,b) => ${funcCall}(a) ?? b, null)`
