@@ -158,6 +158,12 @@
         "data": null
     },
     {
+        "description": "Multiply with a single string produces NaN",
+        "rule": { "*": ["Hey"] },
+        "error": true,
+        "data": null
+    },
+    {
         "description": "Multiply with Array produces NaN",
         "rule": { "*": [[1], 1] },
         "error": true,

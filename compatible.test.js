@@ -56,6 +56,7 @@ describe('All of the compatible tests', () => {
           if (Array.isArray(result)) result = result.map(i => (i || 0).toNumber ? Number(i) : i)
           expect(correction(result)).toStrictEqual(testCase.result)
         } catch (err) {
+          if (err.message.includes('expect')) throw err
           expect(testCase.error).toStrictEqual(true)
         }
       })
@@ -70,6 +71,7 @@ describe('All of the compatible tests', () => {
           if (Array.isArray(result)) result = result.map(i => i.toNumber ? Number(i) : i)
           expect(correction(result)).toStrictEqual(testCase.result)
         } catch (err) {
+          if (err.message.includes('expect')) throw err
           expect(testCase.error).toStrictEqual(true)
         }
       })
