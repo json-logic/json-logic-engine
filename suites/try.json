@@ -55,7 +55,7 @@
         "data": null
     },
     {
-        "description": "Panic if the user is not an admin",
+        "description": "Panic based on an error emitted from an if",
         "rule": { "try": [{ "if": [{"val": ["user", "admin"]}, true, { "error": "Not an admin" }] }] },
         "data": { "user": { "admin": false } },
         "error": true
