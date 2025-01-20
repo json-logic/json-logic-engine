@@ -928,8 +928,17 @@ defaultMethods.if.compile = function (data, buildState) {
  */
 function numberCoercion (i, buildState) {
   if (Array.isArray(i)) return 'precoerceNumber(NaN)'
-  if (typeof i === 'string' || typeof i === 'number' || typeof i === 'boolean') return `precoerceNumber(+${buildString(i, buildState)})`
-  return `(+precoerceNumber(${buildString(i, buildState)}))`
+
+  if (typeof i === 'number' || typeof i === 'boolean') return '+' + buildString(i, buildState)
+  if (typeof i === 'string') return '+' + precoerceNumber(+i)
+
+  // check if it's already a number once built
+  const f = buildString(i, buildState)
+
+  // regex match
+  if (/^-?\d+(\.\d*)?$/.test(f)) return '+' + f
+
+  return `(+precoerceNumber(${f}))`
 }
 
 // @ts-ignore Allow custom attribute
@@ -962,11 +971,11 @@ defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
     return `(${data.map((i, x) => {
     let res = numberCoercion(i, buildState)
-    if (x) res = `(${res}|| (() => { throw new Error('NaN') })() )`
+    if (x) res = `precoerceNumber(${res} || NaN)`
     return res
   }).join(' / ')})`
   }
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b) || (() => { throw new Error('NaN') })() ))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b || NaN)))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
