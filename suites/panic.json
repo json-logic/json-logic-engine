@@ -16,5 +16,11 @@
         "rule": { "panic": [{ "val": "x" }] },
         "error": true,
         "data": { "x": { "error": "Some error" } }
+    },
+    {
+        "description": "Panic within an iterator",
+        "rule": { "map": [[1, 2, 3], { "panic": [{ "/": [0,0] }] }] },
+        "error": true,
+        "data": null
     }
 ]
