@@ -59,32 +59,32 @@ const defaultMethods = {
     if (typeof data === 'string') return precoerceNumber(+data)
     if (typeof data === 'number') return precoerceNumber(+data)
     if (typeof data === 'boolean') return precoerceNumber(+data)
-    if (typeof data === 'object' && !Array.isArray(data)) throw NaN
+    if (typeof data === 'object' && !Array.isArray(data)) throw new Error('NaN')
     let res = 0
     for (let i = 0; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') throw NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res += +data[i]
     }
-    if (Number.isNaN(res)) throw NaN
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '*': (data) => {
     let res = 1
     for (let i = 0; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') throw NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res *= +data[i]
     }
-    if (Number.isNaN(res)) throw NaN
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '/': (data) => {
-    if (data[0] && typeof data[0] === 'object') throw NaN
+    if (data[0] && typeof data[0] === 'object') throw new Error('NaN')
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
-      if ((data[i] && typeof data[i] === 'object') || !data[i]) throw NaN
+      if ((data[i] && typeof data[i] === 'object') || !data[i]) throw new Error('NaN')
       res /= +data[i]
     }
-    if (Number.isNaN(res)) throw NaN
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '-': (data) => {
@@ -92,25 +92,25 @@ const defaultMethods = {
     if (typeof data === 'string') return precoerceNumber(-data)
     if (typeof data === 'number') return precoerceNumber(-data)
     if (typeof data === 'boolean') return precoerceNumber(-data)
-    if (typeof data === 'object' && !Array.isArray(data)) throw NaN
-    if (data[0] && typeof data[0] === 'object') throw NaN
+    if (typeof data === 'object' && !Array.isArray(data)) throw new Error('NaN')
+    if (data[0] && typeof data[0] === 'object') throw new Error('NaN')
     if (data.length === 1) return -data[0]
     let res = data[0]
     for (let i = 1; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') throw NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res -= +data[i]
     }
-    if (Number.isNaN(res)) throw NaN
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '%': (data) => {
-    if (data[0] && typeof data[0] === 'object') throw NaN
+    if (data[0] && typeof data[0] === 'object') throw new Error('NaN')
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') throw NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res %= +data[i]
     }
-    if (Number.isNaN(res)) throw NaN
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   error: (type) => {
@@ -962,11 +962,11 @@ defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
     return `(${data.map((i, x) => {
     let res = numberCoercion(i, buildState)
-    if (x) res = `(${res}|| (() => { throw NaN })() )`
+    if (x) res = `(${res}|| (() => { throw new Error('NaN') })() )`
     return res
   }).join(' / ')})`
   }
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b) || (() => { throw NaN })() ))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b) || (() => { throw new Error('NaN') })() ))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
