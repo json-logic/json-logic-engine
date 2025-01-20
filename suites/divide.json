@@ -150,37 +150,37 @@
     {
         "description": "Divide by Zero",
         "rule": { "/": [0, 0] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     },
     {
         "description": "Divide by NaN",
         "rule": { "/": [1, { "error": "NaN" }] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     },
     {
         "description": "Divide with String produces NaN",
         "rule": { "/": [1, "a"] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     },
     {
         "description": "Divide with Array produces NaN",
         "rule": { "/": [1, [1]] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     },
     {
         "description": "Any division by zero should return NaN",
         "rule": { "/": [1, 0] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     },
     {
         "description": "Any division by zero should return NaN (2)",
         "rule": { "/": [8, 2, 0] },
-        "result": { "error": "NaN" },
+        "error": true,
         "data": null
     }
 ]

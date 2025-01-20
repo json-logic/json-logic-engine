@@ -11,7 +11,7 @@ import {
 import asyncIterators from './async_iterators.js'
 import { coerceArray } from './utilities/coerceArray.js'
 import { countArguments } from './utilities/countArguments.js'
-import { downgrade, precoerceNumber } from './utilities/downgrade.js'
+import { precoerceNumber } from './utilities/downgrade.js'
 
 /**
  * Provides a simple way to compile logic into a function that can be run.
@@ -310,12 +310,12 @@ function processBuiltString (method, str, buildState) {
     str = str.replace(`__%%%${x}%%%__`, item)
   })
 
-  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { ${str.includes('prev') ? 'let prev;' : ''} const result = ${str}; return result }`
+  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, precoerceNumber) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { ${str.includes('prev') ? 'let prev;' : ''} const result = ${str}; return result }`
   // console.log(str)
   // console.log(final)
   // eslint-disable-next-line no-eval
   return Object.assign(
-    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, downgrade, precoerceNumber), {
+    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, precoerceNumber), {
       [Sync]: !buildState.asyncDetected,
       aboveDetected: typeof str === 'string' && str.includes(', above')
     })

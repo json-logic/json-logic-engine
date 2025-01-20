@@ -8,7 +8,7 @@ import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
 import InvalidControlInput from './errors/InvalidControlInput.js'
 import legacyMethods from './legacy.js'
-import { downgrade } from './utilities/downgrade.js'
+import { precoerceNumber } from './utilities/downgrade.js'
 
 function isDeterministic (method, engine, buildState) {
   if (Array.isArray(method)) {
@@ -56,68 +56,65 @@ const oldAll = createArrayIterativeMethod('every', true)
 const defaultMethods = {
   '+': (data) => {
     if (!data) return 0
-    if (typeof data === 'string') return +data
-    if (typeof data === 'number') return +data
-    if (typeof data === 'boolean') return +data
-    if (typeof data === 'object' && !Array.isArray(data)) return Number.NaN
+    if (typeof data === 'string') return precoerceNumber(+data)
+    if (typeof data === 'number') return precoerceNumber(+data)
+    if (typeof data === 'boolean') return precoerceNumber(+data)
+    if (typeof data === 'object' && !Array.isArray(data)) throw new Error('NaN')
     let res = 0
     for (let i = 0; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res += +data[i]
     }
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '*': (data) => {
     let res = 1
     for (let i = 0; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res *= +data[i]
     }
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '/': (data) => {
-    if (data[0] && typeof data[0] === 'object') return Number.NaN
+    if (data[0] && typeof data[0] === 'object') throw new Error('NaN')
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
-      if ((data[i] && typeof data[i] === 'object') || !data[i]) return Number.NaN
+      if ((data[i] && typeof data[i] === 'object') || !data[i]) throw new Error('NaN')
       res /= +data[i]
     }
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '-': (data) => {
     if (!data) return 0
-    if (typeof data === 'string') return -data
-    if (typeof data === 'number') return -data
-    if (typeof data === 'boolean') return -data
-    if (typeof data === 'object' && !Array.isArray(data)) return Number.NaN
-    if (data[0] && typeof data[0] === 'object') return Number.NaN
+    if (typeof data === 'string') return precoerceNumber(-data)
+    if (typeof data === 'number') return precoerceNumber(-data)
+    if (typeof data === 'boolean') return precoerceNumber(-data)
+    if (typeof data === 'object' && !Array.isArray(data)) throw new Error('NaN')
+    if (data[0] && typeof data[0] === 'object') throw new Error('NaN')
     if (data.length === 1) return -data[0]
     let res = data[0]
     for (let i = 1; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res -= +data[i]
     }
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   '%': (data) => {
-    if (data[0] && typeof data[0] === 'object') return Number.NaN
+    if (data[0] && typeof data[0] === 'object') throw new Error('NaN')
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
-      if (data[i] && typeof data[i] === 'object') return Number.NaN
+      if (data[i] && typeof data[i] === 'object') throw new Error('NaN')
       res %= +data[i]
     }
+    if (Number.isNaN(res)) throw new Error('NaN')
     return res
   },
   error: (type) => {
-    if (Array.isArray(type)) type = type[0]
-    if (type === 'NaN') return Number.NaN
-    return { error: type }
-  },
-  panic: (item) => {
-    if (Array.isArray(item)) item = item[0]
-    if (Number.isNaN(item)) throw new Error('NaN was returned from expression')
-    if (item && item.error) throw item.error
-    return item
+    throw new Error(type)
   },
   max: (data) => Math.max(...data),
   min: (data) => Math.min(...data),
@@ -289,8 +286,98 @@ const defaultMethods = {
     },
     lazy: true
   },
-  '??': defineCoalesce(),
-  try: defineCoalesce(downgrade, true),
+  '??': {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
+    method: (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (item !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    asyncMethod: async (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+
+      let item
+      for (let i = 0; i < arr.length; i++) {
+        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        if (item !== null && item !== undefined) return item
+      }
+
+      if (item === undefined) return null
+      return item
+    },
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    compile: (data, buildState) => {
+      if (!chainingSupported) return false
+
+      if (Array.isArray(data) && data.length) {
+        return `(${data.map((i, x) => {
+          const built = buildString(i, buildState)
+        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return built
+        return '(' + built + ')'
+      }).join(' ?? ')})`
+      }
+      return `(${buildString(data, buildState)}).reduce((a,b) => (a) ?? b, null)`
+    },
+    lazy: true
+  },
+  try: {
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
+    method: (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+
+      let item
+      let lastError
+      for (let i = 0; i < arr.length; i++) {
+        try {
+          // Todo: make this message thing more robust.
+          if (lastError) item = engine.run(arr[i], { error: lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
+          else item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+          return item
+        } catch (e) {
+          if (Number.isNaN(e)) lastError = { message: 'NaN' }
+          else lastError = e
+        }
+      }
+
+      throw lastError
+    },
+    asyncMethod: async (arr, _1, _2, engine) => {
+      // See "executeInLoop" above
+      const executeInLoop = Array.isArray(arr)
+      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+
+      let item
+      let lastError
+      for (let i = 0; i < arr.length; i++) {
+        try {
+          // Todo: make this message thing more robust.
+          if (lastError) item = await engine.run(arr[i], { error: lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
+          else item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+          return item
+        } catch (e) {
+          if (Number.isNaN(e)) lastError = { message: 'NaN' }
+          else lastError = e
+        }
+      }
+
+      throw lastError
+    },
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    lazy: true
+  },
   and: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, _1, _2, engine) => {
@@ -712,64 +799,6 @@ const defaultMethods = {
   }
 }
 
-/**
- * Defines separate coalesce methods
- */
-function defineCoalesce (func, panic) {
-  let downgrade
-  if (func) downgrade = func
-  else downgrade = (a) => a
-
-  return {
-    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    method: (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
-
-      let item
-      for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (downgrade(item) !== null && item !== undefined) return item
-      }
-
-      if (item === undefined) return null
-      if (panic) throw item
-      return item
-    },
-    asyncMethod: async (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
-
-      let item
-      for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
-        if (downgrade(item) !== null && item !== undefined) return item
-      }
-
-      if (item === undefined) return null
-      if (panic) throw item
-      return item
-    },
-    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
-    compile: (data, buildState) => {
-      if (!chainingSupported) return false
-      const funcCall = func ? 'downgrade' : ''
-      if (Array.isArray(data) && data.length) {
-        return `(${data.map((i, x) => {
-          const built = buildString(i, buildState)
-        if (panic && x === data.length - 1) return `(typeof ((prev = ${built}) || 0).error !== 'undefined' || Number.isNaN(prev) ? (() => { throw prev.error })() : prev)`
-        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return built
-        return `${funcCall}(` + built + ')'
-      }).join(' ?? ')})`
-      }
-      return `(${buildString(data, buildState)}).reduce((a,b) => ${funcCall}(a) ?? b, null)`
-    },
-    lazy: true
-  }
-}
-
 function createArrayIterativeMethod (name, useTruthy = false) {
   return {
     deterministic: (data, buildState) => {
@@ -898,15 +927,24 @@ defaultMethods.if.compile = function (data, buildState) {
  * Transforms the operands of the arithmetic operation to numbers.
  */
 function numberCoercion (i, buildState) {
-  if (Array.isArray(i)) return 'NaN'
-  if (typeof i === 'string' || typeof i === 'number' || typeof i === 'boolean') return `(+${buildString(i, buildState)})`
-  return `(+precoerceNumber(${buildString(i, buildState)}))`
+  if (Array.isArray(i)) return 'precoerceNumber(NaN)'
+
+  if (typeof i === 'number' || typeof i === 'boolean') return '+' + buildString(i, buildState)
+  if (typeof i === 'string') return '+' + precoerceNumber(+i)
+
+  // check if it's already a number once built
+  const f = buildString(i, buildState)
+
+  // regex match
+  if (/^-?\d+(\.\d*)?$/.test(f)) return '+' + f
+
+  return `(+precoerceNumber(${f}))`
 }
 
 // @ts-ignore Allow custom attribute
 defaultMethods['+'].compile = function (data, buildState) {
   if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
-  if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `(+${buildString(data, buildState)})`
+  if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `precoerceNumber(+${buildString(data, buildState)})`
   return buildState.compile`(Array.isArray(prev = ${data}) ? prev.reduce((a,b) => (+a)+(+precoerceNumber(b)), 0) : +precoerceNumber(prev))`
 }
 
@@ -933,11 +971,11 @@ defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
     return `(${data.map((i, x) => {
     let res = numberCoercion(i, buildState)
-    if (x) res = `(${res}||NaN)`
+    if (x) res = `precoerceNumber(${res} || NaN)`
     return res
   }).join(' / ')})`
   }
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b) || NaN))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b || NaN)))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
@@ -964,7 +1002,7 @@ defaultMethods['!!'].compile = function (data, buildState) {
 defaultMethods.none.deterministic = defaultMethods.some.deterministic
 
 // @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
-defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = defaultMethods.error.optimizeUnary = defaultMethods.panic.optimizeUnary = true
+defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = defaultMethods.error.optimizeUnary = true
 
 export default {
   ...defaultMethods,

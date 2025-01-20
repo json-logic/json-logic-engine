@@ -55,19 +55,6 @@
         "result": false,
         "data": null
     },
-    "# Some error tests",
-    {
-        "description": "Truthy: NaN",
-        "rule": { "!!": { "error": "NaN" } },
-        "result": true,
-        "data": null
-    },
-    {
-        "description": "Truthy: Arbitrary error",
-        "rule": { "!!": { "error": "Some error" } },
-        "result": true,
-        "data": null
-    },
     "# Context Object Tests",
     {
         "description": "Truthy: Zero Key Object",
