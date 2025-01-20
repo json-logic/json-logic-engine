@@ -47,5 +47,19 @@
         "rule": { "try": [{ "if": [{"val": ["user", "admin"]}, true, { "error": "Not an admin" }] }] },
         "data": { "user": { "admin": false } },
         "error": true
+    },
+    {
+        "description": "Try can work further up the AST with Exceptions",
+        "rule": {
+            "try": [{
+                "if": [
+                    true,
+                    { "map": [[1,2,3], {"/": [0, 0] }]},
+                    null
+                ]
+            }, 10]
+        },
+        "result": 10,
+        "data": null
     }
 ]
