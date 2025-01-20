@@ -293,7 +293,9 @@ const defaultMethods = {
       let lastError
       for (let i = 0; i < arr.length; i++) {
         try {
-          item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+          // Todo: make this message thing more robust.
+          if (lastError) item = engine.run(arr[i], { error: lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
+          else item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
           return item
         } catch (e) {
           // Do nothing
@@ -312,7 +314,9 @@ const defaultMethods = {
       let lastError
       for (let i = 0; i < arr.length; i++) {
         try {
-          item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+          // Todo: make this message thing more robust.
+          if (lastError) item = await engine.run(arr[i], { error: lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
+          else item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
           return item
         } catch (e) {
           // Do nothing
@@ -970,11 +974,11 @@ defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
     return `(${data.map((i, x) => {
     let res = numberCoercion(i, buildState)
-    if (x) res = `(${res}|| (() => { throw new Error() })() )`
+    if (x) res = `(${res}|| (() => { throw new Error('NaN') })() )`
     return res
   }).join(' / ')})`
   }
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b) || (() => { throw new Error() })() ))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b) || (() => { throw new Error('NaN') })() ))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {

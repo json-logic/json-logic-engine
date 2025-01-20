@@ -61,5 +61,45 @@
         },
         "result": 10,
         "data": null
+    },
+    {
+        "description": "The context switches for the try coalescing to the previous error",
+        "rule": {
+            "try": [
+                { "if": [true, { "error": "Some error" }, null] },
+                { "val": [] }
+            ]
+        },
+        "result": { "error": "Some error"},
+        "data": null
+    },
+    {
+        "description": "Try can work further up the AST with Exceptions, and return the error",
+        "rule": {
+            "try": [{
+                "if": [
+                    true,
+                    { "map": [[1,2,3], {"/": [0, 0] }]},
+                    null
+                ]
+            }, { "val": [] }]
+        },
+        "result": { "error": "NaN" },
+        "data": null
+    },
+    "# Not Proposed",
+    {
+        "description": "Try can work further up the AST with Exceptions; Grabbing other Context value",
+        "rule": {
+            "try": [{
+                "if": [
+                    true,
+                    { "map": [[1,2,3], {"/": [0, 0] }]},
+                    null
+                ]
+            }, { "val": [[2], "fallback"] }]
+        },
+        "result": "Hello",
+        "data": { "fallback": "Hello" }
     }
 ]
