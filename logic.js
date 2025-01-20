@@ -120,11 +120,11 @@ class LogicEngine {
    *
    * If it detects that a bunch of dynamic objects are being passed in, and it doesn't see the same object,
    * it will disable the interpreted optimization.
-   *
+   * @template T
    * @param {*} logic The logic to be executed
    * @param {*} data The data being passed in to the logic to be executed against.
    * @param {{ above?: any }} options Options for the invocation
-   * @returns {*}
+   * @returns {T}
    */
   run (logic, data = {}, options = {}) {
     const { above = [] } = options
@@ -150,6 +150,7 @@ class LogicEngine {
     if (Array.isArray(logic)) {
       const res = new Array(logic.length)
       for (let i = 0; i < logic.length; i++) res[i] = this.run(logic[i], data, { above })
+      // @ts-expect-error I'll figure out how to type this correctly soon from direct JS
       return res
     }
 
@@ -157,6 +158,7 @@ class LogicEngine {
       const keys = Object.keys(logic)
       if (keys.length > 0) {
         const func = keys[0]
+        // @ts-expect-error I'll figure out how to type this correctly soon from direct JS
         return this._parse(logic, data, above, func)
       }
     }
@@ -165,10 +167,10 @@ class LogicEngine {
   }
 
   /**
-   *
+   * @template T
    * @param {*} logic The logic to be built.
    * @param {{ top?: Boolean, above?: any }} options
-   * @returns {Function}
+   * @returns {(...args: any[]) => T}
    */
   build (logic, options = {}) {
     const { above = [], top = true } = options
