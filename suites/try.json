@@ -37,7 +37,7 @@
         "data": null
     },
     {
-        "description": "Can promote a soft error to a hard error",
+        "description": "Panics when the only argument is an error",
         "rule": { "try": { "error": "Some error" } },
         "error": true,
         "data": null
@@ -79,10 +79,10 @@
         "rule": {
             "try": [
                 { "error": "Some error" },
-                { "val": [] }
+                { "val": "error" }
             ]
         },
-        "result": { "error": "Some error"},
+        "result": "Some error",
         "data": null
     },
     {
@@ -90,10 +90,10 @@
         "rule": {
             "try": [
                 { "if": [true, { "error": "Some error" }, null] },
-                { "val": [] }
+                { "val": "error" }
             ]
         },
-        "result": { "error": "Some error"},
+        "result": "Some error",
         "data": null
     },
     {
@@ -102,10 +102,10 @@
             "try": [
                 { "error": "A" },
                 { "error": "B" },
-                { "val": [] }
+                { "val": "error" }
             ]
         },
-        "result": { "error": "B" },
+        "result": "B",
         "data": null
     },
     {
@@ -117,9 +117,9 @@
                     { "map": [[1,2,3], {"/": [0, 0] }]},
                     null
                 ]
-            }, { "val": [] }]
+            }, { "val": "error" }]
         },
-        "result": { "error": "NaN" },
+        "result": "NaN",
         "data": null
     },
     "# Not Proposed",
