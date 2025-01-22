@@ -220,7 +220,12 @@ function buildString (method, buildState = {}) {
     } else {
       asyncDetected = Boolean(async && engine.methods[func] && engine.methods[func].asyncMethod)
       const argCount = countArguments(asyncDetected ? engine.methods[func].asyncMethod : engine.methods[func].method)
-      const argumentsNeeded = argumentsDict[argCount - 1] || argumentsDict[2]
+      let argumentsNeeded = argumentsDict[argCount - 1] || argumentsDict[2]
+
+      if (asyncDetected && typeof engine.methods[func][Sync] === 'function' && engine.methods[func][Sync](lower, { engine })) {
+        asyncDetected = false
+        argumentsNeeded = argumentsNeeded.replace('engine', 'engine.fallback')
+      }
 
       if (engine.methods[func] && !engine.methods[func].lazy) {
         return makeAsync(`engine.methods["${func}"]${asyncDetected ? '.asyncMethod' : '.method'}(${coerce}(` + buildString(lower, buildState) + ')' + argumentsNeeded + ')')
