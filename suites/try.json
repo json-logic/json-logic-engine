@@ -109,6 +109,14 @@
         "data": null
     },
     {
+        "description": "Error can pull from an error object",
+        "rule": {
+            "try": [{ "error": { "val": "x" } }, { "val": "error" }]
+        },
+        "data": { "x": { "error": "Some error" }},
+        "result": "Some error"
+    },
+    {
         "description": "Try can work further up the AST with Exceptions, and return the error",
         "rule": {
             "try": [{

@@ -10,5 +10,11 @@
         "rule": { "error": "NaN" },
         "data": null,
         "error": true
+    },
+    {
+        "description": "Can throw an error object",
+        "rule": { "error": { "val": "x" } },
+        "data": { "x": { "error": "Some error" }},
+        "error": true
     }
 ]
