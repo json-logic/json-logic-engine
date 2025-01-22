@@ -1,3 +1,4 @@
+/* eslint-disable no-throw-literal */
 // @ts-check
 'use strict'
 
@@ -114,7 +115,9 @@ const defaultMethods = {
     return res
   },
   error: (type) => {
-    throw new Error(type)
+    if (Array.isArray(type)) type = type[0]
+    if (typeof type === 'object') throw type
+    throw { error: type }
   },
   max: (data) => Math.max(...data),
   min: (data) => Math.min(...data),
@@ -342,7 +345,7 @@ const defaultMethods = {
       for (let i = 0; i < arr.length; i++) {
         try {
           // Todo: make this message thing more robust.
-          if (lastError) item = engine.run(arr[i], { error: lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
+          if (lastError) item = engine.run(arr[i], { error: lastError.error || lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
           else item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
           return item
         } catch (e) {
@@ -363,7 +366,7 @@ const defaultMethods = {
       for (let i = 0; i < arr.length; i++) {
         try {
           // Todo: make this message thing more robust.
-          if (lastError) item = await engine.run(arr[i], { error: lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
+          if (lastError) item = await engine.run(arr[i], { error: lastError.error || lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
           else item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
           return item
         } catch (e) {

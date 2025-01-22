@@ -122,6 +122,30 @@
         "result": "NaN",
         "data": null
     },
+    {
+        "description": "Handles NaN Explicitly",
+        "rule": {
+            "try": [
+                { "if": [{ "/": [1, { "val": "x" }] }, { "error": "Some error" }, null] },
+                {
+                    "if": [{ "===": [{ "val": "error" }, "NaN"]}, "Handled", { "error": { "val": [] } }]
+                }
+            ]
+        },
+        "result": "Handled",
+        "data": { "x": 0 }
+    },
+    {
+        "description": "Did not NaN, so it errored",
+        "rule": {
+            "try": [
+                { "if": [{ "/": [1, { "val": "x" }] }, { "error": "Some error" }, null] },
+                { "if": [{ "===": [{ "val": "error" }, "NaN"]}, "Handled", { "error": { "val": [] } }] }
+            ]
+        },
+        "error": true,
+        "data": { "x": 1 }
+    },
     "# Not Proposed",
     {
         "description": "Try can work further up the AST with Exceptions; Grabbing other Context value",
