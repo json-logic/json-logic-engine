@@ -2,7 +2,7 @@
     "# Collection of Tests for Try",
     {
         "description": "Coalesce an error",
-        "rule": { "try": [{ "error": "Some error" }, 1] },
+        "rule": { "try": [{ "throw": "Some error" }, 1] },
         "result": 1,
         "data": null
     },
@@ -14,19 +14,19 @@
     },
     {
         "description": "Try is variadic",
-        "rule": { "try": [{ "error": "Some error" }, { "/": [0, 0] }, 2] },
+        "rule": { "try": [{ "throw": "Some error" }, { "/": [0, 0] }, 2] },
         "result": 2,
         "data": null
     },
     {
         "description": "Panics if none of the values are valid",
-        "rule": { "try": [{ "error": "Some error" }, { "error": "Some other error" }] },
+        "rule": { "try": [{ "throw": "Some error" }, { "throw": "Some other error" }] },
         "error": true,
         "data": null
     },
     {
         "description": "Panics if none of the values are valid (2)",
-        "rule": { "try": [{ "error": "Some error" }, { "/": [0, 0] }] },
+        "rule": { "try": [{ "throw": "Some error" }, { "/": [0, 0] }] },
         "error": true,
         "data": null
     },
@@ -38,7 +38,7 @@
     },
     {
         "description": "Panics when the only argument is an error",
-        "rule": { "try": { "error": "Some error" } },
+        "rule": { "try": { "throw": "Some error" } },
         "error": true,
         "data": null
     },
@@ -56,7 +56,7 @@
     },
     {
         "description": "Panic based on an error emitted from an if",
-        "rule": { "try": [{ "if": [{"val": ["user", "admin"]}, true, { "error": "Not an admin" }] }] },
+        "rule": { "try": [{ "if": [{"val": ["user", "admin"]}, true, { "throw": "Not an admin" }] }] },
         "data": { "user": { "admin": false } },
         "error": true
     },
@@ -78,7 +78,7 @@
         "description": "The context switches for the try coalescing to the previous error",
         "rule": {
             "try": [
-                { "error": "Some error" },
+                { "throw": "Some error" },
                 { "val": "error" }
             ]
         },
@@ -89,7 +89,7 @@
         "description": "The context switches for the try coalescing to the previous error (2)",
         "rule": {
             "try": [
-                { "if": [true, { "error": "Some error" }, null] },
+                { "if": [true, { "throw": "Some error" }, null] },
                 { "val": "error" }
             ]
         },
@@ -100,8 +100,8 @@
         "description": "The context switches for the try coalescing to the previous error (3)",
         "rule": {
             "try": [
-                { "error": "A" },
-                { "error": "B" },
+                { "throw": "A" },
+                { "throw": "B" },
                 { "val": "error" }
             ]
         },
@@ -111,7 +111,7 @@
     {
         "description": "Error can pull from an error object",
         "rule": {
-            "try": [{ "error": { "val": "x" } }, { "val": "error" }]
+            "try": [{ "throw": { "val": "x" } }, { "val": "error" }]
         },
         "data": { "x": { "error": "Some error" }},
         "result": "Some error"
@@ -134,9 +134,9 @@
         "description": "Handles NaN Explicitly",
         "rule": {
             "try": [
-                { "if": [{ "/": [1, { "val": "x" }] }, { "error": "Some error" }, null] },
+                { "if": [{ "/": [1, { "val": "x" }] }, { "throw": "Some error" }, null] },
                 {
-                    "if": [{ "===": [{ "val": "error" }, "NaN"]}, "Handled", { "error": { "val": [] } }]
+                    "if": [{ "===": [{ "val": "error" }, "NaN"]}, "Handled", { "throw": { "val": [] } }]
                 }
             ]
         },
@@ -147,8 +147,8 @@
         "description": "Did not NaN, so it errored",
         "rule": {
             "try": [
-                { "if": [{ "/": [1, { "val": "x" }] }, { "error": "Some error" }, null] },
-                { "if": [{ "===": [{ "val": "error" }, "NaN"]}, "Handled", { "error": { "val": [] } }] }
+                { "if": [{ "/": [1, { "val": "x" }] }, { "throw": "Some error" }, null] },
+                { "if": [{ "===": [{ "val": "error" }, "NaN"]}, "Handled", { "throw": { "val": [] } }] }
             ]
         },
         "error": true,

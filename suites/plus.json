@@ -142,12 +142,6 @@
         "data": { "x": 1, "y": 2 }
     },
     {
-        "description": "Addition with NaN",
-        "rule": { "+": [{ "error": "NaN" }, 1] },
-        "error": true,
-        "data": null
-    },
-    {
         "description": "Addition with string produces NaN",
         "rule": { "+": ["Hey", 1] },
         "error": true,

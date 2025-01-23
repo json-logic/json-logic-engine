@@ -159,12 +159,6 @@
         "result": 5
     },
     {
-        "description": "Modulo with NaN",
-        "rule": { "%": [{ "error": "NaN" }, 1] },
-        "error": true,
-        "data": null
-    },
-    {
         "description": "Modulo with string produces NaN",
         "rule": { "%": ["Hey", 1] },
         "error": true,

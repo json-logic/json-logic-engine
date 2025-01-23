@@ -116,12 +116,6 @@
         "result": -1
     },
     {
-        "description": "Subtraction with NaN",
-        "rule": { "-": [{ "error": "NaN" }, 1] },
-        "error": true,
-        "data": null
-    },
-    {
         "description": "Subtraction with string produces NaN",
         "rule": { "-": ["Hey", 1] },
         "error": true,

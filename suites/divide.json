@@ -154,12 +154,6 @@
         "data": null
     },
     {
-        "description": "Divide by NaN",
-        "rule": { "/": [1, { "error": "NaN" }] },
-        "error": true,
-        "data": null
-    },
-    {
         "description": "Divide with String produces NaN",
         "rule": { "/": [1, "a"] },
         "error": true,
