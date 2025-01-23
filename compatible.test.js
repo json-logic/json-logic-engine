@@ -1,3 +1,4 @@
+/* eslint-disable no-ex-assign */
 import fs from 'fs'
 import { LogicEngine, AsyncLogicEngine } from './index.js'
 
@@ -57,7 +58,9 @@ describe('All of the compatible tests', () => {
           expect(correction(result)).toStrictEqual(testCase.result)
         } catch (err) {
           if (err.message && err.message.includes('expect')) throw err
-          expect(testCase.error).toStrictEqual(true)
+          if (Number.isNaN(err)) err = { type: 'NaN' }
+          else if (err.message) err = { type: err.message }
+          expect(err).toMatchObject(testCase.error)
         }
       })
 
@@ -72,7 +75,9 @@ describe('All of the compatible tests', () => {
           expect(correction(result)).toStrictEqual(testCase.result)
         } catch (err) {
           if (err.message && err.message.includes('expect')) throw err
-          expect(testCase.error).toStrictEqual(true)
+          if (Number.isNaN(err)) err = { type: 'NaN' }
+          else if (err.message) err = { type: err.message }
+          expect(err).toMatchObject(testCase.error)
         }
       })
     }

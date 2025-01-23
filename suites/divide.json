@@ -150,31 +150,31 @@
     {
         "description": "Divide by Zero",
         "rule": { "/": [0, 0] },
-        "error": true,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
         "description": "Divide with String produces NaN",
         "rule": { "/": [1, "a"] },
-        "error": true,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
         "description": "Divide with Array produces NaN",
         "rule": { "/": [1, [1]] },
-        "error": true,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
         "description": "Any division by zero should return NaN",
         "rule": { "/": [1, 0] },
-        "error": true,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
         "description": "Any division by zero should return NaN (2)",
         "rule": { "/": [8, 2, 0] },
-        "error": true,
+        "error": { "type": "NaN" },
         "data": null
     }
 ]
