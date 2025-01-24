@@ -1,5 +1,3 @@
-/* eslint-disable no-ex-assign */
-/* eslint-disable no-throw-literal */
 // @ts-check
 'use strict'
 
@@ -118,6 +116,7 @@ const defaultMethods = {
   throw: (type) => {
     if (Array.isArray(type)) type = type[0]
     if (typeof type === 'object') throw type
+    // eslint-disable-next-line no-throw-literal
     throw { type }
   },
   max: (data) => Math.max(...data),
@@ -388,6 +387,7 @@ const defaultMethods = {
       try {
         res = buildState.compile`((context, above) => { try { return ${data[0]} } catch(err) { above = [null, context, above]; context = { type: err.type || err.message || err.toString() }; `
       } catch (err) {
+        // eslint-disable-next-line no-ex-assign
         if (Number.isNaN(err)) err = { type: 'NaN' }
         res = { [Compiled]: `((context, above) => { { above = [null, context, above]; context = ${JSON.stringify(err)}; ` }
       }
@@ -398,6 +398,7 @@ const defaultMethods = {
             if (i === data.length - 1) res = buildState.compile`${res} try { return ${data[i]} } catch(err) { throw err; } `
             else res = buildState.compile`${res} try { return ${data[i]} } catch(err) { context = { type: err.type || err.message || err.toString() }; } `
           } catch (err) {
+            // eslint-disable-next-line no-ex-assign
             if (Number.isNaN(err)) err = { type: 'NaN' }
             if (i === data.length - 1) res = buildState.compile`${res} throw ${{ [Compiled]: JSON.stringify(err) }} `
             else res = buildState.compile`${res} ${{ [Compiled]: `context = ${JSON.stringify(err)};` }}`
