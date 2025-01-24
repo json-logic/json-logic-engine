@@ -980,14 +980,14 @@ function numberCoercion (i, buildState) {
 
 // @ts-ignore Allow custom attribute
 defaultMethods['+'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
+  if (Array.isArray(data)) return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
   if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `precoerceNumber(+${buildString(data, buildState)})`
   return buildState.compile`(Array.isArray(prev = ${data}) ? prev.reduce((a,b) => (+a)+(+precoerceNumber(b)), 0) : +precoerceNumber(prev))`
 }
 
 // @ts-ignore Allow custom attribute
 defaultMethods['%'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' % ')})`
+  if (Array.isArray(data)) return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' % ')})`
   return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))%(+precoerceNumber(b)))`
 }
 
@@ -999,14 +999,14 @@ defaultMethods.in.compile = function (data, buildState) {
 
 // @ts-ignore Allow custom attribute
 defaultMethods['-'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `${data.length === 1 ? '-' : ''}(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
+  if (Array.isArray(data)) return `${data.length === 1 ? '-' : ''}precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
   if (typeof data === 'string' || typeof data === 'number') return `(-${buildString(data, buildState)})`
   return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 1 ? -precoerceNumber(prev[0]) : prev.reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
-    return `(${data.map((i, x) => {
+    return `precoerceNumber(${data.map((i, x) => {
     let res = numberCoercion(i, buildState)
     if (x && res === '+0') precoerceNumber(NaN)
     if (x) res = `precoerceNumber(${res} || NaN)`
@@ -1017,7 +1017,7 @@ defaultMethods['/'].compile = function (data, buildState) {
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
+  if (Array.isArray(data)) return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
   return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)))`
 }
 
