@@ -1,3 +1,4 @@
+/* eslint-disable no-ex-assign */
 /* eslint-disable no-throw-literal */
 // @ts-check
 'use strict'
@@ -377,8 +378,41 @@ const defaultMethods = {
 
       throw lastError
     },
-    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
-    lazy: true
+    deterministic: (data, buildState) => {
+      return isDeterministic(data[0], buildState.engine, { ...buildState, insideTry: true }) && isDeterministic(data, buildState.engine, { ...buildState, insideIterator: true, insideTry: true })
+    },
+    lazy: true,
+    compile: (data, buildState) => {
+      if (!Array.isArray(data) || !data.length) return false
+      let res
+      try {
+        res = buildState.compile`((context, above) => { try { return ${data[0]} } catch(err) { above = [null, context, above]; context = { type: err.type || err.message || err.toString() }; `
+      } catch (err) {
+        if (Number.isNaN(err)) err = { type: 'NaN' }
+        res = { [Compiled]: `((context, above) => { { above = [null, context, above]; context = ${JSON.stringify(err)}; ` }
+      }
+
+      if (data.length > 1) {
+        for (let i = 1; i < data.length; i++) {
+          try {
+            if (i === data.length - 1) res = buildState.compile`${res} try { return ${data[i]} } catch(err) { throw err; } `
+            else res = buildState.compile`${res} try { return ${data[i]} } catch(err) { context = { type: err.type || err.message || err.toString() }; } `
+          } catch (err) {
+            if (Number.isNaN(err)) err = { type: 'NaN' }
+            if (i === data.length - 1) res = buildState.compile`${res} throw ${{ [Compiled]: JSON.stringify(err) }} `
+            else res = buildState.compile`${res} ${{ [Compiled]: `context = ${JSON.stringify(err)};` }}`
+          }
+        }
+      } else {
+        if (res[Compiled].includes('err')) res = buildState.compile`${res} throw err;`
+        else res = buildState.compile`${res} throw context;`
+      }
+
+      res = buildState.compile`${res} } })(context, above)`
+      if (res[Compiled].includes('await')) res[Compiled] = res[Compiled].replace('((context', '(async (context')
+
+      return res
+    }
   },
   and: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
@@ -1003,6 +1037,11 @@ defaultMethods['!!'].compile = function (data, buildState) {
   return buildState.compile`(!!engine.truthy(${data}))`
 }
 defaultMethods.none.deterministic = defaultMethods.some.deterministic
+
+// @ts-ignore
+defaultMethods.throw.deterministic = (data, buildState) => {
+  return buildState.insideTry && isDeterministic(data, buildState.engine, buildState)
+}
 
 // @ts-ignore Allowing a optimizeUnary attribute that can be used for performance optimizations
 defaultMethods['+'].optimizeUnary = defaultMethods['-'].optimizeUnary = defaultMethods['!'].optimizeUnary = defaultMethods['!!'].optimizeUnary = defaultMethods.cat.optimizeUnary = defaultMethods.throw.optimizeUnary = true
