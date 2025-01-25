@@ -2,7 +2,7 @@
     {
         "description": "Multiply with dynamic empty array",
         "rule": { "*": { "preserve": [] } },
-        "error": { "type": "Invalid Arguments" },
+        "result": 1,
         "data": null
     },
     {

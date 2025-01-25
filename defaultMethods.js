@@ -71,8 +71,7 @@ const defaultMethods = {
     return res
   },
   '*': (data) => {
-    // eslint-disable-next-line no-throw-literal
-    if (data.length === 0) throw INVALID_ARGUMENTS
+    if (data.length === 0) return 1
     let res = 1
     for (let i = 0; i < data.length; i++) {
       if (data[i] && typeof data[i] === 'object') throw NaN
@@ -83,7 +82,7 @@ const defaultMethods = {
   },
   '/': (data) => {
     if (data[0] && typeof data[0] === 'object') throw NaN
-    // eslint-disable-next-line no-throw-literal
+
     if (data.length === 0) throw INVALID_ARGUMENTS
     if (data.length === 1) {
       if (!+data[0] || (data[0] && typeof data[0] === 'object')) throw NaN
@@ -116,7 +115,7 @@ const defaultMethods = {
   },
   '%': (data) => {
     if (data[0] && typeof data[0] === 'object') throw NaN
-    // eslint-disable-next-line no-throw-literal
+
     if (data.length < 2) throw INVALID_ARGUMENTS
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
@@ -129,6 +128,7 @@ const defaultMethods = {
   throw: (type) => {
     if (Array.isArray(type)) type = type[0]
     if (typeof type === 'object') throw type
+
     // eslint-disable-next-line no-throw-literal
     throw { type }
   },
@@ -1042,11 +1042,10 @@ defaultMethods['/'].compile = function (data, buildState) {
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
-    // eslint-disable-next-line no-throw-literal
-    if (data.length === 0) throw INVALID_ARGUMENTS
+    if (data.length === 0) return '1'
     return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
   }
-  return `assertSize(${buildString(data, buildState)}, 1).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)))`
+  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)), 1)`
 }
 
 // @ts-ignore Allow custom attribute

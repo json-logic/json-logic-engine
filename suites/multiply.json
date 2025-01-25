@@ -85,9 +85,9 @@
         "data": null
     },
     {
-        "description": "Multiply with zero operands is an error",
+        "description": "Multiply with zero operands is 1 (Product)",
         "rule": { "*": [] },
-        "error": { "type": "Invalid Arguments" },
+        "result": 1,
         "data": null
     },
     {
