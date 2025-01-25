@@ -55,6 +55,12 @@
         "data": null
     },
     {
+        "description": "Minus with zero operands is zero",
+        "rule": { "-": [] },
+        "result": 0,
+        "data": null
+    },
+    {
         "description": "Minus Operator with Single Operand, Direct (Number)",
         "rule": { "-": 1 },
         "result": -1,
@@ -125,12 +131,6 @@
         "description": "Subtraction with Array produces NaN",
         "rule": { "-": [[1], 1] },
         "error": { "type": "NaN" },
-        "data": null
-    },
-    {
-        "description": "Minus with no operands",
-        "rule": { "-": [] },
-        "result": 0,
         "data": null
     }
 ]

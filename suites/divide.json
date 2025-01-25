@@ -63,6 +63,12 @@
         "data": null
     },
     {
+        "description": "Divide with zero operands is an error",
+        "rule": { "/": [] },
+        "error": { "type": "Invalid Arguments" },
+        "data": null
+    },
+    {
         "description": "Divide with Single Operand, Direct (Number)",
         "rule": { "/": 1 },
         "result": 1,
@@ -182,12 +188,6 @@
         "description": "Any division by zero should return NaN (2)",
         "rule": { "/": [8, 2, 0] },
         "error": { "type": "NaN" },
-        "data": null
-    },
-    {
-        "description": "A division without any operands should throw invalid arguments",
-        "rule": { "/": [] },
-        "error": { "type": "Invalid Arguments" },
         "data": null
     }
 ]

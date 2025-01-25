@@ -98,6 +98,12 @@
         "data": null
     },
     {
+        "description": "Modulo with zero operands is an error",
+        "rule": { "%": [] },
+        "error": { "type": "Invalid Arguments" },
+        "data": null
+    },
+    {
         "description": "Modulo Operator with Single Operand, Direct (Number)",
         "rule": { "%": 1 },
         "error": { "type": "Invalid Arguments"},
@@ -180,12 +186,6 @@
         "description": "Modulo with a negative divisor",
         "rule": { "%": [8, -3] },
         "result": 2,
-        "data": null
-    },
-    {
-        "description": "Modulo with no arguments",
-        "rule": { "%": [] },
-        "error": { "type": "Invalid Arguments" },
         "data": null
     }
 ]

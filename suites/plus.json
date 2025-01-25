@@ -55,6 +55,12 @@
         "data": null
     },
     {
+        "description": "Plus Operator with zero operands is zero",
+        "rule": { "+": [] },
+        "result": 0,
+        "data": null
+    },
+    {
         "description": "Plus Operator with Single Operand, Direct (Number)",
         "rule": { "+": 1 },
         "result": 1,
@@ -187,12 +193,6 @@
         "description": "Plus Operator with Single Operand, Direct Object Input Produces NaN",
         "rule": { "+": {} },
         "error": { "type": "NaN" },
-        "data": null
-    },
-    {
-        "description": "Plus Operator with zero operands is zero",
-        "rule": { "+": [] },
-        "result": 0,
         "data": null
     }
 ]

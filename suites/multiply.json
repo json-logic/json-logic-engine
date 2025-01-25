@@ -85,6 +85,12 @@
         "data": null
     },
     {
+        "description": "Multiply with zero operands is an error",
+        "rule": { "*": [] },
+        "error": { "type": "Invalid Arguments" },
+        "data": null
+    },
+    {
         "description": "Multiply Operator with Single Operand, Direct (Number)",
         "rule": { "*": 1 },
         "result": 1,
@@ -161,12 +167,6 @@
         "description": "Multiply with Array produces NaN",
         "rule": { "*": [[1], 1] },
         "error": { "type": "NaN" },
-        "data": null
-    },
-    {
-        "description": "Multiply with no operands",
-        "rule": { "*": [] },
-        "error": { "type": "Invalid Arguments" },
         "data": null
     }
 ]
