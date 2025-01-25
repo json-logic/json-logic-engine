@@ -10,6 +10,8 @@ import InvalidControlInput from './errors/InvalidControlInput.js'
 import legacyMethods from './legacy.js'
 import { precoerceNumber } from './utilities/downgrade.js'
 
+const INVALID_ARGUMENTS = { type: 'Invalid Arguments' }
+
 function isDeterministic (method, engine, buildState) {
   if (Array.isArray(method)) {
     return method.every((i) => isDeterministic(i, engine, buildState))
@@ -69,6 +71,8 @@ const defaultMethods = {
     return res
   },
   '*': (data) => {
+    // eslint-disable-next-line no-throw-literal
+    if (data.length === 0) throw INVALID_ARGUMENTS
     let res = 1
     for (let i = 0; i < data.length; i++) {
       if (data[i] && typeof data[i] === 'object') throw NaN
@@ -79,12 +83,18 @@ const defaultMethods = {
   },
   '/': (data) => {
     if (data[0] && typeof data[0] === 'object') throw NaN
+    // eslint-disable-next-line no-throw-literal
+    if (data.length === 0) throw INVALID_ARGUMENTS
+    if (data.length === 1) {
+      if (!+data[0] || (data[0] && typeof data[0] === 'object')) throw NaN
+      return 1 / +data[0]
+    }
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
       if ((data[i] && typeof data[i] === 'object') || !data[i]) throw NaN
       res /= +data[i]
     }
-    if (Number.isNaN(res)) throw NaN
+    if (Number.isNaN(res) || res === Infinity) throw NaN
     return res
   },
   '-': (data) => {
@@ -94,6 +104,7 @@ const defaultMethods = {
     if (typeof data === 'boolean') return precoerceNumber(-data)
     if (typeof data === 'object' && !Array.isArray(data)) throw NaN
     if (data[0] && typeof data[0] === 'object') throw NaN
+    if (data.length === 0) return 0
     if (data.length === 1) return -data[0]
     let res = data[0]
     for (let i = 1; i < data.length; i++) {
@@ -105,6 +116,8 @@ const defaultMethods = {
   },
   '%': (data) => {
     if (data[0] && typeof data[0] === 'object') throw NaN
+    // eslint-disable-next-line no-throw-literal
+    if (data.length < 2) throw INVALID_ARGUMENTS
     let res = +data[0]
     for (let i = 1; i < data.length; i++) {
       if (data[i] && typeof data[i] === 'object') throw NaN
@@ -980,15 +993,21 @@ function numberCoercion (i, buildState) {
 
 // @ts-ignore Allow custom attribute
 defaultMethods['+'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
+  if (Array.isArray(data)) {
+    if (data.length === 0) return '(+0)'
+    return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
+  }
   if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `precoerceNumber(+${buildString(data, buildState)})`
   return buildState.compile`(Array.isArray(prev = ${data}) ? prev.reduce((a,b) => (+a)+(+precoerceNumber(b)), 0) : +precoerceNumber(prev))`
 }
 
 // @ts-ignore Allow custom attribute
 defaultMethods['%'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' % ')})`
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))%(+precoerceNumber(b)))`
+  if (Array.isArray(data)) {
+    if (data.length < 2) throw INVALID_ARGUMENTS
+    return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' % ')})`
+  }
+  return `assertSize(${buildString(data, buildState)}, 2).reduce((a,b) => (+precoerceNumber(a))%(+precoerceNumber(b)))`
 }
 
 // @ts-ignore Allow custom attribute
@@ -999,13 +1018,18 @@ defaultMethods.in.compile = function (data, buildState) {
 
 // @ts-ignore Allow custom attribute
 defaultMethods['-'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `${data.length === 1 ? '-' : ''}precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
+  if (Array.isArray(data)) {
+    if (data.length === 0) return '(-0)'
+    return `${data.length === 1 ? '-' : ''}precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
+  }
   if (typeof data === 'string' || typeof data === 'number') return `(-${buildString(data, buildState)})`
-  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 1 ? -precoerceNumber(prev[0]) : prev.reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 0 ? 0 : prev.length === 1 ? -precoerceNumber(prev[0]) : prev.reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
+    if (data.length === 0) throw INVALID_ARGUMENTS
+    if (data.length === 1) data = [1, data[0]]
     return `precoerceNumber(${data.map((i, x) => {
     let res = numberCoercion(i, buildState)
     if (x && res === '+0') precoerceNumber(NaN)
@@ -1013,12 +1037,16 @@ defaultMethods['/'].compile = function (data, buildState) {
     return res
   }).join(' / ')})`
   }
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b || NaN)))`
+  return `assertSize(prev = ${buildString(data, buildState)}, 1) && prev.length === 1 ? 1 / precoerceNumber(prev[0] || NaN) : prev.reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b || NaN)))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['*'].compile = function (data, buildState) {
-  if (Array.isArray(data)) return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
-  return `(${buildString(data, buildState)}).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)))`
+  if (Array.isArray(data)) {
+    // eslint-disable-next-line no-throw-literal
+    if (data.length === 0) throw INVALID_ARGUMENTS
+    return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' * ')})`
+  }
+  return `assertSize(${buildString(data, buildState)}, 1).reduce((a,b) => (+precoerceNumber(a))*(+precoerceNumber(b)))`
 }
 
 // @ts-ignore Allow custom attribute

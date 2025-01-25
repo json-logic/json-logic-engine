@@ -71,7 +71,7 @@
     {
         "description": "Divide with Single Operand, Direct (0)",
         "rule": { "/": 0 },
-        "result": 0,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
@@ -93,9 +93,16 @@
         "data": null
     },
     {
+        "description": "Divide Operator with Single Operand, Direct (2)",
+        "rule": { "/": 2 },
+        "result": 0.5,
+        "decimal": true,
+        "data": null
+    },
+    {
         "description": "Divide Operator with Single Operand, Direct (0)",
         "rule": { "/": 0 },
-        "result": 0,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
@@ -114,7 +121,7 @@
     {
         "description": "Divide Operator with Single Operand, Direct (String 0)",
         "rule": { "/": "0" },
-        "result": 0,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
@@ -126,19 +133,19 @@
     {
         "description": "Divide Operator with Single Operand, Direct (false)",
         "rule": { "/": false },
-        "result": 0,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
         "description": "Divide Operator with Single Operand, Direct (Empty String)",
         "rule": { "/": "" },
-        "result": 0,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
         "description": "Divide Operator with a Single Operand, Direct (null)",
         "rule": { "/": null },
-        "result": 0,
+        "error": { "type": "NaN" },
         "data": null
     },
     {
@@ -175,6 +182,32 @@
         "description": "Any division by zero should return NaN (2)",
         "rule": { "/": [8, 2, 0] },
         "error": { "type": "NaN" },
+        "data": null
+    },
+    {
+        "description": "A division without any operands should throw invalid arguments",
+        "rule": { "/": [] },
+        "error": { "type": "Invalid Arguments" },
+        "data": null
+    },
+    "# Not Included",
+    {
+        "description": "Divide with dynamic empty array",
+        "rule": { "/": { "preserve": [] } },
+        "error": { "type": "Invalid Arguments" },
+        "data": null
+    },
+    {
+        "description": "Divide with dynamic unary array",
+        "rule": { "/": { "preserve": [2] } },
+        "result": 0.5,
+        "decimal": true,
+        "data": null
+    },
+    {
+        "description": "Divide with dynamic array",
+        "rule": { "/": { "preserve": [8, 2] } },
+        "result": 4,
         "data": null
     }
 ]

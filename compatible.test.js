@@ -56,6 +56,7 @@ describe('All of the compatible tests', () => {
           if ((result || 0).toNumber) result = Number(result)
           if (Array.isArray(result)) result = result.map(i => (i || 0).toNumber ? Number(i) : i)
           expect(correction(result)).toStrictEqual(testCase.result)
+          expect(testCase.error).toBeUndefined()
         } catch (err) {
           if (err.message && err.message.includes('expect')) throw err
           if (Number.isNaN(err)) err = { type: 'NaN' }
@@ -73,6 +74,7 @@ describe('All of the compatible tests', () => {
           if ((result || 0).toNumber) result = Number(result)
           if (Array.isArray(result)) result = result.map(i => i.toNumber ? Number(i) : i)
           expect(correction(result)).toStrictEqual(testCase.result)
+          expect(testCase.error).toBeUndefined()
         } catch (err) {
           if (err.message && err.message.includes('expect')) throw err
           if (Number.isNaN(err)) err = { type: 'NaN' }

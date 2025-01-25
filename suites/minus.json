@@ -126,5 +126,18 @@
         "rule": { "-": [[1], 1] },
         "error": { "type": "NaN" },
         "data": null
+    },
+    {
+        "description": "Minus with no operands",
+        "rule": { "-": [] },
+        "result": 0,
+        "data": null
+    },
+    "# Not Included",
+    {
+        "description": "Minus with dynamic empty array",
+        "rule": { "-": { "preserve": [] }},
+        "result": 0,
+        "data": null
     }
 ]
