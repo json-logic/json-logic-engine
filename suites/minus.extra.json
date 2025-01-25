@@ -2,7 +2,7 @@
     {
         "description": "Minus with dynamic empty array",
         "rule": { "-": { "preserve": [] }},
-        "result": 0,
+        "error": { "type": "Invalid Arguments" },
         "data": null
     },
     {

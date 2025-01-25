@@ -103,7 +103,7 @@ const defaultMethods = {
     if (typeof data === 'boolean') return precoerceNumber(-data)
     if (typeof data === 'object' && !Array.isArray(data)) throw NaN
     if (data[0] && typeof data[0] === 'object') throw NaN
-    if (data.length === 0) return 0
+    if (data.length === 0) throw INVALID_ARGUMENTS
     if (data.length === 1) return -data[0]
     let res = data[0]
     for (let i = 1; i < data.length; i++) {
@@ -1019,11 +1019,11 @@ defaultMethods.in.compile = function (data, buildState) {
 // @ts-ignore Allow custom attribute
 defaultMethods['-'].compile = function (data, buildState) {
   if (Array.isArray(data)) {
-    if (data.length === 0) return '(-0)'
+    if (data.length === 0) throw INVALID_ARGUMENTS
     return `${data.length === 1 ? '-' : ''}precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
   }
   if (typeof data === 'string' || typeof data === 'number') return `(-${buildString(data, buildState)})`
-  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 0 ? 0 : prev.length === 1 ? -precoerceNumber(prev[0]) : prev.reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 1 ? -precoerceNumber(prev[0]) : assertSize(prev, 1).reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {
