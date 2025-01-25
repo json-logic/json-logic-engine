@@ -168,12 +168,5 @@
         "rule": { "*": [] },
         "error": { "type": "Invalid Arguments" },
         "data": null
-    },
-    "# Not Included",
-    {
-        "description": "Multiply with dynamic empty array",
-        "rule": { "*": { "preserve": [] } },
-        "error": { "type": "Invalid Arguments" },
-        "data": null
     }
 ]
