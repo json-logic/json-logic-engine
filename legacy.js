@@ -2,7 +2,7 @@
 import { buildString } from './compiler.js'
 import { splitPathMemoized } from './utilities/splitPath.js'
 import chainingSupported from './utilities/chainingSupported.js'
-import { Sync, OriginalImpl } from './constants.js'
+import { Sync, OriginalImpl, Compiled } from './constants.js'
 
 /** @type {Record<'get' | 'missing' | 'missing_some' | 'var', { method: (...args) => any }>} **/
 const legacyMethods = {
@@ -137,23 +137,58 @@ const legacyMethods = {
   missing: {
     [Sync]: true,
     optimizeUnary: false,
-    method: (checked, context, above, engine) => {
-      return (Array.isArray(checked) ? checked : [checked]).filter((key) => {
-        return legacyMethods.var.method(key, context, above, engine) === null
-      })
+    method: (checked, context) => {
+      if (!checked.length) return []
+
+      // Check every item in checked
+      const missing = []
+
+      for (let i = 0; i < checked.length; i++) {
+        // check context for the key, exiting early if any is null
+        const path = splitPathMemoized(String(checked[i]))
+        let data = context
+        let found = true
+        for (let j = 0; j < path.length; j++) {
+          if (!data) {
+            found = false
+            break
+          }
+          data = data[path[j]]
+          if (data === undefined) {
+            found = false
+            break
+          }
+        }
+        if (!found) missing.push(checked[i])
+      }
+
+      return missing
     },
-    deterministic: false
+    compile: (data, buildState) => {
+      if (!Array.isArray(data)) return false
+      if (data.length === 0) return buildState.compile`[]`
+      if (data.length === 1 && typeof data[0] === 'string' && !data[0].includes('.')) return buildState.compile`(context || 0)[${data[0]}] === undefined ? [${data[0]}] : []`
+      if (data.length === 2 && typeof data[0] === 'string' && typeof data[1] === 'string' && !data[0].includes('.') && !data[1].includes('.')) return buildState.compile`(context || 0)[${data[0]}] === undefined ? (context || 0)[${data[1]}] === undefined ? [${data[0]}, ${data[1]}] : [${data[0]}] : (context || 0)[${data[1]}] === undefined ? [${data[1]}] : []`
+      return false
+    },
+    deterministic: (data, buildState) => {
+      if (Array.isArray(data) && data.length === 0) return true
+      return false
+    }
   },
   missing_some: {
     [Sync]: true,
     optimizeUnary: false,
-    method: ([needCount, options], context, above, engine) => {
-      const missing = legacyMethods.missing.method(options, context, above, engine)
-      if (options.length - missing.length >= needCount) {
-        return []
-      } else {
-        return missing
-      }
+    method: ([needCount, options], context) => {
+      const missing = legacyMethods.missing.method(options, context)
+      if (options.length - missing.length >= needCount) return []
+      return missing
+    },
+    compile: ([needCount, options], buildState) => {
+      if (!Array.isArray(options)) return false
+      let compilation = legacyMethods.missing.compile(options, buildState)
+      if (!compilation) compilation = buildState.compile`engine.methods.missing.method(${{ [Compiled]: JSON.stringify(options) }}, context)`
+      return buildState.compile`${options.length} - (prev = ${compilation}).length < ${needCount} ? prev : []`
     },
     deterministic: false
   }

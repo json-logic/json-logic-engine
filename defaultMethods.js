@@ -606,6 +606,10 @@ const defaultMethods = {
       }
       return oldAll.asyncMethod(args, context, above, engine)
     },
+    compile: (data, buildState) => {
+      if (!Array.isArray(data)) return false
+      return buildState.compile`Array.isArray(prev = ${data[0]}) && prev.length === 0 ? false : ${oldAll.compile([{ [Compiled]: 'prev' }, data[1]], buildState)}`
+    },
     deterministic: oldAll.deterministic,
     lazy: oldAll.lazy
   },
@@ -948,6 +952,7 @@ for (const op of ['>', '<', '>=', '<=', '==', '!=', '!==', '===']) {
   defaultMethods[op].compile = function (data, buildState) {
     if (!Array.isArray(data)) return false
     if (data.length < 2) return false
+    if (data.length === 2) return buildState.compile`(${data[0]} ${opStr} ${data[1]})`
     let res = buildState.compile`(${data[0]} ${opStr} (prev = ${data[1]}))`
     for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev ${opStr} ${data[i]})`
     return res
