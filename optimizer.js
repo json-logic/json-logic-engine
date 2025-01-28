@@ -83,13 +83,13 @@ function getMethod (logic, engine, methodName, above) {
 function checkIdioms (logic, engine, above) {
   if (logic.reduce && Array.isArray(logic.reduce)) {
     let [root, mapper, defaultValue] = logic.reduce
-    if (mapper['+'] && mapper['+'].length === 2 && mapper['+'][0].var && mapper['+'][1].var) {
+    if (mapper['+'] && mapper['+'].length === 2 && (mapper['+'][0] || 0).var && (mapper['+'][1] || 0).var) {
       const accumulatorFound = mapper['+'][0].var === 'accumulator' || mapper['+'][1].var === 'accumulator'
       const currentFound = mapper['+'][0].var === 'current' || mapper['+'][1].var === 'current'
       defaultValue = defaultValue || 0
       if (accumulatorFound && currentFound) return optimize({ '+': [{ '+': root }, defaultValue] }, engine, above)
     }
-    if (mapper['*'] && mapper['*'].length === 2 && mapper['*'][0].var && mapper['*'][1].var) {
+    if (mapper['*'] && mapper['*'].length === 2 && (mapper['*'][0] || 0).var && (mapper['*'][1] || 0).var) {
       const accumulatorFound = mapper['*'][0].var === 'accumulator' || mapper['*'][1].var === 'accumulator'
       const currentFound = mapper['*'][0].var === 'current' || mapper['*'][1].var === 'current'
       defaultValue = typeof defaultValue === 'undefined' ? 1 : defaultValue
