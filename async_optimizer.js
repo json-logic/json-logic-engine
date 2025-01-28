@@ -76,6 +76,7 @@ export function optimize (logic, engine, above = []) {
   engine.fallback.allowFunctions = engine.allowFunctions
   if (Array.isArray(logic)) {
     const arr = logic.map(l => optimize(l, engine, above))
+    if (arr.every(l => typeof l !== 'function')) return arr
     if (isSync(arr)) return declareSync((data, abv) => arr.map(l => typeof l === 'function' ? l(data, abv) : l), true)
     return async (data, abv) => map(arr, l => typeof l === 'function' ? l(data, abv) : l)
   };

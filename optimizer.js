@@ -27,6 +27,19 @@ function getMethod (logic, engine, methodName, above) {
   if (Array.isArray(args)) {
     const optimizedArgs = args.map(l => optimize(l, engine, above))
     if (optimizedArgs.every(l => typeof l !== 'function')) return (data, abv) => called(optimizedArgs, data, abv || above, engine)
+
+    if (optimizedArgs.length === 1) {
+      const first = optimizedArgs[0]
+      return (data, abv) => called([first(data, abv)], data, abv || above, engine)
+    }
+
+    if (optimizedArgs.length === 2) {
+      const [first, second] = optimizedArgs
+      if (typeof first === 'function' && typeof second === 'function') return (data, abv) => called([first(data, abv), second(data, abv)], data, abv || above, engine)
+      if (typeof first === 'function') return (data, abv) => called([first(data, abv), second], data, abv || above, engine)
+      return (data, abv) => called([first, second(data, abv)], data, abv || above, engine)
+    }
+
     return (data, abv) => {
       const evaluatedArgs = optimizedArgs.map(l => typeof l === 'function' ? l(data, abv) : l)
       return called(evaluatedArgs, data, abv || above, engine)
@@ -41,6 +54,7 @@ function getMethod (logic, engine, methodName, above) {
       }
       return (data, abv) => called(optimizedArgs, data, abv || above, engine)
     }
+
     if (typeof optimizedArgs === 'function') return (data, abv) => called(coerceArray(optimizedArgs(data, abv)), data, abv || above, engine)
     return (data, abv) => called(coerceArray(optimizedArgs), data, abv || above, engine)
   }
@@ -56,6 +70,7 @@ function getMethod (logic, engine, methodName, above) {
 export function optimize (logic, engine, above = []) {
   if (Array.isArray(logic)) {
     const arr = logic.map(l => optimize(l, engine, above))
+    if (arr.every(l => typeof l !== 'function')) return arr
     return (data, abv) => arr.map(l => typeof l === 'function' ? l(data, abv) : l)
   };
 
