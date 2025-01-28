@@ -2,6 +2,7 @@
 import { isDeterministic } from './compiler.js'
 import { OriginalImpl } from './constants.js'
 import { coerceArray } from './utilities/coerceArray.js'
+import { splitPathMemoized } from './utilities/splitPath.js'
 
 /**
  * Turns an expression like { '+': [1, 2] } into a function that can be called with data.
@@ -47,10 +48,26 @@ function getMethod (logic, engine, methodName, above) {
   } else {
     const optimizedArgs = optimize(args, engine, above)
     if (method.optimizeUnary) {
+      const singleLayer = (data) => !data || typeof data[optimizedArgs] === 'undefined' || (typeof data[optimizedArgs] === 'function' && !engine.allowFunctions) ? null : data[optimizedArgs]
       if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
-      if ((methodName === 'var' || methodName === 'val') && engine.methods[methodName][OriginalImpl] && ((typeof optimizedArgs === 'string' && !optimizedArgs.includes('.') && !optimizedArgs.includes('\\')) || !optimizedArgs || typeof optimizedArgs === 'number')) {
+      if ((methodName === 'var' || methodName === 'val') && engine.methods[methodName][OriginalImpl]) {
         if (!optimizedArgs && methodName !== 'val') return (data) => !data || typeof data === 'undefined' || (typeof data === 'function' && !engine.allowFunctions) ? null : data
-        return (data) => !data || typeof data[optimizedArgs] === 'undefined' || (typeof data[optimizedArgs] === 'function' && !engine.allowFunctions) ? null : data[optimizedArgs]
+        if (methodName === 'val' || typeof optimizedArgs === 'number' || (!optimizedArgs.includes('.') && !optimizedArgs.includes('\\'))) return singleLayer
+
+        if (methodName === 'var' && !optimizedArgs.startsWith('../')) {
+          const path = splitPathMemoized(String(optimizedArgs))
+          let prev
+
+          if (path.length === 2) {
+            const [first, second] = path
+            return (data) => (typeof (prev = (data && data[first] && data[first][second])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
+          }
+
+          if (path.length === 3) {
+            const [first, second, third] = path
+            return (data) => (typeof (prev = (data && data[first] && data[first][second] && data[first][second][third])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
+          }
+        }
       }
       return (data, abv) => called(optimizedArgs, data, abv || above, engine)
     }

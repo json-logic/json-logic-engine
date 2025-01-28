@@ -4,8 +4,8 @@ import { isDeepStrictEqual } from 'util'
 import jl from 'json-logic-js'
 import rust from '@bestow/jsonlogic-rs'
 
-const x = new LogicEngine(undefined, { compatible: true })
-const y = new AsyncLogicEngine(undefined, { compatible: true })
+const x = new LogicEngine()
+const y = new AsyncLogicEngine()
 
 const compatible = []
 const incompatible = []
@@ -21,8 +21,8 @@ JSON.parse(fs.readFileSync('./tests.json').toString()).forEach((test) => {
         compatible.push(test)
       }
     } catch (err) {
-      //   console.log(err)
-      //   console.log(test[0])
+      // console.log(err)
+      // console.log(test[0])
       incompatible.push(test)
     }
   }
@@ -32,6 +32,9 @@ console.log(
   incompatible.length,
   compatible.length / (compatible.length + incompatible.length)
 )
+
+x.optimizedMap = new WeakMap()
+
 // eslint-disable-next-line no-unused-vars
 const defined = [
   [{ '+': [1, 2, 3, 4, 5] }, {}],
@@ -69,13 +72,13 @@ for (let j = 0; j < tests.length; j++) {
 }
 console.timeEnd('json-logic-js')
 
-console.time('json-logic-rs')
-for (let j = 0; j < tests.length; j++) {
-  for (let i = 0; i < 1e5; i++) {
-    rust.apply(tests[j][0], tests[j][1])
-  }
-}
-console.timeEnd('json-logic-rs')
+// console.time('json-logic-rs')
+// for (let j = 0; j < tests.length; j++) {
+//   for (let i = 0; i < 1e5; i++) {
+//     rust.apply(tests[j][0], tests[j][1])
+//   }
+// }
+// console.timeEnd('json-logic-rs')
 
 x.disableInterpretedOptimization = true
 console.time('le interpreted')

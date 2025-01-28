@@ -54,6 +54,22 @@ function isSyncDeep (method, engine, buildState) {
   return true
 }
 
+/**
+ * Runs the logic with the given data.
+ */
+function runOptimizedOrFallback (logic, engine, data, above) {
+  if (!logic) return logic
+  if (typeof logic !== 'object') return logic
+
+  if (!engine.disableInterpretedOptimization && engine.optimizedMap.has(logic)) {
+    const optimized = engine.optimizedMap.get(logic)
+    if (typeof optimized === 'function') return optimized(data, above)
+    return optimized
+  }
+
+  return engine.run(logic, data, { above })
+}
+
 const oldAll = createArrayIterativeMethod('every', true)
 const defaultMethods = {
   '+': (data) => {
@@ -144,7 +160,7 @@ const defaultMethods = {
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw new InvalidControlInput(input)
 
-      if (input.length === 1) return engine.run(input[0], context, { above })
+      if (input.length === 1) return runOptimizedOrFallback(input[0], engine, context, above)
       if (input.length < 2) return null
 
       input = [...input]
@@ -158,13 +174,13 @@ const defaultMethods = {
         const check = input.shift()
         const onTrue = input.shift()
 
-        const test = engine.run(check, context, { above })
+        const test = runOptimizedOrFallback(check, engine, context, above)
 
         // if the condition is true, run the true branch
-        if (engine.truthy(test)) return engine.run(onTrue, context, { above })
+        if (engine.truthy(test)) return runOptimizedOrFallback(onTrue, engine, context, above)
       }
 
-      return engine.run(onFalse, context, { above })
+      return runOptimizedOrFallback(onFalse, engine, context, above)
     },
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     deterministic: (data, buildState) => {
@@ -263,14 +279,14 @@ const defaultMethods = {
   // Both for performance and safety reasons.
   or: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    method: (arr, _1, _2, engine) => {
+    method: (arr, context, above, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
         if (engine.truthy(item)) return item
       }
 
@@ -303,14 +319,14 @@ const defaultMethods = {
   },
   '??': {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    method: (arr, _1, _2, engine) => {
+    method: (arr, context, above, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
         if (item !== null && item !== undefined) return item
       }
 
@@ -348,18 +364,18 @@ const defaultMethods = {
   },
   try: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    method: (arr, _1, _2, engine) => {
+    method: (arr, context, above, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
 
       let item
       let lastError
       for (let i = 0; i < arr.length; i++) {
         try {
           // Todo: make this message thing more robust.
-          if (lastError) item = engine.run(arr[i], { type: lastError.type || lastError.error || lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
-          else item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+          if (lastError) item = runOptimizedOrFallback(arr[i], engine, { type: lastError.type || lastError.error || lastError.message || lastError.constructor.name }, [null, context, above])
+          else item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
           return item
         } catch (e) {
           if (Number.isNaN(e)) lastError = { message: 'NaN' }
@@ -430,14 +446,14 @@ const defaultMethods = {
   },
   and: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
-    method: (arr, _1, _2, engine) => {
+    method: (arr, context, above, engine) => {
       // See "executeInLoop" above
       const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = engine.run(arr, _1, { above: _2 })
+      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
         if (!engine.truthy(item)) return item
       }
       return item
@@ -576,10 +592,10 @@ const defaultMethods = {
       if (!Array.isArray(input)) throw new InvalidControlInput(input)
       let [selector, mapper] = input
 
-      selector = engine.run(selector, context, { above }) || []
+      selector = runOptimizedOrFallback(selector, engine, context, above) || []
 
       for (let i = 0; i < selector.length; i++) {
-        if (engine.truthy(engine.run(mapper, selector[i], { above: [selector, context, above] }))) return true
+        if (engine.truthy(runOptimizedOrFallback(mapper, engine, selector[i], [selector, context, above]))) return true
       }
       return false
     }
@@ -588,14 +604,14 @@ const defaultMethods = {
     [Sync]: oldAll[Sync],
     method: (args, context, above, engine) => {
       if (Array.isArray(args)) {
-        const first = engine.run(args[0], context, above)
+        const first = runOptimizedOrFallback(args[0], engine, context, above)
         if (Array.isArray(first) && first.length === 0) return false
       }
       let [selector, mapper] = args
-      selector = engine.run(selector, context, { above }) || []
+      selector = runOptimizedOrFallback(selector, engine, context, above) || []
 
       for (let i = 0; i < selector.length; i++) {
-        if (!engine.truthy(engine.run(mapper, selector[i], { above: [selector, context, above] }))) return false
+        if (!engine.truthy(runOptimizedOrFallback(mapper, engine, selector[i], [selector, context, above]))) return false
       }
       return true
     },
@@ -688,28 +704,17 @@ const defaultMethods = {
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw new InvalidControlInput(input)
       let [selector, mapper, defaultValue] = input
-      defaultValue = engine.run(defaultValue, context, {
-        above
-      })
-      selector =
-        engine.run(selector, context, {
-          above
-        }) || []
-      const func = (accumulator, current) => {
-        return engine.run(
-          mapper,
-          {
-            accumulator,
-            current
-          },
-          {
-            above: [selector, context, above]
-          }
-        )
+      defaultValue = runOptimizedOrFallback(defaultValue, engine, context, above)
+      selector = runOptimizedOrFallback(selector, engine, context, above) || []
+      let func = (accumulator, current) => engine.run(mapper, { accumulator, current }, { above: [selector, context, above] })
+
+      if (engine.optimizedMap.has(mapper) && typeof engine.optimizedMap.get(mapper) === 'function') {
+        const optimized = engine.optimizedMap.get(mapper)
+        func = (accumulator, current) => optimized({ accumulator, current }, [selector, context, above])
       }
-      if (typeof defaultValue === 'undefined') {
-        return selector.reduce(func)
-      }
+
+      if (typeof defaultValue === 'undefined') return selector.reduce(func)
+
       return selector.reduce(func, defaultValue)
     },
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
@@ -869,11 +874,11 @@ function createArrayIterativeMethod (name, useTruthy = false) {
       if (!Array.isArray(input)) throw new InvalidControlInput(input)
       let [selector, mapper] = input
 
-      selector = engine.run(selector, context, { above }) || []
+      selector = runOptimizedOrFallback(selector, engine, context, above) || []
 
       return selector[name]((i, index) => {
         if (!mapper || typeof mapper !== 'object') return useTruthy ? engine.truthy(mapper) : mapper
-        const result = engine.run(mapper, i, { above: [{ iterator: selector, index }, context, above] })
+        const result = runOptimizedOrFallback(mapper, engine, i, [{ iterator: selector, index }, context, above])
         return useTruthy ? engine.truthy(result) : result
       })
     },
