@@ -1,7 +1,7 @@
 // This is the synchronous version of the optimizer; which the Async one should be based on.
 import { isDeterministic } from './compiler.js'
 import { map } from './async_iterators.js'
-import { isSync, Sync } from './constants.js'
+import { isSync, Sync, OriginalImpl } from './constants.js'
 import declareSync from './utilities/declareSync.js'
 import { coerceArray } from './utilities/coerceArray.js'
 
@@ -29,6 +29,7 @@ function getMethod (logic, engine, methodName, above) {
 
   let args = logic[methodName]
   if ((!args || typeof args !== 'object') && !method.optimizeUnary) args = [args]
+  if (Array.isArray(args) && args.length === 1 && method.optimizeUnary && !Array.isArray(args[0])) args = args[0]
 
   if (Array.isArray(args)) {
     const optimizedArgs = args.map(l => optimize(l, engine, above))
@@ -50,6 +51,11 @@ function getMethod (logic, engine, methodName, above) {
 
     if (isSync(optimizedArgs) && (method.method || method[Sync])) {
       const called = method.method ? method.method : method
+      if ((methodName === 'var' || methodName === 'val') && engine.methods[methodName][OriginalImpl] && ((typeof optimizedArgs === 'string' && !optimizedArgs.includes('.') && !optimizedArgs.includes('\\')) || !optimizedArgs || typeof optimizedArgs === 'number')) {
+        if (!optimizedArgs && methodName !== 'val') return declareSync((data) => !data || typeof data === 'undefined' || (typeof data === 'function' && !engine.allowFunctions) ? null : data)
+        return declareSync((data) => !data || typeof data[optimizedArgs] === 'undefined' || (typeof data[optimizedArgs] === 'function' && !engine.allowFunctions) ? null : data[optimizedArgs])
+      }
+
       if (method.optimizeUnary) return declareSync((data, abv) => called(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs, data, abv || above, engine.fallback), true)
       return declareSync((data, abv) => called(coerceArray(typeof optimizedArgs === 'function' ? optimizedArgs(data, abv) : optimizedArgs), data, abv || above, engine), true)
     }

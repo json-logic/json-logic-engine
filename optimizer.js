@@ -1,5 +1,6 @@
 // This is the synchronous version of the optimizer; which the Async one should be based on.
 import { isDeterministic } from './compiler.js'
+import { OriginalImpl } from './constants.js'
 import { coerceArray } from './utilities/coerceArray.js'
 
 /**
@@ -21,6 +22,7 @@ function getMethod (logic, engine, methodName, above) {
 
   let args = logic[methodName]
   if ((!args || typeof args !== 'object') && !method.optimizeUnary) args = [args]
+  if (Array.isArray(args) && args.length === 1 && method.optimizeUnary && !Array.isArray(args[0])) args = args[0]
 
   if (Array.isArray(args)) {
     const optimizedArgs = args.map(l => optimize(l, engine, above))
@@ -33,6 +35,10 @@ function getMethod (logic, engine, methodName, above) {
     const optimizedArgs = optimize(args, engine, above)
     if (method.optimizeUnary) {
       if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
+      if ((methodName === 'var' || methodName === 'val') && engine.methods[methodName][OriginalImpl] && ((typeof optimizedArgs === 'string' && !optimizedArgs.includes('.') && !optimizedArgs.includes('\\')) || !optimizedArgs || typeof optimizedArgs === 'number')) {
+        if (!optimizedArgs && methodName !== 'val') return (data) => !data || typeof data === 'undefined' || (typeof data === 'function' && !engine.allowFunctions) ? null : data
+        return (data) => !data || typeof data[optimizedArgs] === 'undefined' || (typeof data[optimizedArgs] === 'function' && !engine.allowFunctions) ? null : data[optimizedArgs]
+      }
       return (data, abv) => called(optimizedArgs, data, abv || above, engine)
     }
     if (typeof optimizedArgs === 'function') return (data, abv) => called(coerceArray(optimizedArgs(data, abv)), data, abv || above, engine)
