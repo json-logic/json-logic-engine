@@ -78,6 +78,27 @@ function getMethod (logic, engine, methodName, above) {
 }
 
 /**
+ * Macro-type replacements to lift inefficient logic into more efficient forms.
+ */
+function checkIdioms (logic, engine, above) {
+  if (logic.reduce && Array.isArray(logic.reduce)) {
+    let [root, mapper, defaultValue] = logic.reduce
+    if (mapper['+'] && mapper['+'].length === 2 && mapper['+'][0].var && mapper['+'][1].var) {
+      const accumulatorFound = mapper['+'][0].var === 'accumulator' || mapper['+'][1].var === 'accumulator'
+      const currentFound = mapper['+'][0].var === 'current' || mapper['+'][1].var === 'current'
+      defaultValue = defaultValue || 0
+      if (accumulatorFound && currentFound) return optimize({ '+': [{ '+': root }, defaultValue] }, engine, above)
+    }
+    if (mapper['*'] && mapper['*'].length === 2 && mapper['*'][0].var && mapper['*'][1].var) {
+      const accumulatorFound = mapper['*'][0].var === 'accumulator' || mapper['*'][1].var === 'accumulator'
+      const currentFound = mapper['*'][0].var === 'current' || mapper['*'][1].var === 'current'
+      defaultValue = typeof defaultValue === 'undefined' ? 1 : defaultValue
+      if (accumulatorFound && currentFound) return optimize({ '*': [{ '*': root }, defaultValue] }, engine, above)
+    }
+  }
+}
+
+/**
  * Processes the logic for the engine once so that it doesn't need to be traversed again.
  * @param {*} logic
  * @param {*} engine
@@ -92,6 +113,9 @@ export function optimize (logic, engine, above = []) {
   };
 
   if (logic && typeof logic === 'object') {
+    const idiomEnhancement = checkIdioms(logic, engine, above)
+    if (idiomEnhancement) return idiomEnhancement
+
     const keys = Object.keys(logic)
     const methodName = keys[0]
 

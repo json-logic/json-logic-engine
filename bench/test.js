@@ -2,11 +2,9 @@ import { LogicEngine, AsyncLogicEngine } from '../index.js'
 import fs from 'fs'
 import { isDeepStrictEqual } from 'util'
 import jl from 'json-logic-js'
-import rust from '@bestow/jsonlogic-rs'
 
 const x = new LogicEngine()
 const y = new AsyncLogicEngine()
-
 const compatible = []
 const incompatible = []
 JSON.parse(fs.readFileSync('./tests.json').toString()).forEach((test) => {
@@ -33,7 +31,7 @@ console.log(
   compatible.length / (compatible.length + incompatible.length)
 )
 
-x.optimizedMap = new WeakMap()
+// x.optimizedMap = new WeakMap()
 
 // eslint-disable-next-line no-unused-vars
 const defined = [
