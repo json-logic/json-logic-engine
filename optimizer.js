@@ -81,6 +81,26 @@ function getMethod (logic, engine, methodName, above) {
  * Macro-type replacements to lift inefficient logic into more efficient forms.
  */
 function checkIdioms (logic, engine, above) {
+  // Hyper-Optimizations for val calls.
+  if (logic.val && engine.methods.val[OriginalImpl] && Array.isArray(logic.val) && logic.val.length <= 3 && logic.val.every(i => typeof i !== 'object')) {
+    let prev
+
+    if (logic.val.length === 1) {
+      const first = logic.val[0]
+      return (data) => (typeof (prev = (data && data[first])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
+    }
+
+    if (logic.val.length === 2) {
+      const [first, second] = logic.val
+      return (data) => (typeof (prev = (data && data[first] && data[first][second])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
+    }
+
+    if (logic.val.length === 3) {
+      const [first, second, third] = logic.val
+      return (data) => (typeof (prev = (data && data[first] && data[first][second] && data[first][second][third])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
+    }
+  }
+
   if (logic.reduce && Array.isArray(logic.reduce)) {
     let [root, mapper, defaultValue] = logic.reduce
     if (mapper['+'] && mapper['+'].length === 2 && (mapper['+'][0] || 0).var && (mapper['+'][1] || 0).var) {
