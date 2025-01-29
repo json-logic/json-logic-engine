@@ -130,20 +130,22 @@ class LogicEngine {
     const { above = [] } = options
 
     // OPTIMIZER BLOCK //
-    if (this.missesSinceSeen > 500) {
-      this.disableInterpretedOptimization = true
-      this.missesSinceSeen = 0
-    }
+    if (!this.disableInterpretedOptimization && typeof logic === 'object' && logic) {
+      if (this.missesSinceSeen > 500) {
+        this.disableInterpretedOptimization = true
+        this.missesSinceSeen = 0
+      }
 
-    if (!this.disableInterpretedOptimization && typeof logic === 'object' && logic && !this.optimizedMap.has(logic)) {
-      this.optimizedMap.set(logic, optimize(logic, this, above))
-      this.missesSinceSeen++
-      return typeof this.optimizedMap.get(logic) === 'function' ? this.optimizedMap.get(logic)(data, above) : this.optimizedMap.get(logic)
-    }
-
-    if (!this.disableInterpretedOptimization && logic && typeof logic === 'object' && this.optimizedMap.get(logic)) {
-      this.missesSinceSeen = 0
-      return typeof this.optimizedMap.get(logic) === 'function' ? this.optimizedMap.get(logic)(data, above) : this.optimizedMap.get(logic)
+      if (!this.optimizedMap.has(logic)) {
+        this.optimizedMap.set(logic, optimize(logic, this, above))
+        this.missesSinceSeen++
+        const grab = this.optimizedMap.get(logic)
+        return typeof grab === 'function' ? grab(data, above) : grab
+      } else {
+        this.missesSinceSeen = 0
+        const grab = this.optimizedMap.get(logic)
+        return typeof grab === 'function' ? grab(data, above) : grab
+      }
     }
     // END OPTIMIZER BLOCK //
 
