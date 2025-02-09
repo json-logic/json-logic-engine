@@ -853,6 +853,7 @@ function createComparator (name, func) {
       for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev ${opStr} ${data[i]})`
       return res
     },
+    [OriginalImpl]: true,
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     lazy: true

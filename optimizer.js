@@ -77,6 +77,19 @@ function getMethod (logic, engine, methodName, above) {
   }
 }
 
+const comparisons = {
+  '<': (a, b) => a < b,
+  '<=': (a, b) => a <= b,
+  '>': (a, b) => a > b,
+  '>=': (a, b) => a >= b,
+  // eslint-disable-next-line eqeqeq
+  '==': (a, b) => a == b,
+  '===': (a, b) => a === b,
+  // eslint-disable-next-line eqeqeq
+  '!=': (a, b) => a != b,
+  '!==': (a, b) => a !== b
+}
+
 /**
  * Macro-type replacements to lift inefficient logic into more efficient forms.
  */
@@ -98,6 +111,38 @@ function checkIdioms (logic, engine, above) {
     if (logic.val.length === 3) {
       const [first, second, third] = logic.val
       return (data) => (typeof (prev = (data && data[first] && data[first][second] && data[first][second][third])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
+    }
+  }
+
+  // Hyper-Optimizations for Comparison Operators.
+  for (const comparison in comparisons) {
+    if (logic[comparison] && Array.isArray(logic[comparison]) && engine.methods[comparison][OriginalImpl]) {
+      const comparisonFunc = comparisons[comparison]
+      if (logic[comparison].length === 2) {
+        const [a, b] = logic[comparison]
+        const A = optimize(a, engine, above)
+        const B = optimize(b, engine, above)
+        if (typeof A === 'function' && typeof B === 'function') return (data, abv) => comparisonFunc(A(data, abv), B(data, abv))
+        if (typeof A === 'function') return (data, abv) => comparisonFunc(A(data, abv), B)
+        if (typeof B === 'function') return (data, abv) => comparisonFunc(A, B(data, abv))
+        return () => comparisonFunc(A, B)
+      }
+
+      if (logic[comparison].length === 3) {
+        const [a, b, c] = logic[comparison]
+        const A = optimize(a, engine, above)
+        const B = optimize(b, engine, above)
+        const C = optimize(c, engine, above)
+        let prev
+        if (typeof A === 'function' && typeof B === 'function' && typeof C === 'function') return (data, abv) => comparisonFunc(A(data, abv), (prev = B(data, abv))) && comparisonFunc(prev, C(data, abv))
+        if (typeof A === 'function' && typeof B === 'function') return (data, abv) => comparisonFunc(A(data, abv), (prev = B(data, abv))) && comparisonFunc(prev, C)
+        if (typeof A === 'function' && typeof C === 'function') return (data, abv) => comparisonFunc(A(data, abv), B) && comparisonFunc(B, C(data, abv))
+        if (typeof B === 'function' && typeof C === 'function') return (data, abv) => comparisonFunc(A, (prev = B(data, abv))) && comparisonFunc(prev, C(data, abv))
+        if (typeof A === 'function') return (data, abv) => comparisonFunc(A(data, abv), B) && comparisonFunc(B, C)
+        if (typeof B === 'function') return (data, abv) => comparisonFunc(A, (prev = B(data, abv))) && comparisonFunc(prev, C)
+        if (typeof C === 'function') return (data, abv) => comparisonFunc(A, B) && comparisonFunc(B, C(data, abv))
+        return () => comparisonFunc(A, B) && comparisonFunc(B, C)
+      }
     }
   }
 
