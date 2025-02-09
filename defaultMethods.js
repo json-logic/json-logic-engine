@@ -793,10 +793,22 @@ function createComparator (name, func) {
   return {
     method: (args, context, above, engine) => {
       if (!Array.isArray(args) || args.length <= 1) throw INVALID_ARGUMENTS
-      if (args.length === 2) return func(runOptimizedOrFallback(args[0], engine, context, above), runOptimizedOrFallback(args[1], engine, context, above))
+      if (args.length === 2) {
+        const a = runOptimizedOrFallback(args[0], engine, context, above)
+        const b = runOptimizedOrFallback(args[1], engine, context, above)
+        if (typeof a !== typeof b) {
+          if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
+          if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+        }
+        return func(a, b)
+      }
       let prev = runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
         const current = runOptimizedOrFallback(args[i], engine, context, above)
+        if (typeof current !== typeof prev) {
+          if (typeof current === 'string' && Number.isNaN(+current)) throw NaN
+          if (i === 1 && typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
+        }
         if (!func(prev, current)) return false
         prev = current
       }
@@ -804,10 +816,22 @@ function createComparator (name, func) {
     },
     asyncMethod: async (args, context, above, engine) => {
       if (!Array.isArray(args) || args.length <= 1) throw INVALID_ARGUMENTS
-      if (args.length === 2) return func(await runOptimizedOrFallback(args[0], engine, context, above), await runOptimizedOrFallback(args[1], engine, context, above))
+      if (args.length === 2) {
+        const a = await runOptimizedOrFallback(args[0], engine, context, above)
+        const b = await runOptimizedOrFallback(args[1], engine, context, above)
+        if (typeof a !== typeof b) {
+          if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
+          if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+        }
+        return func(a, b)
+      }
       let prev = await runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
         const current = await runOptimizedOrFallback(args[i], engine, context, above)
+        if (typeof current !== typeof prev) {
+          if (typeof current === 'string' && Number.isNaN(+current)) throw NaN
+          if (i === 1 && typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
+        }
         if (!func(prev, current)) return false
         prev = current
       }
@@ -816,9 +840,9 @@ function createComparator (name, func) {
     compile: (data, buildState) => {
       if (!Array.isArray(data)) return false
       if (data.length < 2) return false
-      if (data.length === 2) return buildState.compile`(${data[0]} ${opStr} ${data[1]})`
-      let res = buildState.compile`(${data[0]} ${opStr} (prev = ${data[1]}))`
-      for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev ${opStr} (prev = ${data[i]}))`
+      if (data.length === 2) return buildState.compile`((prev = ${data[0]}) ${opStr} compareCheck(${data[1]}, prev))`
+      let res = buildState.compile`((prev = ${data[0]}) ${opStr} (prev = compareCheck(${data[1]}, prev)))`
+      for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev ${opStr} (prev = compareCheck(${data[i]}, prev)))`
       return res
     },
     [OriginalImpl]: true,

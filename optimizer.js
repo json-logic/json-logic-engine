@@ -117,7 +117,16 @@ function checkIdioms (logic, engine, above) {
   // Hyper-Optimizations for Comparison Operators.
   for (const comparison in comparisons) {
     if (logic[comparison] && Array.isArray(logic[comparison]) && engine.methods[comparison][OriginalImpl]) {
-      const comparisonFunc = comparisons[comparison]
+      const _comparisonFunc = comparisons[comparison]
+
+      function comparisonFunc (a, b) {
+        if (typeof a !== typeof b) {
+          if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
+          if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+        }
+        return _comparisonFunc(a, b)
+      }
+
       if (logic[comparison].length === 2) {
         const [a, b] = logic[comparison]
         const A = optimize(a, engine, above)

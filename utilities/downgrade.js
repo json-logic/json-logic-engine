@@ -19,3 +19,17 @@ export function assertSize (arr, size) {
   if (!Array.isArray(arr) || arr.length < size) throw { type: 'Invalid Arguments' }
   return arr
 }
+
+/**
+ * Used to assert in compiled templates that when a numeric comparison is made, both values are numbers.
+ * @param {*} item
+ * @param {*} prev
+ * @returns {number}
+ */
+export function compareCheck (item, prev) {
+  if (typeof item !== typeof prev) {
+    if (typeof item === 'string') if (Number.isNaN(+item)) throw NaN
+    if (typeof prev === 'string') if (Number.isNaN(+prev)) throw NaN
+  }
+  return item
+}
