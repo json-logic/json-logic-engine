@@ -100,5 +100,108 @@
         "rule": { "!==": { "preserve": [1,2,3] } },
         "data": null,
         "error": { "type": "Invalid Arguments" }
+    },
+    "Any of the operators listed when called with a non-array argument, will throw",
+    {
+        "description": "if with static non-array argument throws",
+        "rule": { "if": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "or with static non-array argument throws",
+        "rule": { "or": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "and with static non-array argument throws",
+        "rule": { "and": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "map with static non-array argument throws",
+        "rule": { "map": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "filter with static non-array argument throws",
+        "rule": { "filter": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "reduce with static non-array argument throws",
+        "rule": { "reduce": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "some with static non-array argument throws",
+        "rule": { "some": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "all with static non-array argument throws",
+        "rule": { "all": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "none with static non-array argument throws",
+        "rule": { "none": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "< with static non-array argument throws",
+        "rule": { "<": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "<= with static non-array argument throws",
+        "rule": { "<=": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "> with static non-array argument throws",
+        "rule": { ">": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": ">= with static non-array argument throws",
+        "rule": { ">=": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "== with static non-array argument throws",
+        "rule": { "==": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!= with static non-array argument throws",
+        "rule": { "!=": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "=== with static non-array argument throws",
+        "rule": { "===": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!== with static non-array argument throws",
+        "rule": { "!==": 5 },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
     }
 ]
