@@ -148,5 +148,41 @@
         "rule": { "===": [1, "A"] },
         "data": {},
         "result": false
+    },
+    {
+        "description": "=== with (null, 1)",
+        "rule": { "===": [null, 1] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "=== with (1, null)",
+        "rule": { "===": [1, null] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "=== with (null, 0)",
+        "rule": { "===": [null, 0] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "=== with (null, true)",
+        "rule": { "===": [null, true] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "=== with (1, true)",
+        "rule": { "===": [1, true] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "=== with (0, false)",
+        "rule": { "===": [0, false] },
+        "data": {},
+        "result": false
     }
 ]

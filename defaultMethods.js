@@ -800,6 +800,7 @@ function createComparator (name, func) {
         if (!strict && typeof a !== typeof b) {
           if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
           if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+          return func(+a, +b)
         }
         return func(a, b)
       }
@@ -809,8 +810,8 @@ function createComparator (name, func) {
         if (!strict && typeof current !== typeof prev) {
           if (typeof current === 'string' && Number.isNaN(+current)) throw NaN
           if (i === 1 && typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
-        }
-        if (!func(prev, current)) return false
+          if (!func(+prev, +current)) return false
+        } else if (!func(prev, current)) return false
         prev = current
       }
       return true
@@ -823,6 +824,7 @@ function createComparator (name, func) {
         if (!strict && typeof a !== typeof b) {
           if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
           if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+          return func(+a, +b)
         }
         return func(a, b)
       }
@@ -832,8 +834,8 @@ function createComparator (name, func) {
         if (!strict && typeof current !== typeof prev) {
           if (typeof current === 'string' && Number.isNaN(+current)) throw NaN
           if (i === 1 && typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
-        }
-        if (!func(prev, current)) return false
+          if (!func(+prev, +current)) return false
+        } else if (!func(prev, current)) return false
         prev = current
       }
       return true

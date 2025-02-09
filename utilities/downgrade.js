@@ -30,6 +30,11 @@ export function compareCheck (item, prev, strict) {
   if (!strict && typeof item !== typeof prev) {
     if (typeof item === 'string' && Number.isNaN(+item)) throw NaN
     if (typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
+    // The following two checks allow us to handle null == 0 and 0 == null; it's honestly
+    // kind of gross that JavaScript works this way out of the box. Like, why is 0 <= null true,
+    // but null == false. It's just weird.
+    if (prev === null && !item) return null
+    if (item === null && !prev) return 0
   }
   return item
 }

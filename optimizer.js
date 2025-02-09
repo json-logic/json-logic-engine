@@ -125,6 +125,7 @@ function checkIdioms (logic, engine, above) {
           if (typeof a !== typeof b) {
             if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
             if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+            return _comparisonFunc(+a, +b)
           }
           return _comparisonFunc(a, b)
         }
