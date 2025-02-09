@@ -125,7 +125,7 @@ function checkIdioms (logic, engine, above) {
         if (typeof A === 'function' && typeof B === 'function') return (data, abv) => comparisonFunc(A(data, abv), B(data, abv))
         if (typeof A === 'function') return (data, abv) => comparisonFunc(A(data, abv), B)
         if (typeof B === 'function') return (data, abv) => comparisonFunc(A, B(data, abv))
-        return () => comparisonFunc(A, B)
+        return comparisonFunc(A, B)
       }
 
       if (logic[comparison].length === 3) {
@@ -141,7 +141,7 @@ function checkIdioms (logic, engine, above) {
         if (typeof A === 'function') return (data, abv) => comparisonFunc(A(data, abv), B) && comparisonFunc(B, C)
         if (typeof B === 'function') return (data, abv) => comparisonFunc(A, (prev = B(data, abv))) && comparisonFunc(prev, C)
         if (typeof C === 'function') return (data, abv) => comparisonFunc(A, B) && comparisonFunc(B, C(data, abv))
-        return () => comparisonFunc(A, B) && comparisonFunc(B, C)
+        return comparisonFunc(A, B) && comparisonFunc(B, C)
       }
     }
   }
@@ -179,7 +179,7 @@ export function optimize (logic, engine, above = []) {
 
   if (logic && typeof logic === 'object') {
     const idiomEnhancement = checkIdioms(logic, engine, above)
-    if (idiomEnhancement) return idiomEnhancement
+    if (typeof idiomEnhancement !== 'undefined') return idiomEnhancement
 
     const keys = Object.keys(logic)
     const methodName = keys[0]
