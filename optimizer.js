@@ -119,13 +119,15 @@ function checkIdioms (logic, engine, above) {
     if (logic[comparison] && Array.isArray(logic[comparison]) && engine.methods[comparison][OriginalImpl]) {
       const _comparisonFunc = comparisons[comparison]
 
-      function comparisonFunc (a, b) {
-        if (typeof a !== typeof b) {
-          if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
-          if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+      const comparisonFunc = comparison.length === 3
+        ? _comparisonFunc
+        : function comparisonFunc (a, b) {
+          if (typeof a !== typeof b) {
+            if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
+            if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
+          }
+          return _comparisonFunc(a, b)
         }
-        return _comparisonFunc(a, b)
-      }
 
       if (logic[comparison].length === 2) {
         const [a, b] = logic[comparison]

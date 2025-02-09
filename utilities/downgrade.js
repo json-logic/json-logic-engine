@@ -26,10 +26,10 @@ export function assertSize (arr, size) {
  * @param {*} prev
  * @returns {number}
  */
-export function compareCheck (item, prev) {
-  if (typeof item !== typeof prev) {
-    if (typeof item === 'string') if (Number.isNaN(+item)) throw NaN
-    if (typeof prev === 'string') if (Number.isNaN(+prev)) throw NaN
+export function compareCheck (item, prev, strict) {
+  if (!strict && typeof item !== typeof prev) {
+    if (typeof item === 'string' && Number.isNaN(+item)) throw NaN
+    if (typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
   }
   return item
 }
