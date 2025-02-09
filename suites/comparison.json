@@ -113,5 +113,91 @@
         "rule": { "!==": [3, 3, { "throw": "Not Lazy" }] },
         "data": {},
         "result": false
+    },
+    "Single Operand < Tests",
+    {
+        "description": "< with 1 argument",
+        "rule": { "<": [1] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "> with 1 argument",
+        "rule": { ">": [1] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": ">= with 1 argument",
+        "rule": { ">=": [1] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "== with 1 argument",
+        "rule": { "==": [1] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!= with 1 argument",
+        "rule": { "!=": [1] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "=== with 1 argument",
+        "rule": { "===": [1] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!== with 1 argument",
+        "rule": { "!==": [1] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    "Direct Operand Tests",
+    {
+        "description": "< with direct argument",
+        "rule": { "<": 1 },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "> with direct argument",
+        "rule": { ">": 1 },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": ">= with direct argument",
+        "rule": { ">=": 1 },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "== with direct argument",
+        "rule": { "==": 1 },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!= with direct argument",
+        "rule": { "!=": 1 },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "=== with direct argument",
+        "rule": { "===": 1 },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!== with direct argument",
+        "rule": { "!==": 1 },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
     }
 ]
