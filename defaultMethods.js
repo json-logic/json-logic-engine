@@ -6,7 +6,6 @@ import { Sync, isSync, Unfound, OriginalImpl, Compiled } from './constants.js'
 import declareSync from './utilities/declareSync.js'
 import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
-import InvalidControlInput from './errors/InvalidControlInput.js'
 import legacyMethods from './legacy.js'
 import { precoerceNumber } from './utilities/downgrade.js'
 
@@ -158,7 +157,7 @@ const defaultMethods = {
   },
   if: {
     method: (input, context, above, engine) => {
-      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      if (!Array.isArray(input)) throw INVALID_ARGUMENTS
 
       if (input.length === 1) return runOptimizedOrFallback(input[0], engine, context, above)
       if (input.length < 2) return null
@@ -187,7 +186,7 @@ const defaultMethods = {
       return isDeterministic(data, buildState.engine, buildState)
     },
     asyncMethod: async (input, context, above, engine) => {
-      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      if (!Array.isArray(input)) throw INVALID_ARGUMENTS
 
       // check the bounds
       if (input.length === 1) return engine.run(input[0], context, { above })
@@ -225,31 +224,25 @@ const defaultMethods = {
   // eslint-disable-next-line eqeqeq
   '!=': createComparator('!=', (a, b) => a != b),
   '!==': createComparator('!==', (a, b) => a !== b),
-  // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
-  // Both for performance and safety reasons.
   or: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
+      if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
+        item = runOptimizedOrFallback(arr[i], engine, context, above)
         if (engine.truthy(item)) return item
       }
 
       return item
     },
     asyncMethod: async (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+      if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        item = await engine.run(arr[i], _1, { above: _2 })
         if (engine.truthy(item)) return item
       }
 
@@ -270,13 +263,11 @@ const defaultMethods = {
   '??': {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
+      if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
+        item = runOptimizedOrFallback(arr[i], engine, context, above)
         if (item !== null && item !== undefined) return item
       }
 
@@ -284,13 +275,11 @@ const defaultMethods = {
       return item
     },
     asyncMethod: async (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+      if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        item = await engine.run(arr[i], _1, { above: _2 })
         if (item !== null && item !== undefined) return item
       }
 
@@ -315,9 +304,7 @@ const defaultMethods = {
   try: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
+      if (!Array.isArray(arr)) arr = [arr]
 
       let item
       let lastError
@@ -325,7 +312,7 @@ const defaultMethods = {
         try {
           // Todo: make this message thing more robust.
           if (lastError) item = runOptimizedOrFallback(arr[i], engine, { type: lastError.type || lastError.error || lastError.message || lastError.constructor.name }, [null, context, above])
-          else item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
+          else item = runOptimizedOrFallback(arr[i], engine, context, above)
           return item
         } catch (e) {
           if (Number.isNaN(e)) lastError = { message: 'NaN' }
@@ -336,9 +323,7 @@ const defaultMethods = {
       throw lastError
     },
     asyncMethod: async (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+      if (!Array.isArray(arr)) arr = [arr]
 
       let item
       let lastError
@@ -346,7 +331,7 @@ const defaultMethods = {
         try {
           // Todo: make this message thing more robust.
           if (lastError) item = await engine.run(arr[i], { type: lastError.type || lastError.error || lastError.message || lastError.constructor.name }, { above: [null, _1, _2] })
-          else item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+          else item = await engine.run(arr[i], _1, { above: _2 })
           return item
         } catch (e) {
           if (Number.isNaN(e)) lastError = { message: 'NaN' }
@@ -397,25 +382,21 @@ const defaultMethods = {
   and: {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = runOptimizedOrFallback(arr, engine, context, above)
+      if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? runOptimizedOrFallback(arr[i], engine, context, above) : arr[i]
+        item = runOptimizedOrFallback(arr[i], engine, context, above)
         if (!engine.truthy(item)) return item
       }
       return item
     },
     asyncMethod: async (arr, _1, _2, engine) => {
-      // See "executeInLoop" above
-      const executeInLoop = Array.isArray(arr)
-      if (!executeInLoop) arr = await engine.run(arr, _1, { above: _2 })
+      if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
 
       let item
       for (let i = 0; i < arr.length; i++) {
-        item = executeInLoop ? await engine.run(arr[i], _1, { above: _2 }) : arr[i]
+        item = await engine.run(arr[i], _1, { above: _2 })
         if (!engine.truthy(item)) return item
       }
       return item
@@ -539,7 +520,7 @@ const defaultMethods = {
   some: {
     ...createArrayIterativeMethod('some', true),
     method: (input, context, above, engine) => {
-      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper] = input
 
       selector = runOptimizedOrFallback(selector, engine, context, above) || []
@@ -553,12 +534,11 @@ const defaultMethods = {
   all: {
     [Sync]: oldAll[Sync],
     method: (args, context, above, engine) => {
-      if (Array.isArray(args)) {
-        const first = runOptimizedOrFallback(args[0], engine, context, above)
-        if (Array.isArray(first) && first.length === 0) return false
-      }
-      let [selector, mapper] = args
-      selector = runOptimizedOrFallback(selector, engine, context, above) || []
+      if (!Array.isArray(args)) throw INVALID_ARGUMENTS
+      const selector = runOptimizedOrFallback(args[0], engine, context, above) || []
+      if (Array.isArray(selector) && selector.length === 0) return false
+
+      const mapper = args[1]
 
       for (let i = 0; i < selector.length; i++) {
         if (!engine.truthy(runOptimizedOrFallback(mapper, engine, selector[i], [selector, context, above]))) return false
@@ -613,7 +593,7 @@ const defaultMethods = {
       )
     },
     compile: (data, buildState) => {
-      if (!Array.isArray(data)) throw new InvalidControlInput(data)
+      if (!Array.isArray(data)) throw INVALID_ARGUMENTS
       const { async } = buildState
       let [selector, mapper, defaultValue] = data
       selector = buildString(selector, buildState)
@@ -652,7 +632,7 @@ const defaultMethods = {
       }]({ accumulator: a, current: b }, ${aboveArray}))`
     },
     method: (input, context, above, engine) => {
-      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper, defaultValue] = input
       defaultValue = runOptimizedOrFallback(defaultValue, engine, context, above)
       selector = runOptimizedOrFallback(selector, engine, context, above) || []
@@ -669,7 +649,7 @@ const defaultMethods = {
     },
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     asyncMethod: async (input, context, above, engine) => {
-      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper, defaultValue] = input
       defaultValue = await engine.run(defaultValue, context, {
         above
@@ -771,7 +751,7 @@ const defaultMethods = {
           return isDeterministic(i, buildState.engine, buildState)
         })
       }
-      throw new InvalidControlInput(data)
+      throw INVALID_ARGUMENTS
     },
     compile: (data, buildState) => {
       // what's nice about this is that I don't have to worry about whether it's async or not, the lower entries take care of that ;)
@@ -788,7 +768,7 @@ const defaultMethods = {
           .join(',')} })`
         return result
       }
-      throw new InvalidControlInput(data)
+      throw INVALID_ARGUMENTS
     },
     asyncMethod: async (object, context, above, engine) => {
       const result = await asyncIterators.reduce(
@@ -812,13 +792,7 @@ function createComparator (name, func) {
   const opStr = { [Compiled]: name }
   return {
     method: (args, context, above, engine) => {
-      if (!Array.isArray(args)) {
-        const items = runOptimizedOrFallback(args, engine, context, above)
-        if (items.length === 2) return func(items[0], items[1])
-        for (let i = 1; i < items.length; i++) {
-          if (!func(items[i - 1], items[i])) return false
-        }
-      }
+      if (!Array.isArray(args)) throw INVALID_ARGUMENTS
       if (args.length === 2) return func(runOptimizedOrFallback(args[0], engine, context, above), runOptimizedOrFallback(args[1], engine, context, above))
       let prev = runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
@@ -829,13 +803,7 @@ function createComparator (name, func) {
       return true
     },
     asyncMethod: async (args, context, above, engine) => {
-      if (!Array.isArray(args)) {
-        const items = await runOptimizedOrFallback(args, engine, context, above)
-        if (items.length === 2) return func(items[0], items[1])
-        for (let i = 1; i < items.length; i++) {
-          if (!func(items[i - 1], items[i])) return false
-        }
-      }
+      if (!Array.isArray(args)) throw INVALID_ARGUMENTS
       if (args.length === 2) return func(await runOptimizedOrFallback(args[0], engine, context, above), await runOptimizedOrFallback(args[1], engine, context, above))
       let prev = await runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
@@ -873,7 +841,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
     },
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (input, context, above, engine) => {
-      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper] = input
 
       selector = runOptimizedOrFallback(selector, engine, context, above) || []
@@ -885,7 +853,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
       })
     },
     asyncMethod: async (input, context, above, engine) => {
-      if (!Array.isArray(input)) throw new InvalidControlInput(input)
+      if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper] = input
       selector = (await engine.run(selector, context, { above })) || []
       return asyncIterators[name](selector, async (i, index) => {
@@ -897,7 +865,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
       })
     },
     compile: (data, buildState) => {
-      if (!Array.isArray(data)) throw new InvalidControlInput(data)
+      if (!Array.isArray(data)) throw INVALID_ARGUMENTS
       const { async } = buildState
       const [selector, mapper] = data
 

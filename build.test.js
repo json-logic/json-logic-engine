@@ -1,5 +1,4 @@
 import { LogicEngine, AsyncLogicEngine } from './index.js'
-import InvalidControlInput from './errors/InvalidControlInput.js'
 
 function timeout (n, x) {
   return new Promise((resolve) => {
@@ -133,66 +132,6 @@ function timeout (n, x) {
       const f = await logic.build({ '/': [1, { preserve: 2 }] })
 
       expect(await f()).toEqual(1 / 2)
-    })
-
-    test('or operator w/ variable input', async () => {
-      const f = await logic.build({ or: { preserve: [true, false] } })
-
-      expect(await f()).toEqual(true)
-    })
-
-    test('and operator w/ variable input', async () => {
-      const f = await logic.build({ and: { preserve: [true, false] } })
-
-      expect(await f()).toEqual(false)
-    })
-
-    test('<= operator w/ variable input', async () => {
-      const f = await logic.build({ '<=': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(true)
-    })
-
-    test('< operator w/ variable input', async () => {
-      const f = await logic.build({ '<': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(true)
-    })
-
-    test('>= operator w/ variable input', async () => {
-      const f = await logic.build({ '>=': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(false)
-    })
-
-    test('> operator w/ variable input', async () => {
-      const f = await logic.build({ '>': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(false)
-    })
-
-    test('== operator w/ variable input', async () => {
-      const f = await logic.build({ '==': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(false)
-    })
-
-    test('=== operator w/ variable input', async () => {
-      const f = await logic.build({ '===': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(false)
-    })
-
-    test('!== operator w/ variable input', async () => {
-      const f = await logic.build({ '!==': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(true)
-    })
-
-    test('!= operator w/ variable input', async () => {
-      const f = await logic.build({ '!=': { preserve: [1, 2] } })
-
-      expect(await f()).toEqual(true)
     })
 
     test('min command w/ variable input', async () => {

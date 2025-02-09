@@ -230,24 +230,6 @@ describe('Various Test Cases', () => {
     }
   })
 
-  it('does not execute any logic from and / or array if the argument is executed', async () => {
-    for (const engine of [...normalEngines, ...permissiveEngines]) {
-      let count = 0
-      engine.addMethod('increment', {
-        method: () => {
-          count++
-          return true
-        }
-      })
-
-      await testEngine(engine, { and: { preserve: [{ increment: true }, { increment: true }] } }, {}, { increment: true })
-      assert.strictEqual(count, 0, 'Should not have called increment on and.')
-
-      await testEngine(engine, { or: { preserve: [{ increment: true }, { increment: true }] } }, {}, { increment: true })
-      assert.strictEqual(count, 0, 'Should not have called increment on or.')
-    }
-  })
-
   it('disables interpreted optimization when it realizes it will not be faster', async () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) {
       const disableInterpretedOptimization = engine.disableInterpretedOptimization
