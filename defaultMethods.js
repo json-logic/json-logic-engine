@@ -215,66 +215,16 @@ const defaultMethods = {
     },
     lazy: true
   },
-  '<': (args) => {
-    if (args.length === 2) return args[0] < args[1]
-    for (let i = 1; i < args.length; i++) {
-      if (args[i - 1] >= args[i]) return false
-    }
-    return true
-  },
-  '<=': (args) => {
-    if (args.length === 2) return args[0] <= args[1]
-    for (let i = 1; i < args.length; i++) {
-      if (args[i - 1] > args[i]) return false
-    }
-    return true
-  },
-  '>': (args) => {
-    if (args.length === 2) return args[0] > args[1]
-    for (let i = 1; i < args.length; i++) {
-      if (args[i - 1] <= args[i]) return false
-    }
-    return true
-  },
-  '>=': (args) => {
-    if (args.length === 2) return args[0] >= args[1]
-    for (let i = 1; i < args.length; i++) {
-      if (args[i - 1] < args[i]) return false
-    }
-    return true
-  },
-  '==': (args) => {
-    // eslint-disable-next-line eqeqeq
-    if (args.length === 2) return args[0] == args[1]
-    for (let i = 1; i < args.length; i++) {
-      // eslint-disable-next-line eqeqeq
-      if (args[i - 1] != args[i]) return false
-    }
-    return true
-  },
-  '===': (args) => {
-    if (args.length === 2) return args[0] === args[1]
-    for (let i = 1; i < args.length; i++) {
-      if (args[i - 1] !== args[i]) return false
-    }
-    return true
-  },
-  '!=': (args) => {
-    // eslint-disable-next-line eqeqeq
-    if (args.length === 2) return args[0] != args[1]
-    for (let i = 1; i < args.length; i++) {
-      // eslint-disable-next-line eqeqeq
-      if (args[i - 1] == args[i]) return false
-    }
-    return true
-  },
-  '!==': (args) => {
-    if (args.length === 2) return args[0] !== args[1]
-    for (let i = 1; i < args.length; i++) {
-      if (args[i - 1] === args[i]) return false
-    }
-    return true
-  },
+  '<': createComparator('<', (a, b) => a < b),
+  '<=': createComparator('<=', (a, b) => a <= b),
+  '>': createComparator('>', (a, b) => a > b),
+  '>=': createComparator('>=', (a, b) => a >= b),
+  // eslint-disable-next-line eqeqeq
+  '==': createComparator('==', (a, b) => a == b),
+  '===': createComparator('===', (a, b) => a === b),
+  // eslint-disable-next-line eqeqeq
+  '!=': createComparator('!=', (a, b) => a != b),
+  '!==': createComparator('!==', (a, b) => a !== b),
   // Why "executeInLoop"? Because if it needs to execute to get an array, I do not want to execute the arguments,
   // Both for performance and safety reasons.
   or: {
@@ -858,6 +808,57 @@ const defaultMethods = {
   }
 }
 
+function createComparator (name, func) {
+  const opStr = { [Compiled]: name }
+  return {
+    method: (args, context, above, engine) => {
+      if (!Array.isArray(args)) {
+        const items = runOptimizedOrFallback(args, engine, context, above)
+        if (items.length === 2) return func(items[0], items[1])
+        for (let i = 1; i < items.length; i++) {
+          if (!func(items[i - 1], items[i])) return false
+        }
+      }
+      if (args.length === 2) return func(runOptimizedOrFallback(args[0], engine, context, above), runOptimizedOrFallback(args[1], engine, context, above))
+      let prev = runOptimizedOrFallback(args[0], engine, context, above)
+      for (let i = 1; i < args.length; i++) {
+        const current = runOptimizedOrFallback(args[i], engine, context, above)
+        if (!func(prev, current)) return false
+        prev = current
+      }
+      return true
+    },
+    asyncMethod: async (args, context, above, engine) => {
+      if (!Array.isArray(args)) {
+        const items = await runOptimizedOrFallback(args, engine, context, above)
+        if (items.length === 2) return func(items[0], items[1])
+        for (let i = 1; i < items.length; i++) {
+          if (!func(items[i - 1], items[i])) return false
+        }
+      }
+      if (args.length === 2) return func(await runOptimizedOrFallback(args[0], engine, context, above), await runOptimizedOrFallback(args[1], engine, context, above))
+      let prev = await runOptimizedOrFallback(args[0], engine, context, above)
+      for (let i = 1; i < args.length; i++) {
+        const current = await runOptimizedOrFallback(args[i], engine, context, above)
+        if (!func(prev, current)) return false
+        prev = current
+      }
+      return true
+    },
+    compile: (data, buildState) => {
+      if (!Array.isArray(data)) return false
+      if (data.length < 2) return false
+      if (data.length === 2) return buildState.compile`(${data[0]} ${opStr} ${data[1]})`
+      let res = buildState.compile`(${data[0]} ${opStr} (prev = ${data[1]}))`
+      for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev ${opStr} ${data[i]})`
+      return res
+    },
+    [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    lazy: true
+  }
+}
+
 function createArrayIterativeMethod (name, useTruthy = false) {
   return {
     deterministic: (data, buildState) => {
@@ -949,19 +950,6 @@ defaultMethods.max.compile = function (data, buildState) {
   return `Math.max(${data
     .map((i) => buildString(i, buildState))
     .join(', ')})`
-}
-
-for (const op of ['>', '<', '>=', '<=', '==', '!=', '!==', '===']) {
-  const opStr = { [Compiled]: op }
-  // @ts-ignore Allow custom attribute
-  defaultMethods[op].compile = function (data, buildState) {
-    if (!Array.isArray(data)) return false
-    if (data.length < 2) return false
-    if (data.length === 2) return buildState.compile`(${data[0]} ${opStr} ${data[1]})`
-    let res = buildState.compile`(${data[0]} ${opStr} (prev = ${data[1]}))`
-    for (let i = 2; i < data.length; i++) res = buildState.compile`(${res} && prev ${opStr} ${data[i]})`
-    return res
-  }
 }
 
 // @ts-ignore Allow custom attribute

@@ -65,5 +65,53 @@
         "rule": { "===": [3, 3, 2] },
         "data": {},
         "result": false
+    },
+    {
+        "description": "< is lazily evaluated",
+        "rule": { "<": [3, 2, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "> is lazily evaluated",
+        "rule": { ">": [2, 3, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "<= is lazily evaluated",
+        "rule": { "<=": [3, 2, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": ">= is lazily evaluated",
+        "rule": { ">=": [2, 3, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "== is lazily evaluated",
+        "rule": { "==": [3, 2, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "!= is lazily evaluated",
+        "rule": { "!=": [3, 3, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "=== is lazily evaluated",
+        "rule": { "===": [3, 2, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
+    },
+    {
+        "description": "!== is lazily evaluated",
+        "rule": { "!==": [3, 3, { "throw": "Not Lazy" }] },
+        "data": {},
+        "result": false
     }
 ]
