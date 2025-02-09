@@ -792,7 +792,7 @@ function createComparator (name, func) {
   const opStr = { [Compiled]: name }
   return {
     method: (args, context, above, engine) => {
-      if (!Array.isArray(args) || args.length === 1) throw INVALID_ARGUMENTS
+      if (!Array.isArray(args) || args.length <= 1) throw INVALID_ARGUMENTS
       if (args.length === 2) return func(runOptimizedOrFallback(args[0], engine, context, above), runOptimizedOrFallback(args[1], engine, context, above))
       let prev = runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
@@ -803,7 +803,7 @@ function createComparator (name, func) {
       return true
     },
     asyncMethod: async (args, context, above, engine) => {
-      if (!Array.isArray(args) || args.length === 1) throw INVALID_ARGUMENTS
+      if (!Array.isArray(args) || args.length <= 1) throw INVALID_ARGUMENTS
       if (args.length === 2) return func(await runOptimizedOrFallback(args[0], engine, context, above), await runOptimizedOrFallback(args[1], engine, context, above))
       let prev = await runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {

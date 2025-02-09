@@ -199,5 +199,48 @@
         "rule": { "!==": 1 },
         "data": {},
         "error": { "type": "Invalid Arguments" }
+    },
+    "Empty Operand Tests",
+    {
+        "description": "< with empty argument",
+        "rule": { "<": [] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "> with empty argument",
+        "rule": { ">": [] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": ">= with empty argument",
+        "rule": { ">=": [] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "== with empty argument",
+        "rule": { "==": [] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!= with empty argument",
+        "rule": { "!=": [] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "=== with empty argument",
+        "rule": { "===": [] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "!== with empty argument",
+        "rule": { "!==": [] },
+        "data": {},
+        "error": { "type": "Invalid Arguments" }
     }
 ]
