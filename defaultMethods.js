@@ -797,21 +797,18 @@ function createComparator (name, func) {
       if (args.length === 2) {
         const a = runOptimizedOrFallback(args[0], engine, context, above)
         const b = runOptimizedOrFallback(args[1], engine, context, above)
-        if (!strict && typeof a !== typeof b) {
-          if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
-          if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
-          return func(+a, +b)
-        }
-        return func(a, b)
+        if (strict || (typeof a === 'string' && typeof b === 'string')) return func(a, b)
+        if (Number.isNaN(+precoerceNumber(a))) throw NaN
+        if (Number.isNaN(+precoerceNumber(b))) throw NaN
+        return func(+a, +b)
       }
       let prev = runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
         const current = runOptimizedOrFallback(args[i], engine, context, above)
-        if (!strict && typeof current !== typeof prev) {
-          if (typeof current === 'string' && Number.isNaN(+current)) throw NaN
-          if (i === 1 && typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
-          if (!func(+prev, +current)) return false
-        } else if (!func(prev, current)) return false
+        if (strict || (typeof current === 'string' && typeof prev === 'string')) if (!func(prev, current)) return false
+        if (Number.isNaN(+precoerceNumber(current))) throw NaN
+        if (i === 1 && Number.isNaN(+precoerceNumber(prev))) throw NaN
+        if (!func(+prev, +current)) return false
         prev = current
       }
       return true
@@ -821,21 +818,18 @@ function createComparator (name, func) {
       if (args.length === 2) {
         const a = await runOptimizedOrFallback(args[0], engine, context, above)
         const b = await runOptimizedOrFallback(args[1], engine, context, above)
-        if (!strict && typeof a !== typeof b) {
-          if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
-          if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
-          return func(+a, +b)
-        }
-        return func(a, b)
+        if (strict || (typeof a === 'string' && typeof b === 'string')) return func(a, b)
+        if (Number.isNaN(+precoerceNumber(a))) throw NaN
+        if (Number.isNaN(+precoerceNumber(b))) throw NaN
+        return func(+a, +b)
       }
       let prev = await runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
         const current = await runOptimizedOrFallback(args[i], engine, context, above)
-        if (!strict && typeof current !== typeof prev) {
-          if (typeof current === 'string' && Number.isNaN(+current)) throw NaN
-          if (i === 1 && typeof prev === 'string' && Number.isNaN(+prev)) throw NaN
-          if (!func(+prev, +current)) return false
-        } else if (!func(prev, current)) return false
+        if (strict || (typeof current === 'string' && typeof prev === 'string')) if (!func(prev, current)) return false
+        if (Number.isNaN(+precoerceNumber(current))) throw NaN
+        if (i === 1 && Number.isNaN(+precoerceNumber(prev))) throw NaN
+        if (!func(+prev, +current)) return false
         prev = current
       }
       return true

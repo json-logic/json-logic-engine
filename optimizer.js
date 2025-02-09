@@ -2,6 +2,7 @@
 import { isDeterministic } from './compiler.js'
 import { OriginalImpl } from './constants.js'
 import { coerceArray } from './utilities/coerceArray.js'
+import { precoerceNumber } from './utilities/downgrade.js'
 import { splitPathMemoized } from './utilities/splitPath.js'
 
 /**
@@ -122,12 +123,10 @@ function checkIdioms (logic, engine, above) {
       const comparisonFunc = comparison.length === 3
         ? _comparisonFunc
         : function comparisonFunc (a, b) {
-          if (typeof a !== typeof b) {
-            if (typeof a === 'string' && Number.isNaN(+a)) throw NaN
-            if (typeof b === 'string' && Number.isNaN(+b)) throw NaN
-            return _comparisonFunc(+a, +b)
-          }
-          return _comparisonFunc(a, b)
+          if (typeof a === 'string' && typeof b === 'string') return _comparisonFunc(a, b)
+          if (Number.isNaN(+precoerceNumber(a))) throw NaN
+          if (Number.isNaN(+precoerceNumber(b))) throw NaN
+          return _comparisonFunc(+a, +b)
         }
 
       if (logic[comparison].length === 2) {
