@@ -228,6 +228,7 @@ const defaultMethods = {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
+      if (!arr.length) return false
 
       let item
       for (let i = 0; i < arr.length; i++) {
@@ -239,6 +240,7 @@ const defaultMethods = {
     },
     asyncMethod: async (arr, _1, _2, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
+      if (!arr.length) return false
 
       let item
       for (let i = 0; i < arr.length; i++) {
@@ -251,7 +253,8 @@ const defaultMethods = {
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
       let res = buildState.compile``
-      if (Array.isArray(data) && data.length) {
+      if (Array.isArray(data)) {
+        if (!data.length) return buildState.compile`false`
         for (let i = 0; i < data.length; i++) res = buildState.compile`${res} engine.truthy(prev = ${data[i]}) ? prev : `
         res = buildState.compile`${res} prev`
         return res
@@ -383,6 +386,7 @@ const defaultMethods = {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
+      if (!arr.length) return false
 
       let item
       for (let i = 0; i < arr.length; i++) {
@@ -393,7 +397,7 @@ const defaultMethods = {
     },
     asyncMethod: async (arr, _1, _2, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
-
+      if (!arr.length) return false
       let item
       for (let i = 0; i < arr.length; i++) {
         item = await engine.run(arr[i], _1, { above: _2 })
@@ -405,11 +409,13 @@ const defaultMethods = {
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
       let res = buildState.compile``
-      if (Array.isArray(data) && data.length) {
+      if (Array.isArray(data)) {
+        if (!data.length) return buildState.compile`false`
         for (let i = 0; i < data.length; i++) res = buildState.compile`${res} !engine.truthy(prev = ${data[i]}) ? prev : `
         res = buildState.compile`${res} prev`
         return res
       }
+
       return false
     }
   },
