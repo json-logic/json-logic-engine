@@ -4,8 +4,12 @@ import { LogicEngine, AsyncLogicEngine } from './index.js'
 
 const tests = []
 
-// get all json files from "suites" directory
-const files = fs.readdirSync('./suites')
+// get all json files from "suites" directory, 1 layer of depth
+const files = fs.readdirSync('./suites', { withFileTypes: true }).flatMap(i => {
+  if (i.isDirectory()) return fs.readdirSync(`./suites/${i.name}`).map(j => `${i.name}/${j}`)
+  return i.name
+})
+
 for (const file of files) {
   if (file.endsWith('.json')) {
     tests.push(...JSON.parse(fs.readFileSync(`./suites/${file}`).toString()).filter(i => typeof i !== 'string').map(i => {
