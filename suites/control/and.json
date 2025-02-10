@@ -43,6 +43,18 @@
         "result": false
     },
     {
+        "description": "When all values are truthy, the last truthy value should be returned",
+        "rule": { "and": [1, 2, 3] },
+        "data": null,
+        "result": 3
+    },
+    {
+        "description": "When all values are truthy, the last truthy value should be returned (2)",
+        "rule": { "and": [true, 1, {}] },
+        "data": null,
+        "result": {}
+    },
+    {
         "description": "And with a single falsey value should be return the falsy value",
         "rule": { "and": [[]] },
         "data": null,
