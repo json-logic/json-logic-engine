@@ -55,8 +55,10 @@ class AsyncLogicEngine {
    * @returns
    */
   truthy (value) {
+    if (!value) return value
     if (Array.isArray(value) && value.length === 0) return false
-    if (Number.isNaN(value)) return true
+    // Uncomment the following line to switch empty object to falsy.
+    // if (value && typeof value === 'object') return Object.keys(value).length > 0
     return value
   }
 
