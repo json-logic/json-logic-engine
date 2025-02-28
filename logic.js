@@ -60,13 +60,13 @@ class LogicEngine {
    * @param {*} above The context above (can be used for handlebars-style data traversal.)
    * @returns {{ result: *, func: string }}
    */
-  _parse (logic, context, above, func) {
+  _parse (logic, context, above, func, length) {
     const data = logic[func]
 
     if (this.isData(logic, func)) return logic
 
     // eslint-disable-next-line no-throw-literal
-    if (!this.methods[func]) throw { type: 'Unknown Operator', key: func }
+    if (!this.methods[func] || length > 1) throw { type: 'Unknown Operator', key: func }
 
     // A small but useful micro-optimization for some of the most common functions.
     // Later on, I could define something to shut this off if var / val are redefined.
@@ -162,7 +162,7 @@ class LogicEngine {
       const keys = Object.keys(logic)
       if (keys.length > 0) {
         const func = keys[0]
-        return this._parse(logic, data, above, func)
+        return this._parse(logic, data, above, func, keys.length)
       }
     }
 

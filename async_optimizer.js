@@ -90,6 +90,9 @@ export function optimize (logic, engine, above = []) {
     const isData = engine.isData(logic, methodName)
     if (isData) return () => logic
 
+    // eslint-disable-next-line no-throw-literal
+    if (keys.length > 1) throw { type: 'Unknown Operator' }
+
     // If we have a deterministic function, we can just return the result of the evaluation,
     // basically inlining the operation.
     const deterministic = !engine.disableInline && isDeterministic(logic, engine, { engine })
