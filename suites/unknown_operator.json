@@ -12,8 +12,14 @@
       "error": { "type": "Unknown Operator" } 
     },
     {
-      "description": "Multi-Key Object, one key is a valid operator. Should fail.",
+      "description": "Multi-Key Object, one key is a valid operator (valid, invalid). Should fail.",
       "rule": { "+": true, "UnknownOperator2": true },
+      "data": null,
+      "error": { "type": "Unknown Operator" } 
+    },
+    {
+      "description": "Multi-Key Object, one key is a valid operator (invalid, valid). Should fail.",
+      "rule": { "UnknownOperator2": true, "+": true },
       "data": null,
       "error": { "type": "Unknown Operator" } 
     },
