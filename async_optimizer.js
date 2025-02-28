@@ -85,6 +85,8 @@ export function optimize (logic, engine, above = []) {
     const keys = Object.keys(logic)
     const methodName = keys[0]
 
+    if (keys.length === 0) return logic
+
     const isData = engine.isData(logic, methodName)
     if (isData) return () => logic
 
@@ -113,6 +115,9 @@ export function optimize (logic, engine, above = []) {
       }
       return result
     }
+
+    // eslint-disable-next-line no-throw-literal
+    throw { type: 'Unknown Operator', key: methodName }
   }
 
   return logic

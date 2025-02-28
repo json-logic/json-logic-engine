@@ -20,7 +20,8 @@ function isDeterministic (method, engine, buildState) {
     const lower = method[func]
 
     if (engine.isData(method, func) || func === undefined) return true
-    if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+    // eslint-disable-next-line no-throw-literal
+    if (!engine.methods[func]) throw { type: 'Unknown Operator', key: func }
 
     if (engine.methods[func].lazy) {
       return typeof engine.methods[func].deterministic === 'function'
@@ -45,7 +46,8 @@ function isSyncDeep (method, engine, buildState) {
     const func = Object.keys(method)[0]
     const lower = method[func]
     if (engine.isData(method, func) || func === undefined) return true
-    if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+    // eslint-disable-next-line no-throw-literal
+    if (!engine.methods[func]) throw { type: 'Unknown Operator', key: func }
     if (engine.methods[func].lazy) return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync]
     return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync] && isSyncDeep(lower, engine, buildState)
   }

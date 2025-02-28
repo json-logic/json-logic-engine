@@ -65,7 +65,8 @@ class LogicEngine {
 
     if (this.isData(logic, func)) return logic
 
-    if (!this.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+    // eslint-disable-next-line no-throw-literal
+    if (!this.methods[func]) throw { type: 'Unknown Operator', key: func }
 
     // A small but useful micro-optimization for some of the most common functions.
     // Later on, I could define something to shut this off if var / val are redefined.

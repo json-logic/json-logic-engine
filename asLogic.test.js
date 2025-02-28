@@ -70,9 +70,14 @@ describe('asLogicAsync', () => {
 
   it('Should not allow you to create a builder with methods that do not exist', async () => {
     const builder = asLogicAsync(module)
-    expect(builder({
-      hello: { '+': [1, 2] }
-    })).rejects.toThrow()
+    try {
+      await builder({
+        hello: { '+': [1, 2] }
+      })
+    } catch (e) {
+      return
+    }
+    throw new Error('Should have thrown an error')
   })
 
   it('Should let you select logic kept', async () => {
