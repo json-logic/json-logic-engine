@@ -1,0 +1,14 @@
+[
+    { 
+      "description": "Empty object passes through", 
+      "rule": {},
+      "result": {},
+      "data": null
+    },
+    { 
+      "description": "Empty object passes through, even embedded", 
+      "rule": [{}, {}],
+      "result": [{}, {}],
+      "data": null
+    }
+  ]
