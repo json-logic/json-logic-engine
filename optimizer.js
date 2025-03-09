@@ -115,6 +115,27 @@ function checkIdioms (logic, engine, above) {
     }
   }
 
+  if ((logic.if || logic['?:']) && engine.methods.if[OriginalImpl] && Array.isArray(logic.if || logic['?:']) && (logic.if || logic['?:']).length === 3) {
+    const [condition, truthy, falsy] = logic.if || logic['?:']
+    const C = optimize(condition, engine, above)
+    const T = optimize(truthy, engine, above)
+    const F = optimize(falsy, engine, above)
+
+    if (typeof C === 'function' && typeof T === 'function' && typeof F === 'function') return (data, abv) => engine.truthy(C(data, abv)) ? T(data, abv) : F(data, abv)
+    if (typeof C === 'function' && typeof T === 'function') return (data, abv) => engine.truthy(C(data, abv)) ? T(data, abv) : F
+    if (typeof C === 'function' && typeof F === 'function') return (data, abv) => engine.truthy(C(data, abv)) ? T : F(data, abv)
+    if (typeof C === 'function') return (data, abv) => engine.truthy(C(data, abv)) ? T : F
+
+    // Otherwise, C is not a function, and we can just return the result of the evaluation.
+    return engine.truthy(C) ? T : F
+  }
+
+  if (logic.filter && engine.methods.filter[OriginalImpl] && Array.isArray(logic.filter) && logic.filter.length === 2) {
+    const [collection, filter] = logic.filter
+    const filterF = optimize(filter, engine, above)
+    if (typeof filterF !== 'function') return engine.truthy(filterF) ? optimize(collection, engine, above) : []
+  }
+
   // Hyper-Optimizations for Comparison Operators.
   for (const comparison in comparisons) {
     if (logic[comparison] && Array.isArray(logic[comparison]) && engine.methods[comparison][OriginalImpl]) {

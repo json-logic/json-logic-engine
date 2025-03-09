@@ -158,6 +158,7 @@ const defaultMethods = {
     [Sync]: () => true
   },
   if: {
+    [OriginalImpl]: true,
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
 
@@ -868,6 +869,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
         })
       )
     },
+    [OriginalImpl]: true,
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
