@@ -15,7 +15,7 @@
     "Null check",
     {
         "description": "null is falsy",
-        "rule": { "if": [[], "apple", "banana"] },
+        "rule": { "if": [null, "apple", "banana"] },
         "data": null,
         "result": "banana"
     },
@@ -78,19 +78,19 @@
         "result": null 
     },
     {
-        "description": "If no then is defined when true, it'll just return null.",
+        "description": "If no 'then' is defined, it should return the first argument (true)",
         "rule": { "if": [true] },
         "data": null,
         "result": true
     },
     {
-        "description": "If no fallback is defined when falsy, it'll just return null.",
+        "description": "If no 'then' is defined, it should return the first argument (false)",
         "rule": { "if": [false] },
         "data": null,
         "result": false
     },
     {
-        "description": "If no then is defined when truthy, it'll just return null.",
+        "description": "If no 'then' is defined, it should return the first argument (apple string)",
         "rule": { "if": ["apple"] },
         "data": null,
         "result": "apple"

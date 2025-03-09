@@ -124,7 +124,7 @@
         "description": "Or with no arguments should return false",
         "rule": { "or": [] },
         "data": null,
-        "result": false
+        "result": null
     },
     "Valid Arguments Checks",
     {

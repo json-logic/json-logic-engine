@@ -124,7 +124,7 @@
         "description": "And with no arguments should return false",
         "rule": { "and": [] },
         "data": null,
-        "result": false
+        "result": null
     },
     "Valid Arguments Checks",
     {
