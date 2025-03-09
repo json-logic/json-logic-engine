@@ -1,0 +1,131 @@
+[
+    "Collection of Chained Arithmetic Tests",
+    "Plus",
+    {
+        "description": "Plus can be chained with other operators",
+        "rule": { "+": { "val": "arr" } },
+        "data": { "arr": [1, 2, 3] },
+        "result": 6
+    },
+    {
+        "description": "Plus can be chained with other operators (2)",
+        "rule": { "+": { "merge": [[1, 2], 3, [4, 5]] } },
+        "data": null,
+        "result": 15
+    },
+    {
+        "description": "Plus can be chained with other operators (3)",
+        "rule": { "+": { "map": [{ "val": "people" }, { "val": "age" }] } },
+        "data": {
+            "people": [
+                { "name": "John", "age": 30 },
+                { "name": "Jane", "age": 25 },
+                { "name": "Bob", "age": 35 },
+                { "name": "Alice", "age": 28 }
+            ]
+        },
+        "result": 118
+    },
+    "Multiply",
+    {
+        "description": "Multiply can be chained with other operators",
+        "rule": { "*": { "val": "arr" } },
+        "data": { "arr": [1, 2, 3] },
+        "result": 6
+    },
+    {
+        "description": "Multiply can be chained with other operators (2)",
+        "rule": { "*": { "merge": [[1, 2], 3, [4, 5]] } },
+        "data": null,
+        "result": 120
+    },
+    {
+        "description": "Multiply can be chained with other operators (3)",
+        "rule": { "*": { "map": [{ "val": "arr" }, { "val": "x" }] } },
+        "data": {
+            "arr": [
+                { "x": 30 },
+                { "x": 25 },
+                { "x": 35 },
+                { "x": 28 }
+            ]
+        },
+        "result": 735000
+    },
+    "Minus",
+    {
+        "description": "Minus can be chained with other operators",
+        "rule": { "-": { "val": "arr" } },
+        "data": { "arr": [10, 7] },
+        "result": 3
+    },
+    {
+        "description": "Minus can be chained with other operators (2)",
+        "rule": { "-": { "merge": [[1], 5] } },
+        "data": null,
+        "result": -4
+    },
+    {
+        "description": "Minus can be chained with other operators (3)",
+        "rule": { "-": { "map": [{ "val": "people" }, { "val": "age" }] } },
+        "data": {
+            "people": [
+                { "name": "John", "age": 30 },
+                { "name": "Jane", "age": 25 },
+                { "name": "Bob", "age": 35 },
+                { "name": "Alice", "age": 28 }
+            ]
+        },
+        "result": -58
+    },
+    "Divide",
+    {
+        "description": "Divide can be chained with other operators",
+        "rule": { "/": { "val": "arr" } },
+        "data": { "arr": [10, 5] },
+        "result": 2
+    },
+    {
+        "description": "Divide can be chained with other operators (2)",
+        "rule": { "/": { "merge": [[20], 5] } },
+        "data": null,
+        "result": 4
+    },
+    {
+        "description": "Divide can be chained with other operators (3)",
+        "rule": { "/": { "map": [{ "val": "arr" }, { "val": "x" }] } },
+        "data": {
+            "arr": [
+                { "x": 16 },
+                { "x": 2 },
+                { "x": 2 },
+                { "x": 2 }
+            ]
+        },
+        "result": 2
+    },
+    "Modulo",
+    {
+        "description": "Modulo can be chained with other operators",
+        "rule": { "%": { "val": "arr" } },
+        "data": { "arr": [10, 3] },
+        "result": 1
+    },
+    {
+        "description": "Modulo can be chained with other operators (2)",
+        "rule": { "%": { "merge": [[20], 3] } },
+        "data": null,
+        "result": 2
+    },
+    {
+        "description": "Modulo can be chained with other operators (3)",
+        "rule": { "%": { "map": [{ "val": "arr" }, { "val": "x" }] } },
+        "data": {
+            "arr": [
+                { "x": 17 },
+                { "x": 4 }
+            ]
+        },
+        "result": 1
+    }
+]

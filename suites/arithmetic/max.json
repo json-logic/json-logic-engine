@@ -1,0 +1,261 @@
+[
+    {
+        "description": "Max of two numbers",
+        "rule": { "max": [1, 2] },
+        "data": null,
+        "result": 2
+    },
+    {
+        "description": "Max of two numbers (2)",
+        "rule": { "max": [2, 1] },
+        "data": null,
+        "result": 2
+    },
+    {
+        "description": "Max of three numbers",
+        "rule": { "max": [1, 2, 3] },
+        "data": null,
+        "result": 3
+    },
+    {
+        "description": "Max of three numbers (2)",
+        "rule": { "max": [3, 2, 1] },
+        "data": null,
+        "result": 3
+    },
+    {
+        "description": "Max of three numbers",
+        "rule": { "max": [3, 3, 2] },
+        "data": null,
+        "result": 3
+    },
+    {
+        "description": "Max of a multitude of numbers",
+        "rule": { "max": [55, 33, 11, 66, 127, 25, 3] },
+        "data": null,
+        "result": 127
+    },
+    {
+        "description": "Max with all negative numbers",
+        "rule": { "max": [-1, -2, -3] },
+        "data": null,
+        "result": -1
+    },
+    {
+        "description": "Max with a mix of positive and negative numbers",
+        "rule": { "max": [-1, 2, -3] },
+        "data": null,
+        "result": 2
+    },
+    {
+        "description": "Max of one number",
+        "rule": { "max": [1] },
+        "data": null,
+        "result": 1
+    },
+    {
+        "description": "Max of one number, direct",
+        "rule": { "max": 7 },
+        "data": null,
+        "result": 7
+    },
+    {
+        "description": "Max with an operator argument (showing it's not lazy)",
+        "rule": { "max": [1, 2, 3, { "val": "a" }, 5, { "+": "3" }, 4] },
+        "data": { "a": 7 },
+        "result": 7
+    },
+    {
+        "description": "Max can chain with other operators",
+        "rule": { "max": { "val": "arr" } },
+        "data": { "arr": [1, 2, 3] },
+        "result": 3
+    },
+    {
+        "description": "Max can chain with other operators (2)",
+        "rule": { "max": { "val": "arr" } },
+        "data": { "arr": [6, 5, 4] },
+        "result": 6
+    },
+    {
+        "description": "Max can chain with other operators (3)",
+        "rule": { "max": { "merge": [[1, 2], 3, [4, 5]] } },
+        "data": null,
+        "result": 5
+    },
+    {
+        "description": "Max can chain with other operators (4)",
+        "rule": { "max": { "map": [{ "val": "people" }, { "val": "age" }] } },
+        "data": {
+            "people": [
+                { "name": "John", "age": 30 },
+                { "name": "Jane", "age": 25 },
+                { "name": "Bob", "age": 35 },
+                { "name": "Alice", "age": 28 }
+            ]
+        },
+        "result": 35
+    },
+    {
+        "description": "Max of a string", 
+        "rule": { "max": ["1"] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a string, direct",
+        "rule": { "max": "2" },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of multiple strings",
+        "rule": { "max": ["1", "2", "3"] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a string and a number",
+        "rule": { "max": ["1", 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a string and a number (2)",
+        "rule": { "max": [2, "1"] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of multiple numbers and a string",
+        "rule": { "max": [1, 2, 3, 4, 5, "3", 4] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a boolean",
+        "rule": { "max": [true] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a boolean, direct",
+        "rule": { "max": true },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of multiple booleans",
+        "rule": { "max": [true, false, true] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of boolean and a number",
+        "rule": { "max": [true, 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of boolean and a number (2)",
+        "rule": { "max": [2, true] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a null",
+        "rule": { "max": [null] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a null, direct",
+        "rule": { "max": null },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of multiple nulls",
+        "rule": { "max": [null, null, null] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a null and a number",
+        "rule": { "max": [null, 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of a null and a number (2)",
+        "rule": { "max": [2, null] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an empty array",
+        "rule": { "max": [[]] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an array with items",
+        "rule": { "max": [[1, 2, 3]] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max with multiple arrays",
+        "rule": { "max": [[1, 2], [3, 4], []] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an array and a number",
+        "rule": { "max": [[1, 2], 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an array and a number (2)",
+        "rule": { "max": [2, [1, 2]] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an object",
+        "rule": { "max": [{}] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an object, direct",
+        "rule": { "max": {} },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of multiple objects",
+        "rule": { "max": [{}, {}, {}] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an object and a number",
+        "rule": { "max": [{}, 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max of an object and a number (2)",
+        "rule": { "max": [2, {}] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Max with zero arguments throws",
+        "rule": { "max": [] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    }
+]

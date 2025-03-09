@@ -149,8 +149,24 @@ const defaultMethods = {
     // eslint-disable-next-line no-throw-literal
     throw { type }
   },
-  max: (data) => Math.max(...data),
-  min: (data) => Math.min(...data),
+  max: (data) => {
+    if (!data.length || typeof data[0] !== 'number') throw INVALID_ARGUMENTS
+    let max = data[0]
+    for (let i = 1; i < data.length; i++) {
+      if (typeof data[i] !== 'number') throw INVALID_ARGUMENTS
+      if (data[i] > max) max = data[i]
+    }
+    return max
+  },
+  min: (data) => {
+    if (!data.length || typeof data[0] !== 'number') throw INVALID_ARGUMENTS
+    let min = data[0]
+    for (let i = 1; i < data.length; i++) {
+      if (typeof data[i] !== 'number') throw INVALID_ARGUMENTS
+      if (data[i] < min) min = data[i]
+    }
+    return min
+  },
   in: ([item, array]) => (array || []).includes(item),
   preserve: {
     lazy: true,
@@ -936,21 +952,6 @@ Object.keys(defaultMethods).forEach((item) => {
       ? true
       : defaultMethods[item].deterministic
 })
-
-// @ts-ignore Allow custom attribute
-defaultMethods.min.compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  return `Math.min(${data
-    .map((i) => buildString(i, buildState))
-    .join(', ')})`
-}
-// @ts-ignore Allow custom attribute
-defaultMethods.max.compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  return `Math.max(${data
-    .map((i) => buildString(i, buildState))
-    .join(', ')})`
-}
 
 // @ts-ignore Allow custom attribute
 defaultMethods.if.compile = function (data, buildState) {

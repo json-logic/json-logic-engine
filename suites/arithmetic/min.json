@@ -1,0 +1,261 @@
+[
+    {
+        "description": "Min of two numbers",
+        "rule": { "min": [1, 2] },
+        "data": null,
+        "result": 1
+    },
+    {
+        "description": "Min of two numbers (2)",
+        "rule": { "min": [2, 1] },
+        "data": null,
+        "result": 1
+    },
+    {
+        "description": "Min of three numbers",
+        "rule": { "min": [1, 2, 3] },
+        "data": null,
+        "result": 1
+    },
+    {
+        "description": "Min of three numbers (2)",
+        "rule": { "min": [3, 2, 1] },
+        "data": null,
+        "result": 1
+    },
+    {
+        "description": "Min of three numbers",
+        "rule": { "min": [3, 3, 2] },
+        "data": null,
+        "result": 2
+    },
+    {
+        "description": "Min of a multitude of numbers",
+        "rule": { "min": [55, 33, 11, 66, 127, 25, 3] },
+        "data": null,
+        "result": 3
+    },
+    {
+        "description": "Min with all negative numbers",
+        "rule": { "min": [-1, -2, -3] },
+        "data": null,
+        "result": -3
+    },
+    {
+        "description": "Min with a mix of positive and negative numbers",
+        "rule": { "min": [-1, 2, -3] },
+        "data": null,
+        "result": -3
+    },
+    {
+        "description": "Min of one number",
+        "rule": { "min": [1] },
+        "data": null,
+        "result": 1
+    },
+    {
+        "description": "Min of one number, direct",
+        "rule": { "min": 7 },
+        "data": null,
+        "result": 7
+    },
+    {
+        "description": "Min with an operator argument (showing it's not lazy)",
+        "rule": { "min": [1, 2, 3, { "val": "a" }, 5, { "+": "3" }, 4] },
+        "data": { "a": 7 },
+        "result": 1
+    },
+    {
+        "description": "Min can chain with other operators",
+        "rule": { "min": { "val": "arr" } },
+        "data": { "arr": [1, 2, 3] },
+        "result": 1
+    },
+    {
+        "description": "Min can chain with other operators (2)",
+        "rule": { "min": { "val": "arr" } },
+        "data": { "arr": [6, 5, 4] },
+        "result": 4
+    },
+    {
+        "description": "Min can chain with other operators (3)",
+        "rule": { "min": { "merge": [[1, 2], 3, [4, 5]] } },
+        "data": null,
+        "result": 1
+    },
+    {
+        "description": "Min can chain with other operators (4)",
+        "rule": { "min": { "map": [{ "val": "people" }, { "val": "age" }] } },
+        "data": {
+            "people": [
+                { "name": "John", "age": 30 },
+                { "name": "Jane", "age": 25 },
+                { "name": "Bob", "age": 35 },
+                { "name": "Alice", "age": 28 }
+            ]
+        },
+        "result": 25
+    },
+    {
+        "description": "Min of a string", 
+        "rule": { "min": ["1"] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a string, direct",
+        "rule": { "min": "2" },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of multiple strings",
+        "rule": { "min": ["1", "2", "3"] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a string and a number",
+        "rule": { "min": ["1", 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a string and a number (2)",
+        "rule": { "min": [2, "1"] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of multiple numbers and a string",
+        "rule": { "min": [1, 2, 3, 4, 5, "3", 4] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a boolean",
+        "rule": { "min": [true] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a boolean, direct",
+        "rule": { "min": true },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of multiple booleans",
+        "rule": { "min": [true, false, true] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of boolean and a number",
+        "rule": { "min": [true, 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of boolean and a number (2)",
+        "rule": { "min": [2, true] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a null",
+        "rule": { "min": [null] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a null, direct",
+        "rule": { "min": null },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of multiple nulls",
+        "rule": { "min": [null, null, null] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a null and a number",
+        "rule": { "min": [null, 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of a null and a number (2)",
+        "rule": { "min": [2, null] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an empty array",
+        "rule": { "min": [[]] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an array with items",
+        "rule": { "min": [[1, 2, 3]] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min with multiple arrays",
+        "rule": { "min": [[1, 2], [3, 4], []] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an array and a number",
+        "rule": { "min": [[1, 2], 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an array and a number (2)",
+        "rule": { "min": [2, [1, 2]] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an object",
+        "rule": { "min": [{}] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an object, direct",
+        "rule": { "min": {} },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of multiple objects",
+        "rule": { "min": [{}, {}, {}] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an object and a number",
+        "rule": { "min": [{}, 2] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min of an object and a number (2)",
+        "rule": { "min": [2, {}] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    },
+    {
+        "description": "Min with zero arguments throws",
+        "rule": { "min": [] },
+        "data": null,
+        "error": { "type": "Invalid Arguments" }
+    }
+]
