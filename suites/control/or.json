@@ -121,7 +121,7 @@
         "result": "0"
     },
     {
-        "description": "Or with no arguments should return false",
+        "description": "Or with no arguments should return null",
         "rule": { "or": [] },
         "data": null,
         "result": null
