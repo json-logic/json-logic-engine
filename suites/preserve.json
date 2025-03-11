@@ -1,0 +1,86 @@
+[
+    {
+        "description": "Preserve on a string",
+        "rule": { "preserve": "a" },
+        "result": "a",
+        "data": null
+    },
+    {
+        "description": "Preserve on a number",
+        "rule": { "preserve": 1 },
+        "result": 1,
+        "data": null
+    },
+    {
+        "description": "Preserve on a zero",
+        "rule": { "preserve": 0 },
+        "result": 0,
+        "data": null
+    },
+    {
+        "description": "Preserve on a negative number",
+        "rule": { "preserve": -1 },
+        "result": -1,
+        "data": null
+    },
+    {
+        "description": "Preserve on true",
+        "rule": { "preserve": true },
+        "result": true,
+        "data": null
+    },
+    {
+        "description": "Preserve on false",
+        "rule": { "preserve": false },
+        "result": false,
+        "data": null
+    },
+    {
+        "description": "Preserve on an array",
+        "rule": { "preserve": [1, 2] },
+        "result": [1, 2],
+        "data": null
+    },
+    {
+        "description": "Preserve on a null",
+        "rule": { "preserve": null },
+        "result": null,
+        "data": null
+    },
+    {
+        "description": "Preserve on a single key object",
+        "rule": { "preserve": { "a": 1 } },
+        "result": { "a": 1 },
+        "data": null
+    },
+    {
+        "description": "Preserve on a multi key object",
+        "rule": { "preserve": { "a": 1, "b": 2 } },
+        "result": { "a": 1, "b": 2 },
+        "data": null
+    },
+    {
+        "description": "Preserve on an array of objects",
+        "rule": { "preserve": [{ "a": 1 }, { "b": 2 }, { "a": 1, "b": 2 }] },
+        "result": [{ "a": 1 }, { "b": 2 }, { "a": 1, "b": 2 }],
+        "data": null
+    },
+    {
+        "description": "Preserve on something that looks like an operator",
+        "rule": { "preserve": { "+": [1, 2, 3] } },
+        "result": { "+": [1, 2, 3] },
+        "data": null
+    },
+    {
+        "description": "Preserve on an empty array",
+        "rule": { "preserve": [] },
+        "result": [],
+        "data": null
+    },
+    {
+        "description": "Preserve on an empty object",
+        "rule": { "preserve": {} },
+        "result": {},
+        "data": null
+    }
+]

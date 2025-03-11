@@ -121,10 +121,10 @@
         "result": true
     },
     {
-        "description": "And with no arguments should return false",
+        "description": "And with no arguments should return null",
         "rule": { "and": [] },
         "data": null,
-        "result": false
+        "result": null
     },
     "Valid Arguments Checks",
     {

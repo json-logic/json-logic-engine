@@ -86,7 +86,9 @@ export function isDeterministic (method, engine, buildState) {
 
     if (engine.isData(method, func)) return true
     if (lower === undefined) return true
-    if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+
+    // eslint-disable-next-line no-throw-literal
+    if (!engine.methods[func]) throw { type: 'Unknown Operator', key: func }
 
     if (engine.methods[func].lazy) {
       return typeof engine.methods[func].deterministic === 'function'
@@ -169,14 +171,16 @@ function buildString (method, buildState = {}) {
     return result
   }
 
-  const func = method && Object.keys(method)[0]
-
   if (method && typeof method === 'object') {
+    const keys = Object.keys(method)
+    const func = keys[0]
+
     if (!func) return pushValue(method)
-    if (!engine.methods[func]) {
+    if (!engine.methods[func] || keys.length > 1) {
       // Check if this is supposed to be "data" rather than a function.
       if (engine.isData(method, func)) return pushValue(method, true)
-      throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+      // eslint-disable-next-line no-throw-literal
+      throw { type: 'Unknown Operator', key: func }
     }
 
     if (

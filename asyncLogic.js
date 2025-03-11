@@ -69,12 +69,13 @@ class AsyncLogicEngine {
    * @param {*} above The context above (can be used for handlebars-style data traversal.)
    * @returns {Promise<*>}
    */
-  async _parse (logic, context, above) {
-    const [func] = Object.keys(logic)
+  async _parse (logic, context, above, func, length) {
     const data = logic[func]
 
     if (this.isData(logic, func)) return logic
-    if (!this.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+
+    // eslint-disable-next-line no-throw-literal
+    if (!this.methods[func] || length > 1) throw { type: 'Unknown Operator', key: func }
 
     // A small but useful micro-optimization for some of the most common functions.
     // Later on, I could define something to shut this off if var / val are redefined.
@@ -182,7 +183,13 @@ class AsyncLogicEngine {
       return res
     }
 
-    if (logic && typeof logic === 'object' && Object.keys(logic).length > 0) return this._parse(logic, data, above)
+    if (logic && typeof logic === 'object' && Object.keys(logic).length > 0) {
+      const keys = Object.keys(logic)
+      if (keys.length > 0) {
+        const func = keys[0]
+        return this._parse(logic, data, above, func, keys.length)
+      }
+    }
 
     return logic
   }

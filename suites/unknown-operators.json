@@ -1,0 +1,32 @@
+[
+    { 
+      "description": "Single key object, does not map to operator. Should fail.",
+      "rule": { "UnknownOperator": true },
+      "data": null,
+      "error": { "type": "Unknown Operator"  } 
+    },
+    {
+      "description": "Multi-Key Object, both keys are not operators. Should fail.",
+      "rule": { "UnknownOperator": true, "UnknownOperator2": true },
+      "data": null,
+      "error": { "type": "Unknown Operator" } 
+    },
+    {
+      "description": "Multi-Key Object, one key is a valid operator (valid, invalid). Should fail.",
+      "rule": { "+": true, "UnknownOperator2": true },
+      "data": null,
+      "error": { "type": "Unknown Operator" } 
+    },
+    {
+      "description": "Multi-Key Object, one key is a valid operator (invalid, valid). Should fail.",
+      "rule": { "UnknownOperator2": true, "+": true },
+      "data": null,
+      "error": { "type": "Unknown Operator" } 
+    },
+    {
+      "description": "Multi-Key Object, both keys are valid operators. Should fail.",
+      "rule": { "+": true, "-": true },
+      "data": null,
+      "error": { "type": "Unknown Operator" } 
+    }
+  ]

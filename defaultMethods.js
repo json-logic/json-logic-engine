@@ -20,7 +20,8 @@ function isDeterministic (method, engine, buildState) {
     const lower = method[func]
 
     if (engine.isData(method, func) || func === undefined) return true
-    if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+    // eslint-disable-next-line no-throw-literal
+    if (!engine.methods[func]) throw { type: 'Unknown Operator', key: func }
 
     if (engine.methods[func].lazy) {
       return typeof engine.methods[func].deterministic === 'function'
@@ -45,7 +46,8 @@ function isSyncDeep (method, engine, buildState) {
     const func = Object.keys(method)[0]
     const lower = method[func]
     if (engine.isData(method, func) || func === undefined) return true
-    if (!engine.methods[func]) throw new Error(`Method '${func}' was not found in the Logic Engine.`)
+    // eslint-disable-next-line no-throw-literal
+    if (!engine.methods[func]) throw { type: 'Unknown Operator', key: func }
     if (engine.methods[func].lazy) return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync]
     return typeof engine.methods[func][Sync] === 'function' ? engine.methods[func][Sync](lower, buildState) : engine.methods[func][Sync] && isSyncDeep(lower, engine, buildState)
   }
@@ -147,8 +149,24 @@ const defaultMethods = {
     // eslint-disable-next-line no-throw-literal
     throw { type }
   },
-  max: (data) => Math.max(...data),
-  min: (data) => Math.min(...data),
+  max: (data) => {
+    if (!data.length || typeof data[0] !== 'number') throw INVALID_ARGUMENTS
+    let max = data[0]
+    for (let i = 1; i < data.length; i++) {
+      if (typeof data[i] !== 'number') throw INVALID_ARGUMENTS
+      if (data[i] > max) max = data[i]
+    }
+    return max
+  },
+  min: (data) => {
+    if (!data.length || typeof data[0] !== 'number') throw INVALID_ARGUMENTS
+    let min = data[0]
+    for (let i = 1; i < data.length; i++) {
+      if (typeof data[i] !== 'number') throw INVALID_ARGUMENTS
+      if (data[i] < min) min = data[i]
+    }
+    return min
+  },
   in: ([item, array]) => (array || []).includes(item),
   preserve: {
     lazy: true,
@@ -156,6 +174,7 @@ const defaultMethods = {
     [Sync]: () => true
   },
   if: {
+    [OriginalImpl]: true,
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
 
@@ -228,7 +247,7 @@ const defaultMethods = {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
-      if (!arr.length) return false
+      if (!arr.length) return null
 
       let item
       for (let i = 0; i < arr.length; i++) {
@@ -240,7 +259,7 @@ const defaultMethods = {
     },
     asyncMethod: async (arr, _1, _2, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
-      if (!arr.length) return false
+      if (!arr.length) return null
 
       let item
       for (let i = 0; i < arr.length; i++) {
@@ -254,7 +273,7 @@ const defaultMethods = {
     compile: (data, buildState) => {
       let res = buildState.compile``
       if (Array.isArray(data)) {
-        if (!data.length) return buildState.compile`false`
+        if (!data.length) return buildState.compile`null`
         for (let i = 0; i < data.length; i++) res = buildState.compile`${res} engine.truthy(prev = ${data[i]}) ? prev : `
         res = buildState.compile`${res} prev`
         return res
@@ -386,7 +405,7 @@ const defaultMethods = {
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (arr, context, above, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
-      if (!arr.length) return false
+      if (!arr.length) return null
 
       let item
       for (let i = 0; i < arr.length; i++) {
@@ -397,7 +416,7 @@ const defaultMethods = {
     },
     asyncMethod: async (arr, _1, _2, engine) => {
       if (!Array.isArray(arr)) throw INVALID_ARGUMENTS
-      if (!arr.length) return false
+      if (!arr.length) return null
       let item
       for (let i = 0; i < arr.length; i++) {
         item = await engine.run(arr[i], _1, { above: _2 })
@@ -410,7 +429,7 @@ const defaultMethods = {
     compile: (data, buildState) => {
       let res = buildState.compile``
       if (Array.isArray(data)) {
-        if (!data.length) return buildState.compile`false`
+        if (!data.length) return buildState.compile`null`
         for (let i = 0; i < data.length; i++) res = buildState.compile`${res} !engine.truthy(prev = ${data[i]}) ? prev : `
         res = buildState.compile`${res} prev`
         return res
@@ -866,6 +885,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
         })
       )
     },
+    [OriginalImpl]: true,
     [Sync]: (data, buildState) => isSyncDeep(data, buildState.engine, buildState),
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
@@ -932,21 +952,6 @@ Object.keys(defaultMethods).forEach((item) => {
       ? true
       : defaultMethods[item].deterministic
 })
-
-// @ts-ignore Allow custom attribute
-defaultMethods.min.compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  return `Math.min(${data
-    .map((i) => buildString(i, buildState))
-    .join(', ')})`
-}
-// @ts-ignore Allow custom attribute
-defaultMethods.max.compile = function (data, buildState) {
-  if (!Array.isArray(data)) return false
-  return `Math.max(${data
-    .map((i) => buildString(i, buildState))
-    .join(', ')})`
-}
 
 // @ts-ignore Allow custom attribute
 defaultMethods.if.compile = function (data, buildState) {

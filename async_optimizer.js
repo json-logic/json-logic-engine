@@ -85,8 +85,13 @@ export function optimize (logic, engine, above = []) {
     const keys = Object.keys(logic)
     const methodName = keys[0]
 
+    if (keys.length === 0) return logic
+
     const isData = engine.isData(logic, methodName)
     if (isData) return () => logic
+
+    // eslint-disable-next-line no-throw-literal
+    if (keys.length > 1) throw { type: 'Unknown Operator' }
 
     // If we have a deterministic function, we can just return the result of the evaluation,
     // basically inlining the operation.
@@ -113,6 +118,9 @@ export function optimize (logic, engine, above = []) {
       }
       return result
     }
+
+    // eslint-disable-next-line no-throw-literal
+    throw { type: 'Unknown Operator', key: methodName }
   }
 
   return logic
