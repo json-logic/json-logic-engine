@@ -38,6 +38,12 @@
         "data": null
     },
     {
+        "description": "Truthy: {}, Direct",
+        "rule": { "!!": {} },
+        "result": false,
+        "data": null
+    },
+    {
         "description": "Truthy: {}",
         "rule": { "!!": [{}] },
         "result": false,
