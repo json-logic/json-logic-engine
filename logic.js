@@ -47,9 +47,16 @@ class LogicEngine {
    */
   truthy (value) {
     if (!value) return value
-    if (Array.isArray(value) && value.length === 0) return false
-    // Uncomment the following line to switch empty object to falsy.
-    // if (typeof value === 'object') return Object.keys(value).length > 0
+    // The following check could be erased, as it'd be caught by the iterator check,
+    // but it's here for performance reasons.
+    if (Array.isArray(value)) return value.length > 0
+    if (typeof value === 'object') {
+      if (value[Symbol.iterator]) {
+        if ('length' in value && value.length === 0) return false
+        if ('size' in value && value.size === 0) return false
+      }
+      if (value.constructor.name === 'Object') return Object.keys(value).length > 0
+    }
     return value
   }
 

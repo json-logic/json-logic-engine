@@ -21,13 +21,13 @@
     },
     "Object checks",
     {
-        "description": "Objects are always truthy, even without keys.",
+        "description": "Empty object is falsy.",
         "rule": { "if": [{}, "apple", "banana"] },
         "data": null,
-        "result": "apple"
+        "result": "banana"
     },
     {
-        "description": "Objects are always truthy, with keys defined",
+        "description": "Objects are truthy, with keys defined",
         "rule": { "if": [{ "val": [] }, "apple", "banana"] },
         "data": { "some": "value" },
         "result": "apple"
@@ -240,6 +240,12 @@
         "description": "Returns first truthy value, some conditions truthy (8)",
         "rule": { "if": [{}, "apple", 0, "banana", 7, "carrot", "date"] },
         "data": null,
+        "result": "carrot"
+    },
+    {
+        "description": "Returns first truthy value, some conditions truthy (9)",
+        "rule": { "if": [{ "val": "a" }, "apple", 0, "banana", 7, "carrot", "date"] },
+        "data": { "a": { "b": 1 } },
         "result": "apple"
     },
     "Bad Arguments",
