@@ -153,6 +153,32 @@ describe('Various Test Cases', () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { max: 5 }, {}, 5)
   })
 
+  it('sees empty structures as false', async () => {
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: {} }, false)
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: [] }, false)
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: new Map() }, false)
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: new Set() }, false)
+  })
+
+  it('sees filled structures as true', async () => {
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: { a: 1 } }, true)
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: [1] }, true)
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: new Map([[1, 'a']]) }, true)
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: new Set([1]) }, true)
+  })
+
+  it('sees classes as true', async () => {
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: new Date() }, true)
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: new RegExp() }, true)
+
+    class Empty {}
+    const empty = new Empty()
+
+    assert.strictEqual(Object.keys(empty).length, 0, 'Should have no keys')
+
+    for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: empty }, true)
+  })
+
   it('is able to handle path escaping in a var call', async () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { var: 'hello\\.world' }, { 'hello.world': 2 }, 2)
   })
