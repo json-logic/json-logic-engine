@@ -38,9 +38,15 @@
         "data": null
     },
     {
+        "description": "Truthy: {}, Direct",
+        "rule": { "!!": {} },
+        "result": false,
+        "data": null
+    },
+    {
         "description": "Truthy: {}",
         "rule": { "!!": [{}] },
-        "result": true,
+        "result": false,
         "data": null
     },
     {
@@ -59,7 +65,7 @@
     {
         "description": "Truthy: Zero Key Object",
         "rule": { "!!": { "val": "obj" } },
-        "result": true,
+        "result": false,
         "data": { "obj": {} }
     },
     {
