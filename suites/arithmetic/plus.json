@@ -194,5 +194,30 @@
         "rule": { "+": {} },
         "error": { "type": "NaN" },
         "data": null
+    },
+    {
+        "description": "Plus can be chained with other operators",
+        "rule": { "+": { "val": "arr" } },
+        "data": { "arr": [1, 2, 3] },
+        "result": 6
+    },
+    {
+        "description": "Plus can be chained with other operators (2)",
+        "rule": { "+": { "merge": [[1, 2], 3, [4, 5]] } },
+        "data": null,
+        "result": 15
+    },
+    {
+        "description": "Plus can be chained with other operators (3)",
+        "rule": { "+": { "map": [{ "val": "people" }, { "val": "age" }] } },
+        "data": {
+            "people": [
+                { "name": "John", "age": 30 },
+                { "name": "Jane", "age": 25 },
+                { "name": "Bob", "age": 35 },
+                { "name": "Alice", "age": 28 }
+            ]
+        },
+        "result": 118
     }
 ]

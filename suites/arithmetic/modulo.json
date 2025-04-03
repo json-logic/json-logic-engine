@@ -187,5 +187,28 @@
         "rule": { "%": [8, -3] },
         "result": 2,
         "data": null
+    },
+    {
+        "description": "Modulo can be chained with other operators",
+        "rule": { "%": { "val": "arr" } },
+        "data": { "arr": [10, 3] },
+        "result": 1
+    },
+    {
+        "description": "Modulo can be chained with other operators (2)",
+        "rule": { "%": { "merge": [[20], 3] } },
+        "data": null,
+        "result": 2
+    },
+    {
+        "description": "Modulo can be chained with other operators (3)",
+        "rule": { "%": { "map": [{ "val": "arr" }, { "val": "x" }] } },
+        "data": {
+            "arr": [
+                { "x": 17 },
+                { "x": 4 }
+            ]
+        },
+        "result": 1
     }
 ]

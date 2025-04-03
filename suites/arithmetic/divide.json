@@ -189,5 +189,30 @@
         "rule": { "/": [8, 2, 0] },
         "error": { "type": "NaN" },
         "data": null
+    },
+    {
+        "description": "Divide can be chained with other operators",
+        "rule": { "/": { "val": "arr" } },
+        "data": { "arr": [10, 5] },
+        "result": 2
+    },
+    {
+        "description": "Divide can be chained with other operators (2)",
+        "rule": { "/": { "merge": [[20], 5] } },
+        "data": null,
+        "result": 4
+    },
+    {
+        "description": "Divide can be chained with other operators (3)",
+        "rule": { "/": { "map": [{ "val": "arr" }, { "val": "x" }] } },
+        "data": {
+            "arr": [
+                { "x": 16 },
+                { "x": 2 },
+                { "x": 2 },
+                { "x": 2 }
+            ]
+        },
+        "result": 2
     }
 ]

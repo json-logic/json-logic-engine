@@ -168,5 +168,30 @@
         "rule": { "*": [[1], 1] },
         "error": { "type": "NaN" },
         "data": null
+    },
+    {
+        "description": "Multiply can be chained with other operators",
+        "rule": { "*": { "val": "arr" } },
+        "data": { "arr": [1, 2, 3] },
+        "result": 6
+    },
+    {
+        "description": "Multiply can be chained with other operators (2)",
+        "rule": { "*": { "merge": [[1, 2], 3, [4, 5]] } },
+        "data": null,
+        "result": 120
+    },
+    {
+        "description": "Multiply can be chained with other operators (3)",
+        "rule": { "*": { "map": [{ "val": "arr" }, { "val": "x" }] } },
+        "data": {
+            "arr": [
+                { "x": 30 },
+                { "x": 25 },
+                { "x": 35 },
+                { "x": 28 }
+            ]
+        },
+        "result": 735000
     }
 ]

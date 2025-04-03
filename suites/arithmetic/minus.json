@@ -132,5 +132,30 @@
         "rule": { "-": [[1], 1] },
         "error": { "type": "NaN" },
         "data": null
+    },
+    {
+        "description": "Minus can be chained with other operators",
+        "rule": { "-": { "val": "arr" } },
+        "data": { "arr": [10, 7] },
+        "result": 3
+    },
+    {
+        "description": "Minus can be chained with other operators (2)",
+        "rule": { "-": { "merge": [[1], 5] } },
+        "data": null,
+        "result": -4
+    },
+    {
+        "description": "Minus can be chained with other operators (3)",
+        "rule": { "-": { "map": [{ "val": "people" }, { "val": "age" }] } },
+        "data": {
+            "people": [
+                { "name": "John", "age": 30 },
+                { "name": "Jane", "age": 25 },
+                { "name": "Bob", "age": 35 },
+                { "name": "Alice", "age": 28 }
+            ]
+        },
+        "result": -58
     }
 ]
