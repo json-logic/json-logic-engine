@@ -753,14 +753,6 @@ modes.forEach((logic) => {
       expect(answer).toStrictEqual(0)
     })
 
-    test('length object (null)', async () => {
-      const answer = await logic.run({
-        length: { preserve: null }
-      })
-
-      expect(answer).toStrictEqual(0)
-    })
-
     test('merge', async () => {
       const answer = await logic.run({
         merge: [{ preserve: ['b'] }, { preserve: ['c'] }]

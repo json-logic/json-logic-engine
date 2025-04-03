@@ -730,14 +730,6 @@ modes.forEach((logic) => {
       expect(answer).toStrictEqual(0)
     })
 
-    test('length object (null)', () => {
-      const answer = logic.run({
-        length: { preserve: null }
-      })
-
-      expect(answer).toStrictEqual(0)
-    })
-
     test('get from array', () => {
       const answer = logic.run({
         get: [['hi'], 'length']

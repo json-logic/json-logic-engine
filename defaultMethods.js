@@ -445,10 +445,25 @@ const defaultMethods = {
     }
     return string.substr(from, end)
   },
-  length: ([i]) => {
-    if (typeof i === 'string' || Array.isArray(i)) return i.length
-    if (i && typeof i === 'object') return Object.keys(i).length
-    return 0
+  length: {
+    method: (data, context, above, engine) => {
+      if (!data) throw INVALID_ARGUMENTS
+      const parsed = runOptimizedOrFallback(data, engine, context, above)
+      const i = Array.isArray(data) ? parsed[0] : parsed
+      if (typeof i === 'string' || Array.isArray(i)) return i.length
+      if (i && typeof i === 'object') return Object.keys(i).length
+      throw INVALID_ARGUMENTS
+    },
+    asyncMethod: async (data, context, above, engine) => {
+      if (!data) throw INVALID_ARGUMENTS
+      const parsed = await runOptimizedOrFallback(data, engine, context, above)
+      const i = Array.isArray(data) ? parsed[0] : parsed
+      if (typeof i === 'string' || Array.isArray(i)) return i.length
+      if (i && typeof i === 'object') return Object.keys(i).length
+      throw INVALID_ARGUMENTS
+    },
+    deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
+    lazy: true
   },
   exists: {
     method: (key, context, above, engine) => {

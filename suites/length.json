@@ -1,0 +1,75 @@
+[
+  "# Length operator tests",
+  {
+    "description": "Length of a basic array",
+    "rule": { "length": {"val": "array"} },
+    "data": { "array": [1, 2, 3, 4, 5] },
+    "result": 5
+  },
+  {
+    "description": "Length of an empty array returns 0",
+    "rule": { "length": {"val": "emptyArray"} },
+    "data": { "emptyArray": [] },
+    "result": 0
+  },
+  {
+    "description": "Length of a string counts characters",
+    "rule": { "length": {"val": "str"} },
+    "data": { "str": "hello" },
+    "result": 5
+  },
+  {
+    "description": "Length of an empty string returns 0",
+    "rule": { "length": {"val": "empty"} },
+    "data": { "empty": "" },
+    "result": 0
+  },
+  {
+    "description": "Length of missing variable returns null",
+    "rule": { "length": {"val": "missing"} },
+    "data": {},
+    "error": { "type": "Invalid Arguments" }
+  },
+  {
+    "description": "Length operator with null argument throws error",
+    "rule": { "length": null },
+    "data": {},
+    "error": { "type": "Invalid Arguments" }
+  },
+  {
+    "description": "Length operator with numeric argument throws error",
+    "rule": { "length": 123 },
+    "data": {},
+    "error": { "type": "Invalid Arguments" }
+  },
+  {
+    "description": "Length operator with boolean argument throws error",
+    "rule": { "length": true },
+    "data": {},
+    "error": { "type": "Invalid Arguments" }
+  },
+  {
+    "description": "Conditional based on array length (longer than 3)",
+    "rule": { "if": [{ ">": [{ "length": {"val": "array"} }, 3] }, "long", "short"] },
+    "data": { "array": [1, 2, 3, 4] },
+    "result": "long"
+  },
+  {
+    "description": "Conditional based on array length (not longer than 3)",
+    "rule": { "if": [{ ">": [{ "length": {"val": "array"} }, 3] }, "long", "short"] },
+    "data": { "array": [1, 2, 3] },
+    "result": "short"
+  },
+  {
+    "description": "Length of nested array counts top level elements",
+    "rule": { "length": {"val": "nestedArray"} },
+    "data": { "nestedArray": [[1, 2], [3, 4], [5, 6]] },
+    "result": 3
+  },
+  {
+    "description": "Length of array of objects counts objects",
+    "rule": { "length": {"val": "objectArray"} },
+    "data": { "objectArray": [{"a": 1}, {"b": 2}, {"c": 3}] },
+    "result": 3
+  }
+]
