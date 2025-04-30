@@ -153,6 +153,22 @@ describe('Various Test Cases', () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { max: 5 }, {}, 5)
   })
 
+  it('calls the function the correct amount of times', async () => {
+    for (const engine of [...normalEngines, ...permissiveEngines]) {
+      let called = 0
+      engine.addMethod('inc', () => {
+        called++
+        return 1
+      }, { optimizeUnary: true })
+
+      const f = await engine.build({ inc: undefined })
+      await f()
+      await f()
+      await f()
+      if (called !== 3) throw new Error('Should have called the function 3 times')
+    }
+  })
+
   it('sees empty structures as false', async () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: {} }, false)
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { if: [{ var: 'x' }, true, false] }, { x: [] }, false)

@@ -85,7 +85,7 @@ export function isDeterministic (method, engine, buildState) {
     const lower = method[func]
 
     if (engine.isData(method, func)) return true
-    if (lower === undefined) return true
+    if (func === undefined) return true
 
     // eslint-disable-next-line no-throw-literal
     if (!engine.methods[func]) throw { type: 'Unknown Operator', key: func }
