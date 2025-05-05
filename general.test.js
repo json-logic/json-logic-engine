@@ -134,6 +134,15 @@ describe('Various Test Cases', () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { var: 'toString' }, 'hello', null)
   })
 
+  it('is able to return the constant value', async () => {
+    for (const engine of [...normalEngines, ...permissiveEngines]) {
+      const items = [1, 'hello', [1, 2], [{}]]
+      for (const item of items) {
+        if (JSON.stringify(await engine.build(item, { top: false })) !== JSON.stringify(item)) throw new Error('Should have returned the same value, ' + item)
+      }
+    }
+  })
+
   it('is able to return functions if enabled', async () => {
     try {
       for (const engine of [...normalEngines, ...permissiveEngines]) {

@@ -184,12 +184,9 @@ class LogicEngine {
    */
   build (logic, options = {}) {
     const { above = [], top = true } = options
-    if (top) {
-      const constructedFunction = build(logic, { state: {}, engine: this, above })
-      if (typeof constructedFunction === 'function' || top === true) return (...args) => typeof constructedFunction === 'function' ? constructedFunction(...args) : constructedFunction
-      return constructedFunction
-    }
-    return logic
+    const constructedFunction = build(logic, { engine: this, above })
+    if (top === false && constructedFunction.deterministic) return constructedFunction()
+    return constructedFunction
   }
 }
 export default LogicEngine

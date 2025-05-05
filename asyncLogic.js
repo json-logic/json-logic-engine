@@ -212,24 +212,23 @@ class AsyncLogicEngine {
     this.fallback.truthy = this.truthy
     // @ts-ignore
     this.fallback.allowFunctions = this.allowFunctions
-    if (top) {
-      const constructedFunction = await buildAsync(logic, { engine: this, above, async: true, state: {} })
+    const constructedFunction = await buildAsync(logic, { engine: this, above, async: true })
 
-      const result = declareSync((...args) => {
-        if (top === true) {
-          try {
-            const result = typeof constructedFunction === 'function' ? constructedFunction(...args) : constructedFunction
-            return Promise.resolve(result)
-          } catch (err) {
-            return Promise.reject(err)
-          }
+    const result = declareSync((...args) => {
+      if (top === true) {
+        try {
+          const result = typeof constructedFunction === 'function' ? constructedFunction(...args) : constructedFunction
+          return Promise.resolve(result)
+        } catch (err) {
+          return Promise.reject(err)
         }
+      }
 
-        return typeof constructedFunction === 'function' ? constructedFunction(...args) : constructedFunction
-      }, top !== true && isSync(constructedFunction))
-      return typeof constructedFunction === 'function' || top === true ? result : constructedFunction
-    }
-    return logic
+      return typeof constructedFunction === 'function' ? constructedFunction(...args) : constructedFunction
+    }, top !== true && isSync(constructedFunction))
+
+    if (top === false && constructedFunction.deterministic) return result()
+    return (typeof constructedFunction === 'function' || top === true) ? result : constructedFunction
   }
 }
 export default AsyncLogicEngine
