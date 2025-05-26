@@ -1002,6 +1002,13 @@ function numberCoercion (i, buildState) {
   // regex match
   if (/^-?\d+(\.\d*)?$/.test(f)) return '+' + f
 
+  // if it starts with " it's a string
+  if (f.startsWith('"')) return '+' + precoerceNumber(+JSON.parse(f))
+  if (f === 'true') return '1'
+  if (f === 'false') return '0'
+  if (f === 'null') return '0'
+  if (f.startsWith('[') || f.startsWith('{')) return precoerceNumber(NaN)
+
   return `(+precoerceNumber(${f}))`
 }
 
