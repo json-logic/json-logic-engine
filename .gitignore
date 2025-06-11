@@ -3,8 +3,10 @@ node_modules/
 .nyc_output
 coverage
 .vscode
+.zed
 .idea
 .npmrc
 bench/node_modules/
 dist/
 *.d.ts
+.DS_Store
