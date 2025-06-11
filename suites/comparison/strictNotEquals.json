@@ -88,7 +88,7 @@
         "rule": { "!==": ["2024-01-01", "2024-01-01"] },
         "data": {},
         "result": false
-    }, 
+    },
     {
         "description": "!== with (2023n, 2024-01-01s)",
         "rule": { "!==": [2023, "2024-01-01"] },
@@ -142,6 +142,30 @@
         "rule": { "!==": [1, "A"] },
         "data": {},
         "result": true
+    },
+    {
+      "description": "!== with (null, As)",
+      "rule": { "!==": [null, "A"] },
+      "data": {},
+      "result": true
+    },
+    {
+      "description": "!== with (null, null)",
+      "rule": { "!==": [null, null] },
+      "data": {},
+      "result": false
+    },
+    {
+      "description": "!== with (null, null, null)",
+      "rule": { "!==": [null, null, null] },
+      "data": {},
+      "result": false
+    },
+    {
+      "description": "!== with (null, null, As)",
+      "rule": { "!==": [null, null, "A"] },
+      "data": {},
+      "result": false
     },
     {
         "description": "!== with (null, 1)",

@@ -144,6 +144,30 @@
         "error": { "type": "NaN" }
     },
     {
+      "description": "!= with (null, As)",
+      "rule": { "!=": [null, "A"] },
+      "data": {},
+      "result": true
+    },
+    {
+      "description": "== with (null, null)",
+      "rule": { "!=": [null, null] },
+      "data": {},
+      "result": false
+    },
+    {
+      "description": "!= with (null, null, null)",
+      "rule": { "!=": [null, null, null] },
+      "data": {},
+      "result": false
+    },
+    {
+      "description": "!= with (null, null, As)",
+      "rule": { "!=": [null, null, "A"] },
+      "data": {},
+      "result": false
+    },
+    {
         "description": "!= with (null, 1)",
         "rule": { "!=": [null, 1] },
         "data": {},

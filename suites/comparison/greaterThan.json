@@ -150,6 +150,12 @@
         "error": { "type": "NaN" }
     },
     {
+      "description": "> with (null, As)",
+      "rule": { ">": [null, "A"] },
+      "data": {},
+      "result": false
+    },
+    {
         "description": "> with (null, 1)",
         "rule": { ">": [null, 1] },
         "data": {},

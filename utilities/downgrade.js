@@ -5,7 +5,7 @@
 export function precoerceNumber (item) {
   if (Number.isNaN(item)) throw NaN
   if (!item) return item
-  if (typeof item === 'object') throw NaN
+  if (item && typeof item === 'object') throw NaN
   return item
 }
 
@@ -29,7 +29,7 @@ export function assertSize (arr, size) {
 export function compareCheck (item, prev, strict) {
   if (strict || (typeof item === 'string' && typeof prev === 'string')) return item
 
-  if (Number.isNaN(+precoerceNumber(item))) throw NaN
+  if (Number.isNaN(+precoerceNumber(item)) && prev !== null) throw NaN
   if (Number.isNaN(+precoerceNumber(prev))) throw NaN
 
   // The following two checks allow us to handle null == 0 and 0 == null; it's honestly

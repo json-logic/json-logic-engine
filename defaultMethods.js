@@ -839,14 +839,14 @@ function createComparator (name, func) {
         const b = runOptimizedOrFallback(args[1], engine, context, above)
         if (strict || (typeof a === 'string' && typeof b === 'string')) return func(a, b)
         if (Number.isNaN(+precoerceNumber(a))) throw NaN
-        if (Number.isNaN(+precoerceNumber(b))) throw NaN
+        if (Number.isNaN(+precoerceNumber(b)) && a !== null) throw NaN
         return func(+a, +b)
       }
       let prev = runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
         const current = runOptimizedOrFallback(args[i], engine, context, above)
         if (strict || (typeof current === 'string' && typeof prev === 'string')) if (!func(prev, current)) return false
-        if (Number.isNaN(+precoerceNumber(current))) throw NaN
+        if (Number.isNaN(+precoerceNumber(current)) && prev !== null) throw NaN
         if (i === 1 && Number.isNaN(+precoerceNumber(prev))) throw NaN
         if (!func(+prev, +current)) return false
         prev = current
@@ -860,14 +860,14 @@ function createComparator (name, func) {
         const b = await runOptimizedOrFallback(args[1], engine, context, above)
         if (strict || (typeof a === 'string' && typeof b === 'string')) return func(a, b)
         if (Number.isNaN(+precoerceNumber(a))) throw NaN
-        if (Number.isNaN(+precoerceNumber(b))) throw NaN
+        if (Number.isNaN(+precoerceNumber(b)) && a !== null) throw NaN
         return func(+a, +b)
       }
       let prev = await runOptimizedOrFallback(args[0], engine, context, above)
       for (let i = 1; i < args.length; i++) {
         const current = await runOptimizedOrFallback(args[i], engine, context, above)
         if (strict || (typeof current === 'string' && typeof prev === 'string')) if (!func(prev, current)) return false
-        if (Number.isNaN(+precoerceNumber(current))) throw NaN
+        if (Number.isNaN(+precoerceNumber(current)) && prev !== null) throw NaN
         if (i === 1 && Number.isNaN(+precoerceNumber(prev))) throw NaN
         if (!func(+prev, +current)) return false
         prev = current
