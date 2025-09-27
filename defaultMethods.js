@@ -370,8 +370,14 @@ const defaultMethods = {
     compile: (data, buildState) => {
       if (!Array.isArray(data) || !data.length) return false
       let res
+
       try {
-        res = buildState.compile`((context, above) => { try { return ${data[0]} } catch(err) { above = [null, context, above]; context = { type: err.type || err.message || err.toString() }; `
+        // This is a very specific optimization to speed up the common case of trying to coerce a value to a number, and falling back to a different value.
+        if ('+' in data[0] && data.length > 1) {
+          res = buildState.compile`((context, above) => { try { const precoerceNumber = a => a; return Number.isNaN(prev = ${data[0]}) ? ${data[1]} : prev  } catch(err) { above = [null, context, above]; context = { type: err.type || err.message || err.toString() }; `
+        } else {
+          res = buildState.compile`((context, above) => { try { return ${data[0]} } catch(err) { above = [null, context, above]; context = { type: err.type || err.message || err.toString() }; `
+        }
       } catch (err) {
         // eslint-disable-next-line no-ex-assign
         if (Number.isNaN(err)) err = { type: 'NaN' }
@@ -1019,7 +1025,7 @@ defaultMethods['+'].compile = function (data, buildState) {
     return `precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' + ')})`
   }
   if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') return `precoerceNumber(+${buildString(data, buildState)})`
-  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.reduce((a,b) => (+a)+(+precoerceNumber(b)), 0) : +precoerceNumber(prev))`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.reduce((a,b) => (+a)+(+precoerceNumber(b)), 0) : precoerceNumber(+prev))`
 }
 
 // @ts-ignore Allow custom attribute
@@ -1044,7 +1050,7 @@ defaultMethods['-'].compile = function (data, buildState) {
     return `${data.length === 1 ? '-' : ''}precoerceNumber(${data.map(i => numberCoercion(i, buildState)).join(' - ')})`
   }
   if (typeof data === 'string' || typeof data === 'number') return `(-${buildString(data, buildState)})`
-  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 1 ? -precoerceNumber(prev[0]) : assertSize(prev, 1).reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(prev))`
+  return buildState.compile`(Array.isArray(prev = ${data}) ? prev.length === 1 ? -precoerceNumber(prev[0]) : assertSize(prev, 1).reduce((a,b) => (+precoerceNumber(a))-(+precoerceNumber(b))) : -precoerceNumber(+prev))`
 }
 // @ts-ignore Allow custom attribute
 defaultMethods['/'].compile = function (data, buildState) {

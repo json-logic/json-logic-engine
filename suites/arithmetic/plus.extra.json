@@ -6,6 +6,12 @@
         "data": null
     },
     {
+      "description": "Plus val direct",
+      "rule": { "+": { "val": "a" } },
+      "data": { "a": "hello" },
+      "error": { "type": "NaN" }
+    },
+    {
         "description": "Plus operator with unary array dynamic",
         "rule": { "+": { "preserve": [7] } },
         "result": 7,
