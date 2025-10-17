@@ -7,7 +7,7 @@ import declareSync from './utilities/declareSync.js'
 import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
 import legacyMethods from './legacy.js'
-import { precoerceNumber } from './utilities/downgrade.js'
+import { precoerceNumber, assertNotType } from './utilities/downgrade.js'
 
 const INVALID_ARGUMENTS = { type: 'Invalid Arguments' }
 
@@ -32,7 +32,7 @@ function isDeterministic (method, engine, buildState) {
     return typeof engine.methods[func].deterministic === 'function'
       ? engine.methods[func].deterministic(lower, buildState)
       : engine.methods[func].deterministic &&
-          isDeterministic(lower, engine, buildState)
+      isDeterministic(lower, engine, buildState)
   }
   return true
 }
@@ -315,9 +315,9 @@ const defaultMethods = {
       if (Array.isArray(data) && data.length) {
         return `(${data.map((i, x) => {
           const built = buildString(i, buildState)
-        if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return built
-        return '(' + built + ')'
-      }).join(' ?? ')})`
+          if (Array.isArray(i) || !i || typeof i !== 'object' || x === data.length - 1) return built
+          return '(' + built + ')'
+        }).join(' ?? ')})`
       }
       return `(${buildString(data, buildState)}).reduce((a,b) => (a) ?? b, null)`
     },
@@ -653,40 +653,37 @@ const defaultMethods = {
       }
       mapper = build(mapper, mapState)
       const aboveArray = mapper.aboveDetected ? '[null, context, above]' : 'null'
-
+      const verifyAccumulator = buildState.engine.options.enableObjectAccumulators ? '' : 'assertNotType'
       buildState.methods.push(mapper)
+
       if (async) {
         if (!isSync(mapper) || selector.includes('await')) {
           buildState.asyncDetected = true
           if (typeof defaultValue !== 'undefined') {
-            return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${
-              buildState.methods.length - 1
-            }]({ accumulator: a, current: b }, ${aboveArray}), ${defaultValue})`
+            return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray}), ${defaultValue}, ${buildState.engine.options.enableObjectAccumulators})`
           }
-          return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${
-            buildState.methods.length - 1
-          }]({ accumulator: a, current: b }, ${aboveArray}))`
+          return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray}), undefined, ${buildState.engine.options.enableObjectAccumulators})`
         }
       }
+
       if (typeof defaultValue !== 'undefined') {
-        return `(${selector} || []).reduce((a,b) => methods[${
-          buildState.methods.length - 1
-        }]({ accumulator: a, current: b }, ${aboveArray}), ${defaultValue})`
+        return `(${selector} || []).reduce((a,b) => ${verifyAccumulator}(methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray})), ${verifyAccumulator}(${defaultValue}))`
       }
-      return `(${selector} || []).reduce((a,b) => methods[${
-        buildState.methods.length - 1
-      }]({ accumulator: a, current: b }, ${aboveArray}))`
+      return `(${selector} || []).reduce((a,b) => ${verifyAccumulator}(methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray})))`
     },
     method: (input, context, above, engine) => {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper, defaultValue] = input
-      defaultValue = runOptimizedOrFallback(defaultValue, engine, context, above)
+
+      const verifyAccumulator = engine.options.enableObjectAccumulators ? a => a : assertNotType
+
+      defaultValue = verifyAccumulator(runOptimizedOrFallback(defaultValue, engine, context, above))
       selector = runOptimizedOrFallback(selector, engine, context, above) || []
-      let func = (accumulator, current) => engine.run(mapper, { accumulator, current }, { above: [selector, context, above] })
+      let func = (accumulator, current) => verifyAccumulator(engine.run(mapper, { accumulator, current }, { above: [selector, context, above] }), 'object')
 
       if (engine.optimizedMap.has(mapper) && typeof engine.optimizedMap.get(mapper) === 'function') {
         const optimized = engine.optimizedMap.get(mapper)
-        func = (accumulator, current) => optimized({ accumulator, current }, [selector, context, above])
+        func = (accumulator, current) => verifyAccumulator(optimized({ accumulator, current }, [selector, context, above]))
       }
 
       if (typeof defaultValue === 'undefined') return selector.reduce(func)
@@ -697,13 +694,10 @@ const defaultMethods = {
     asyncMethod: async (input, context, above, engine) => {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper, defaultValue] = input
-      defaultValue = await engine.run(defaultValue, context, {
-        above
-      })
-      selector =
-        (await engine.run(selector, context, {
-          above
-        })) || []
+      const verifyAccumulator = engine.options.enableObjectAccumulators ? a => a : assertNotType
+
+      defaultValue = verifyAccumulator(await engine.run(defaultValue, context, { above }))
+      selector = (await engine.run(selector, context, { above })) || []
       return asyncIterators.reduce(
         selector,
         (accumulator, current) => {
@@ -718,7 +712,8 @@ const defaultMethods = {
             }
           )
         },
-        defaultValue
+        defaultValue,
+        engine.enableObjectAccumulators
       )
     },
     lazy: true
@@ -827,7 +822,8 @@ const defaultMethods = {
           })
           return accumulator
         },
-        {}
+        {},
+        true
       )
       return result
     }
@@ -1058,11 +1054,11 @@ defaultMethods['/'].compile = function (data, buildState) {
     if (data.length === 0) throw INVALID_ARGUMENTS
     if (data.length === 1) data = [1, data[0]]
     return `precoerceNumber(${data.map((i, x) => {
-    let res = numberCoercion(i, buildState)
-    if (x && res === '+0') precoerceNumber(NaN)
-    if (x) res = `precoerceNumber(${res} || NaN)`
-    return res
-  }).join(' / ')})`
+      let res = numberCoercion(i, buildState)
+      if (x && res === '+0') precoerceNumber(NaN)
+      if (x) res = `precoerceNumber(${res} || NaN)`
+      return res
+    }).join(' / ')})`
   }
   return `assertSize(prev = ${buildString(data, buildState)}, 1) && prev.length === 1 ? 1 / precoerceNumber(prev[0] || NaN) : prev.reduce((a,b) => (+precoerceNumber(a))/(+precoerceNumber(b || NaN)))`
 }

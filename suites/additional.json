@@ -76,5 +76,29 @@
         "rule": { "val": { "cat": ["te", "st"] } },
         "data": { "test": 1 },
         "result": 1
+    },
+    {
+      "description": "Throws when you try to use reduce with an array as the accumulator (Default)",
+      "rule": { "reduce": [[1,2,3], 0, []] },
+      "error": { "type": "Invalid Return" },
+      "data": null
+    },
+    {
+      "description": "Throws when you try to use reduce with an array as the accumulator (Return)",
+      "rule": { "reduce": [[1,2,3], []] },
+      "error": { "type": "Invalid Return" },
+      "data": null
+    },
+    {
+      "description": "Throws when you try to use reduce with an object as the accumulator (Default)",
+      "rule": { "reduce": [[1,2,3], 0, {}] },
+      "error": { "type": "Invalid Return" },
+      "data": null
+    },
+    {
+      "description": "Throws when you try to use reduce with an object as the accumulator (Return)",
+      "rule": { "reduce": [[1,2,3], {}] },
+      "error": { "type": "Invalid Return" },
+      "data": null
     }
 ]

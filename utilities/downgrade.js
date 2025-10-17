@@ -21,6 +21,20 @@ export function assertSize (arr, size) {
 }
 
 /**
+ * Asserts that an item is not of a certain type.
+ * Treats null as its own type, "null".
+ * The main use-case for this is to prevent reduce from returning objects.
+ * @param {*} item
+ * @param {string} type
+ */
+export function assertNotType (item, type = 'object', error = 'Invalid Return') {
+  const typeOfItem = item === null ? 'null' : typeof item
+  // eslint-disable-next-line no-throw-literal
+  if (typeOfItem === type) throw { type: error }
+  return item
+}
+
+/**
  * Used to assert in compiled templates that when a numeric comparison is made, both values are numbers.
  * @param {*} item
  * @param {*} prev

@@ -18,11 +18,11 @@ class LogicEngine {
    * Creates a new instance of the Logic Engine.
   *
    * @param {Object} methods An object that stores key-value pairs between the names of the commands & the functions they execute.
-   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean, permissive?: boolean }} options
+   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean, permissive?: boolean, enableObjectAccumulators?: boolean, maxArrayLength?: number, maxStringLength?: number }} options
    */
   constructor (
     methods = defaultMethods,
-    options = { disableInline: false, disableInterpretedOptimization: false, permissive: false }
+    options = { disableInline: false, disableInterpretedOptimization: false, permissive: false, enableObjectAccumulators: false, maxArrayLength: 1 << 15, maxStringLength: 1 << 16 }
   ) {
     this.disableInline = options.disableInline
     this.disableInterpretedOptimization = options.disableInterpretedOptimization
@@ -31,8 +31,8 @@ class LogicEngine {
     this.optimizedMap = new WeakMap()
     this.missesSinceSeen = 0
 
-    /** @type {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean }} */
-    this.options = { disableInline: options.disableInline, disableInterpretedOptimization: options.disableInterpretedOptimization }
+    /** @type {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean, enableObjectAccumulators?: boolean, maxArrayLength?: number, maxStringLength?: number }} */
+    this.options = { disableInline: options.disableInline, disableInterpretedOptimization: options.disableInterpretedOptimization, enableObjectAccumulators: options.enableObjectAccumulators || false, maxArrayLength: options.maxArrayLength || (1 << 15), maxStringLength: options.maxStringLength || (1 << 16) }
     if (!this.isData) {
       if (!options.permissive) this.isData = () => false
       else this.isData = (data, key) => !(key in this.methods)

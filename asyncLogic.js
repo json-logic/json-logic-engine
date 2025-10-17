@@ -23,15 +23,15 @@ class AsyncLogicEngine {
    * - In mainline: empty arrays are falsey; in our implementation, they are truthy.
    *
    * @param {Object} methods An object that stores key-value pairs between the names of the commands & the functions they execute.
-   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: boolean, permissive?: boolean }} options
+   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: boolean, permissive?: boolean, enableObjectAccumulators?: boolean, maxArrayLength?: number, maxStringLength?: number }} options
    */
   constructor (
     methods = defaultMethods,
-    options = { disableInline: false, disableInterpretedOptimization: false, permissive: false }
+    options = { disableInline: false, disableInterpretedOptimization: false, permissive: false, enableObjectAccumulators: false, maxArrayLength: 1 << 15, maxStringLength: 1 << 16 }
   ) {
     this.methods = { ...methods }
-    /** @type {{disableInline?: Boolean, disableInterpretedOptimization?: Boolean }} */
-    this.options = { disableInline: options.disableInline, disableInterpretedOptimization: options.disableInterpretedOptimization }
+    /** @type {{disableInline?: Boolean, disableInterpretedOptimization?: Boolean, enableObjectAccumulators?: Boolean, maxArrayLength?: number, maxStringLength?: number}} */
+    this.options = { disableInline: options.disableInline, disableInterpretedOptimization: options.disableInterpretedOptimization, enableObjectAccumulators: options.enableObjectAccumulators || false, maxArrayLength: options.maxArrayLength || (1 << 15), maxStringLength: options.maxStringLength || (1 << 16) }
     this.disableInline = options.disableInline
     this.disableInterpretedOptimization = options.disableInterpretedOptimization
     this.async = true
