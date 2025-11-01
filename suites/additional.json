@@ -78,27 +78,27 @@
         "result": 1
     },
     {
-      "description": "Throws when you try to use reduce with an array as the accumulator (Default)",
-      "rule": { "reduce": [[1,2,3], 0, []] },
-      "error": { "type": "Invalid Return" },
+      "description": "Throws when you try to use reduce with an array as the accumulator beyond allowed depth (Default)",
+      "rule": { "reduce": [[1,2,3], 0, [[]]] },
+      "error": { "type": "Exceeded Allowed Depth" },
       "data": null
     },
     {
-      "description": "Throws when you try to use reduce with an array as the accumulator (Return)",
-      "rule": { "reduce": [[1,2,3], []] },
-      "error": { "type": "Invalid Return" },
+      "description": "Throws when you try to use reduce with an array as the accumulator beyond allowed depth (Return)",
+      "rule": { "reduce": [[1,2,3], [[]]] },
+      "error": { "type": "Exceeded Allowed Depth" },
       "data": null
     },
     {
-      "description": "Throws when you try to use reduce with an object as the accumulator (Default)",
-      "rule": { "reduce": [[1,2,3], 0, {}] },
-      "error": { "type": "Invalid Return" },
+      "description": "Throws when you try to use reduce with an array as the accumulator beyond allowed depth (Return 2)",
+      "rule": { "reduce": [[1,2,3], [{}]] },
+      "error": { "type": "Exceeded Allowed Depth" },
       "data": null
     },
     {
-      "description": "Throws when you try to use reduce with an object as the accumulator (Return)",
-      "rule": { "reduce": [[1,2,3], {}] },
-      "error": { "type": "Invalid Return" },
+      "description": "Throws when you try to use reduce with an array as the accumulator beyond allowed depth (Return 3)",
+      "rule": { "reduce": [[1,2,3], { "preserve": { "a": [] } }] },
+      "error": { "type": "Exceeded Allowed Depth" },
       "data": null
     }
 ]

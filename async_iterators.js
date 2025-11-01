@@ -1,7 +1,7 @@
 // @ts-check
 'use strict'
 
-import { assertNotType } from './utilities/downgrade.js'
+import { assertAllowedDepth } from './utilities/downgrade.js'
 
 // Note: Each of these iterators executes synchronously, and will not "run in parallel"
 // I am supporting filter, reduce, some, every, map
@@ -39,17 +39,17 @@ export async function map (arr, iter) {
   return result
 }
 
-export async function reduce (arr, iter, defaultValue, skipTypeCheck = false) {
+export async function reduce (arr, iter, defaultValue, maxDepth = 0) {
   if (arr.length === 0) {
     if (typeof defaultValue !== 'undefined') return defaultValue
     throw new Error('Array has no elements.')
   }
 
   const start = typeof defaultValue === 'undefined' ? 1 : 0
-  let data = assertNotType(start ? arr[0] : defaultValue, skipTypeCheck ? '' : 'object')
+  let data = assertAllowedDepth(start ? arr[0] : defaultValue, maxDepth)
 
   for (let i = start; i < arr.length; i++) {
-    data = assertNotType(await iter(data, arr[i]), skipTypeCheck ? '' : 'object')
+    data = assertAllowedDepth(await iter(data, arr[i]), maxDepth)
   }
 
   return data

@@ -7,7 +7,7 @@ import declareSync from './utilities/declareSync.js'
 import { build, buildString } from './compiler.js'
 import chainingSupported from './utilities/chainingSupported.js'
 import legacyMethods from './legacy.js'
-import { precoerceNumber, assertNotType } from './utilities/downgrade.js'
+import { precoerceNumber, assertAllowedDepth } from './utilities/downgrade.js'
 
 const INVALID_ARGUMENTS = { type: 'Invalid Arguments' }
 
@@ -402,7 +402,7 @@ const defaultMethods = {
       }
 
       res = buildState.compile`${res} } })(context, above)`
-      if (res[Compiled].includes('await')) res[Compiled] = res[Compiled].replace('((context', '(async (context')
+      if (res[Compiled].includes('await')) res[Compiled] = res[Compiled].replace('((context', 'await (async (context')
 
       return res
     }
@@ -653,16 +653,16 @@ const defaultMethods = {
       }
       mapper = build(mapper, mapState)
       const aboveArray = mapper.aboveDetected ? '[null, context, above]' : 'null'
-      const verifyAccumulator = buildState.engine.options.enableObjectAccumulators ? '' : 'assertNotType'
+      const verifyAccumulator = buildState.engine.options.maxDepth === Infinity ? '' : 'assertAllowedDepth'
       buildState.methods.push(mapper)
 
       if (async) {
         if (!isSync(mapper) || selector.includes('await')) {
           buildState.asyncDetected = true
           if (typeof defaultValue !== 'undefined') {
-            return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray}), ${defaultValue}, ${buildState.engine.options.enableObjectAccumulators})`
+            return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray}), ${defaultValue}, ${buildState.engine.options.maxDepth})`
           }
-          return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray}), undefined, ${buildState.engine.options.enableObjectAccumulators})`
+          return `await asyncIterators.reduce(${selector} || [], (a,b) => methods[${buildState.methods.length - 1}]({ accumulator: a, current: b }, ${aboveArray}), undefined, ${buildState.engine.options.maxDepth})`
         }
       }
 
@@ -675,15 +675,13 @@ const defaultMethods = {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper, defaultValue] = input
 
-      const verifyAccumulator = engine.options.enableObjectAccumulators ? a => a : assertNotType
-
-      defaultValue = verifyAccumulator(runOptimizedOrFallback(defaultValue, engine, context, above))
+      defaultValue = assertAllowedDepth(runOptimizedOrFallback(defaultValue, engine, context, above), engine.options.maxDepth)
       selector = runOptimizedOrFallback(selector, engine, context, above) || []
-      let func = (accumulator, current) => verifyAccumulator(engine.run(mapper, { accumulator, current }, { above: [selector, context, above] }), 'object')
+      let func = (accumulator, current) => assertAllowedDepth(engine.run(mapper, { accumulator, current }, { above: [selector, context, above] }), engine.options.maxDepth)
 
       if (engine.optimizedMap.has(mapper) && typeof engine.optimizedMap.get(mapper) === 'function') {
         const optimized = engine.optimizedMap.get(mapper)
-        func = (accumulator, current) => verifyAccumulator(optimized({ accumulator, current }, [selector, context, above]))
+        func = (accumulator, current) => assertAllowedDepth(optimized({ accumulator, current }, [selector, context, above]), engine.options.maxDepth)
       }
 
       if (typeof defaultValue === 'undefined') return selector.reduce(func)
@@ -694,9 +692,8 @@ const defaultMethods = {
     asyncMethod: async (input, context, above, engine) => {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper, defaultValue] = input
-      const verifyAccumulator = engine.options.enableObjectAccumulators ? a => a : assertNotType
 
-      defaultValue = verifyAccumulator(await engine.run(defaultValue, context, { above }))
+      defaultValue = assertAllowedDepth(await engine.run(defaultValue, context, { above }), engine.options.maxDepth)
       selector = (await engine.run(selector, context, { above })) || []
       return asyncIterators.reduce(
         selector,
@@ -713,7 +710,7 @@ const defaultMethods = {
           )
         },
         defaultValue,
-        engine.enableObjectAccumulators
+        engine.options.maxDepth
       )
     },
     lazy: true
@@ -823,7 +820,7 @@ const defaultMethods = {
           return accumulator
         },
         {},
-        true
+        Infinity
       )
       return result
     }

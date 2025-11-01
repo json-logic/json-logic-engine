@@ -11,7 +11,7 @@ import {
 import asyncIterators from './async_iterators.js'
 import { coerceArray } from './utilities/coerceArray.js'
 import { countArguments } from './utilities/countArguments.js'
-import { precoerceNumber, assertSize, compareCheck, assertNotType } from './utilities/downgrade.js'
+import { precoerceNumber, assertSize, compareCheck, assertAllowedDepth } from './utilities/downgrade.js'
 
 /**
  * Provides a simple way to compile logic into a function that can be run.
@@ -99,7 +99,7 @@ export function isDeterministic (method, engine, buildState) {
     return typeof engine.methods[func].deterministic === 'function'
       ? engine.methods[func].deterministic(lower, buildState)
       : engine.methods[func].deterministic &&
-          isDeterministic(lower, engine, buildState)
+      isDeterministic(lower, engine, buildState)
   }
 
   return true
@@ -319,12 +319,12 @@ function processBuiltString (method, str, buildState) {
     str = str.replace(`__%%%${x}%%%__`, item)
   })
 
-  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, precoerceNumber, assertSize, compareCheck, assertNotType) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { ${str.includes('prev') ? 'let prev;' : ''} const result = ${str}; return result }`
+  const final = `(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, precoerceNumber, assertSize, compareCheck, assertAllowedDepth) => ${buildState.asyncDetected ? 'async' : ''} (context ${buildState.extraArguments ? ',' + buildState.extraArguments : ''}) => { ${str.includes('prev') ? 'let prev;' : ''} const result = ${str}; return result }`
   // console.log(str)
   // console.log(final)
   // eslint-disable-next-line no-eval
   return Object.assign(
-    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, precoerceNumber, assertSize, compareCheck, assertNotType), {
+    (typeof globalThis !== 'undefined' ? globalThis : global).eval(final)(values, methods, notTraversed, asyncIterators, engine, above, coerceArray, precoerceNumber, assertSize, compareCheck, assertAllowedDepth), {
       [Sync]: !buildState.asyncDetected,
       deterministic: !str.includes('('),
       aboveDetected: typeof str === 'string' && str.includes(', above')
