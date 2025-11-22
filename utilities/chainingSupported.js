@@ -15,7 +15,7 @@ const getIsOptionalChainingSupported = () => {
     const isUndefined = (typeof globalThis !== 'undefined' ? globalThis : global).eval('(test) => test?.foo?.bar')(test)
     return result = (isUndefined === undefined)
   } catch (err) {
-    return false
+    return result = false
   }
 }
 export default getIsOptionalChainingSupported()
