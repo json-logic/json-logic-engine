@@ -57,5 +57,8 @@
     "rules",
     "sandbox",
     "engine"
-  ]
+  ],
+  "publishConfig": {
+    "tag": "slim"
+  }
 }

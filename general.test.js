@@ -27,19 +27,6 @@ async function testEngineAsync (engine, rule, data, expected, matcher = 'deepStr
     const result = await engine.run(rule, data)
     assert[matcher](result, expected)
   }
-
-  // build
-  if (expected === Error) {
-    try {
-      const built = await engine.build(rule)
-      await built(data)
-      throw new Error('Should have failed')
-    } catch (e) {}
-  } else {
-    const built = await engine.build(rule)
-    const builtResult = await built(data)
-    assert[matcher](builtResult, expected)
-  }
 }
 
 function testEngine (engine, rule, data, expected, matcher = 'deepStrictEqual') {
@@ -56,19 +43,6 @@ function testEngine (engine, rule, data, expected, matcher = 'deepStrictEqual') 
   } else {
     const result = engine.run(rule, data)
     assert[matcher](result, expected)
-  }
-
-  // build
-  if (expected === Error) {
-    try {
-      const built = engine.build(rule)
-      built(data)
-      throw new Error('Should have failed')
-    } catch (e) {}
-  } else {
-    const built = engine.build(rule)
-    const builtResult = built(data)
-    assert[matcher](builtResult, expected)
   }
 }
 
@@ -134,15 +108,6 @@ describe('Various Test Cases', () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { var: 'toString' }, 'hello', null)
   })
 
-  it('is able to return the constant value', async () => {
-    for (const engine of [...normalEngines, ...permissiveEngines]) {
-      const items = [1, 'hello', [1, 2], [{}]]
-      for (const item of items) {
-        if (JSON.stringify(await engine.build(item, { top: false })) !== JSON.stringify(item)) throw new Error('Should have returned the same value, ' + item)
-      }
-    }
-  })
-
   it('is able to return functions if enabled', async () => {
     try {
       for (const engine of [...normalEngines, ...permissiveEngines]) {
@@ -160,22 +125,6 @@ describe('Various Test Cases', () => {
 
   it('is able to handle max with 1 element', async () => {
     for (const engine of [...normalEngines, ...permissiveEngines]) await testEngine(engine, { max: 5 }, {}, 5)
-  })
-
-  it('calls the function the correct amount of times', async () => {
-    for (const engine of [...normalEngines, ...permissiveEngines]) {
-      let called = 0
-      engine.addMethod('inc', () => {
-        called++
-        return 1
-      }, { optimizeUnary: true })
-
-      const f = await engine.build({ inc: undefined })
-      await f()
-      await f()
-      await f()
-      if (called !== 3) throw new Error('Should have called the function 3 times')
-    }
   })
 
   it('sees empty structures as false', async () => {
@@ -261,7 +210,7 @@ describe('Various Test Cases', () => {
       })
       await testEngine(engine, { or: [{ increment: true }, { increment: true }, { increment: true }] }, {}, true)
       // It's called twice because it runs once for interpreted, and once for compiled.
-      assert.strictEqual(count, 2, 'Should have only called increment twice. (Count)')
+      assert.strictEqual(count, 1, 'Should have only called increment once. (Count)')
     }
   })
 
@@ -277,17 +226,7 @@ describe('Various Test Cases', () => {
       })
       await testEngine(engine, { and: [{ increment: true }, { increment: true }, { increment: true }] }, {}, false)
       // It's called twice because it runs once for interpreted, and once for compiled.
-      assert.strictEqual(count, 2, 'Should have only called increment twice. (Count)')
-    }
-  })
-
-  it('disables interpreted optimization when it realizes it will not be faster', async () => {
-    for (const engine of [...normalEngines, ...permissiveEngines]) {
-      const disableInterpretedOptimization = engine.disableInterpretedOptimization
-      for (let i = 0; i < 10e3; i++) await engine.run({ '+': [1, 2] }, {})
-      assert.strictEqual(engine.disableInterpretedOptimization, true)
-      // Resets back to the original value.
-      engine.disableInterpretedOptimization = disableInterpretedOptimization
+      assert.strictEqual(count, 1, 'Should have only called increment once. (Count)')
     }
   })
 

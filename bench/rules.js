@@ -49,20 +49,20 @@ const logicRules = {
     {
       and: [
         {
-          '===': [40, { var: 'gameDuration' }]
+          '===': [40, { val: 'gameDuration' }]
         },
         {
-          '>=': [{ var: 'personalFoulCount' }, 5]
+          '>=': [{ val: 'personalFoulCount' }, 5]
         }
       ]
     },
     {
       and: [
         {
-          '===': [48, { var: 'gameDuration' }]
+          '===': [48, { val: 'gameDuration' }]
         },
         {
-          '>=': [{ var: 'personalFoulCount' }, 6]
+          '>=': [{ val: 'personalFoulCount' }, 6]
         }
       ]
     }

@@ -3,11 +3,8 @@
 
 import defaultMethods from './defaultMethods.js'
 import LogicEngine from './logic.js'
-import { isSync, OriginalImpl } from './constants.js'
-import declareSync from './utilities/declareSync.js'
-import { buildAsync } from './compiler.js'
+import { OriginalImpl } from './constants.js'
 import omitUndefined from './utilities/omitUndefined.js'
-import { optimize } from './async_optimizer.js'
 import { coerceArray } from './utilities/coerceArray.js'
 
 /**
@@ -23,17 +20,15 @@ class AsyncLogicEngine {
    * - In mainline: empty arrays are falsey; in our implementation, they are truthy.
    *
    * @param {Object} methods An object that stores key-value pairs between the names of the commands & the functions they execute.
-   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: boolean, permissive?: boolean, maxDepth?: number, maxArrayLength?: number, maxStringLength?: number }} options
+   * @param {{ permissive?: boolean, maxDepth?: number, maxArrayLength?: number, maxStringLength?: number }} options
    */
   constructor (
     methods = defaultMethods,
-    options = { disableInline: false, disableInterpretedOptimization: false, permissive: false, maxDepth: 0, maxArrayLength: 1 << 15, maxStringLength: 1 << 16 }
+    options = { permissive: false, maxDepth: 0, maxArrayLength: 1 << 15, maxStringLength: 1 << 16 }
   ) {
     this.methods = { ...methods }
-    /** @type {{disableInline?: Boolean, disableInterpretedOptimization?: Boolean, maxDepth?: number, maxArrayLength?: number, maxStringLength?: number}} */
-    this.options = { disableInline: options.disableInline, disableInterpretedOptimization: options.disableInterpretedOptimization, maxDepth: options.maxDepth || 0, maxArrayLength: options.maxArrayLength || (1 << 15), maxStringLength: options.maxStringLength || (1 << 16) }
-    this.disableInline = options.disableInline
-    this.disableInterpretedOptimization = options.disableInterpretedOptimization
+    /** @type {{maxDepth?: number, maxArrayLength?: number, maxStringLength?: number}} */
+    this.options = { maxDepth: options.maxDepth || 0, maxArrayLength: options.maxArrayLength || (1 << 15), maxStringLength: options.maxStringLength || (1 << 16) }
     this.async = true
     this.fallback = new LogicEngine(methods, options)
 
@@ -130,7 +125,7 @@ class AsyncLogicEngine {
     Object.assign(method, omitUndefined({ deterministic, optimizeUnary }))
     // @ts-ignore
     this.fallback.addMethod(name, method, { deterministic })
-    this.methods[name] = declareSync(method, sync)
+    this.methods[name] = method
   }
 
   /**
@@ -163,25 +158,6 @@ class AsyncLogicEngine {
   async run (logic, data = {}, options = {}) {
     const { above = [] } = options
 
-    // OPTIMIZER BLOCK //
-    if (!this.disableInterpretedOptimization && typeof logic === 'object' && logic) {
-      if (this.missesSinceSeen > 500) {
-        this.disableInterpretedOptimization = true
-        this.missesSinceSeen = 0
-      }
-      if (!this.optimizedMap.has(logic)) {
-        this.optimizedMap.set(logic, optimize(logic, this, above))
-        this.missesSinceSeen++
-        const grab = this.optimizedMap.get(logic)
-        return typeof grab === 'function' ? grab(data, above) : grab
-      } else {
-        this.missesSinceSeen = 0
-        const grab = this.optimizedMap.get(logic)
-        return typeof grab === 'function' ? grab(data, above) : grab
-      }
-    }
-    // END OPTIMIZER BLOCK //
-
     if (Array.isArray(logic)) {
       const res = new Array(logic.length)
       // Note: In the past, it used .map and Promise.all; this can be changed in the future
@@ -202,33 +178,12 @@ class AsyncLogicEngine {
   }
 
   /**
-   *
-   * @param {*} logic The logic to be built.
-   * @param {{ top?: Boolean, above?: any }} options
-   * @returns {Promise<Function>}
+   * Builds a function that can be used to run the logic against data.
+   * @param {*} logic
+   * @returns {Promise<(context: any) => any>}
    */
-  async build (logic, options = {}) {
-    const { above = [], top = true } = options
-    this.fallback.truthy = this.truthy
-    // @ts-ignore
-    this.fallback.allowFunctions = this.allowFunctions
-    const constructedFunction = await buildAsync(logic, { engine: this, above, async: true })
-
-    const result = declareSync((...args) => {
-      if (top === true) {
-        try {
-          const result = typeof constructedFunction === 'function' ? constructedFunction(...args) : constructedFunction
-          return Promise.resolve(result)
-        } catch (err) {
-          return Promise.reject(err)
-        }
-      }
-
-      return typeof constructedFunction === 'function' ? constructedFunction(...args) : constructedFunction
-    }, top !== true && isSync(constructedFunction))
-
-    if (top === false && constructedFunction.deterministic) return result()
-    return (typeof constructedFunction === 'function' || top === true) ? result : constructedFunction
+  async build (logic) {
+    return (context) => this.run(logic, context)
   }
 }
 export default AsyncLogicEngine

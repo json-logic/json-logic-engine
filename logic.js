@@ -3,10 +3,7 @@
 
 import defaultMethods from './defaultMethods.js'
 
-import { build } from './compiler.js'
-import declareSync from './utilities/declareSync.js'
 import omitUndefined from './utilities/omitUndefined.js'
-import { optimize } from './optimizer.js'
 import { coerceArray } from './utilities/coerceArray.js'
 import { OriginalImpl } from './constants.js'
 
@@ -18,21 +15,16 @@ class LogicEngine {
    * Creates a new instance of the Logic Engine.
   *
    * @param {Object} methods An object that stores key-value pairs between the names of the commands & the functions they execute.
-   * @param {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean, permissive?: boolean, maxDepth?: number, maxArrayLength?: number, maxStringLength?: number }} options
+   * @param {{  permissive?: boolean, maxDepth?: number, maxArrayLength?: number, maxStringLength?: number }} options
    */
   constructor (
     methods = defaultMethods,
-    options = { disableInline: false, disableInterpretedOptimization: false, permissive: false, maxDepth: 0, maxArrayLength: 1 << 15, maxStringLength: 1 << 16 }
+    options = { permissive: false, maxDepth: 0, maxArrayLength: 1 << 15, maxStringLength: 1 << 16 }
   ) {
-    this.disableInline = options.disableInline
-    this.disableInterpretedOptimization = options.disableInterpretedOptimization
     this.methods = { ...methods }
 
-    this.optimizedMap = new WeakMap()
-    this.missesSinceSeen = 0
-
     /** @type {{ disableInline?: Boolean, disableInterpretedOptimization?: Boolean, maxDepth?: number, maxArrayLength?: number, maxStringLength?: number }} */
-    this.options = { disableInline: options.disableInline, disableInterpretedOptimization: options.disableInterpretedOptimization, maxDepth: options.maxDepth || 0, maxArrayLength: options.maxArrayLength || (1 << 15), maxStringLength: options.maxStringLength || (1 << 16) }
+    this.options = { maxDepth: options.maxDepth || 0, maxArrayLength: options.maxArrayLength || (1 << 15), maxStringLength: options.maxStringLength || (1 << 16) }
     if (!this.isData) {
       if (!options.permissive) this.isData = () => false
       else this.isData = (data, key) => !(key in this.methods)
@@ -106,7 +98,7 @@ class LogicEngine {
     if (typeof method === 'function') method = { method, lazy: false }
     else method = { ...method, lazy: typeof method.traverse !== 'undefined' ? !method.traverse : method.lazy }
     Object.assign(method, omitUndefined({ deterministic, optimizeUnary }))
-    this.methods[name] = declareSync(method)
+    this.methods[name] = method
   }
 
   /**
@@ -139,26 +131,6 @@ class LogicEngine {
   run (logic, data = {}, options = {}) {
     const { above = [] } = options
 
-    // OPTIMIZER BLOCK //
-    if (!this.disableInterpretedOptimization && typeof logic === 'object' && logic) {
-      if (this.missesSinceSeen > 500) {
-        this.disableInterpretedOptimization = true
-        this.missesSinceSeen = 0
-      }
-
-      if (!this.optimizedMap.has(logic)) {
-        this.optimizedMap.set(logic, optimize(logic, this, above))
-        this.missesSinceSeen++
-        const grab = this.optimizedMap.get(logic)
-        return typeof grab === 'function' ? grab(data, above) : grab
-      } else {
-        this.missesSinceSeen = 0
-        const grab = this.optimizedMap.get(logic)
-        return typeof grab === 'function' ? grab(data, above) : grab
-      }
-    }
-    // END OPTIMIZER BLOCK //
-
     if (Array.isArray(logic)) {
       const res = new Array(logic.length)
       for (let i = 0; i < logic.length; i++) res[i] = this.run(logic[i], data, { above })
@@ -177,16 +149,12 @@ class LogicEngine {
   }
 
   /**
-   *
-   * @param {*} logic The logic to be built.
-   * @param {{ top?: Boolean, above?: any }} options
-   * @returns {Function}
+   * Builds a function that can be used to run the logic against data.
+   * @param {*} logic
+   * @returns {(context: any) => any}
    */
-  build (logic, options = {}) {
-    const { above = [], top = true } = options
-    const constructedFunction = build(logic, { engine: this, above })
-    if (top === false && constructedFunction.deterministic) return constructedFunction()
-    return constructedFunction
+  build (logic) {
+    return (context) => this.run(logic, context)
   }
 }
 export default LogicEngine

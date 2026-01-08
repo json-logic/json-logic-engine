@@ -14,17 +14,18 @@ JSON.parse(fs.readFileSync('./tests.json').toString()).forEach((test) => {
     try {
       if (!isDeepStrictEqual(x.run(test[0], test[1]), test[2])) {
         incompatible.push(test)
-        // console.log(test[0])
+        console.log(test[0])
       } else {
         compatible.push(test)
       }
     } catch (err) {
-      // console.log(err)
+      console.log(err)
       // console.log(test[0])
       incompatible.push(test)
     }
   }
 })
+
 console.log(
   compatible.length,
   incompatible.length,
@@ -59,9 +60,7 @@ const defined = [
 ]
 const tests = compatible
 const other = tests
-const built = other.map((i) => {
-  return x.build(i[0])
-})
+
 console.time('json-logic-js')
 for (let j = 0; j < tests.length; j++) {
   for (let i = 0; i < 1e5; i++) {
@@ -78,7 +77,6 @@ console.timeEnd('json-logic-js')
 // }
 // console.timeEnd('json-logic-rs')
 
-x.disableInterpretedOptimization = true
 console.time('le interpreted')
 for (let j = 0; j < other.length; j++) {
   for (let i = 0; i < 1e5; i++) {
@@ -87,29 +85,7 @@ for (let j = 0; j < other.length; j++) {
 }
 console.timeEnd('le interpreted')
 
-x.disableInterpretedOptimization = false
-console.time('le interpreted (optimized)')
-for (let j = 0; j < other.length; j++) {
-  for (let i = 0; i < 1e5; i++) {
-    x.run(other[j][0], other[j][1])
-  }
-}
-console.timeEnd('le interpreted (optimized)')
-
-console.time('le built')
-for (let j = 0; j < tests.length; j++) {
-  for (let i = 0; i < 1e5; i++) {
-    built[j](tests[j][1])
-  }
-}
-console.timeEnd('le built')
 async function run () {
-  const built2 = await Promise.all(
-    other.map((i) => {
-      return y.build(i[0])
-    })
-  )
-
   console.time('le async interpreted')
   for (let j = 0; j < tests.length; j++) {
     for (let i = 0; i < 1e5; i++) {
@@ -117,13 +93,5 @@ async function run () {
     }
   }
   console.timeEnd('le async interpreted')
-
-  console.time('le async built')
-  for (let j = 0; j < tests.length; j++) {
-    for (let i = 0; i < 1e5; i++) {
-      await built2[j](tests[j][1])
-    }
-  }
-  console.timeEnd('le async built')
 }
 run()
