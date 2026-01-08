@@ -1,5 +1,5 @@
 {
-  "name": "json-logic-engine",
+  "name": "json-logic-engine-slim",
   "version": "5.0.3",
   "description": "Construct complex rules with JSON & process them.",
   "main": "./dist/cjs/index.js",
@@ -57,8 +57,5 @@
     "rules",
     "sandbox",
     "engine"
-  ],
-  "publishConfig": {
-    "tag": "slim"
-  }
+  ]
 }
