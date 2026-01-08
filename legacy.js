@@ -87,13 +87,6 @@ const legacyMethods = {
       }
 
       return missing
-    },
-    compile: (data, buildState) => {
-      if (!Array.isArray(data)) return false
-      if (data.length === 0) return buildState.compile`[]`
-      if (data.length === 1 && typeof data[0] === 'string' && !data[0].includes('.')) return buildState.compile`(context || 0)[${data[0]}] === undefined ? [${data[0]}] : []`
-      if (data.length === 2 && typeof data[0] === 'string' && typeof data[1] === 'string' && !data[0].includes('.') && !data[1].includes('.')) return buildState.compile`(context || 0)[${data[0]}] === undefined ? (context || 0)[${data[1]}] === undefined ? [${data[0]}, ${data[1]}] : [${data[0]}] : (context || 0)[${data[1]}] === undefined ? [${data[1]}] : []`
-      return false
     }
   },
   missing_some: {
