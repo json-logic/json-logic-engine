@@ -144,7 +144,7 @@ function checkIdioms (logic, engine, above) {
       const comparisonFunc = comparison.length === 3
         ? _comparisonFunc
         : function comparisonFunc (a, b) {
-          if (typeof a === 'string' && typeof b === 'string') return _comparisonFunc(a, b)
+          if ((typeof a === 'string' || a === null) && (typeof b === 'string' || b === null)) return _comparisonFunc(a, b)
           if (Number.isNaN(+precoerceNumber(a))) throw NaN
           if (Number.isNaN(+precoerceNumber(b)) && a !== null) throw NaN
           return _comparisonFunc(+a, +b)

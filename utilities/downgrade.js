@@ -59,8 +59,7 @@ export function assertAllowedDepth (item, depthAllowed = 0) {
  * @returns {number}
  */
 export function compareCheck (item, prev, strict) {
-  if (strict || (typeof item === 'string' && typeof prev === 'string')) return item
-
+  if (strict || ((typeof item === 'string' || item === null) && (typeof prev === 'string' || prev === null))) return item
   if (Number.isNaN(+precoerceNumber(item)) && prev !== null) throw NaN
   if (Number.isNaN(+precoerceNumber(prev))) throw NaN
 
