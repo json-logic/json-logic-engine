@@ -198,6 +198,18 @@
         "result": false
     },
     {
+      "description": "== with (null, '')",
+      "rule": { "==": [null, ""] },
+      "data": {},
+      "result": false
+    },
+    {
+      "description": "== with (null, 'text')",
+      "rule": { "==": [null, "text"] },
+      "data": {},
+      "result": false
+    },
+    {
         "description": "== with (1, true)",
         "rule": { "==": [1, true] },
         "data": {},
