@@ -16,6 +16,40 @@ JSON Logic might be your solution! Designed with a lisp-like syntax, JSON Logic 
 
 Check out our [Documentation Here](https://json-logic.github.io/json-logic-engine/).
 
+---
+
+## Why json-logic-engine?
+
+This library was built as a more modern, performant, and feature-rich alternative to [`json-logic-js`](https://github.com/jwadhams/json-logic-js). Here's why you might choose it:
+
+### Performance
+
+- **Optimized Interpreter**: Uses closures to achieve ~5x faster evaluation on average
+- **Logic Compilation**: Compile your rules for 12.5-20x performance improvements in hot paths
+- **Deterministic Evaluation**: Prevents redundant re-computation of deterministic logic
+
+### Features
+
+- **Async Support**: First-class support for asynchronous logic evaluation
+- **Custom Control Structures**: Define your own operators with lazy or eager evaluation semantics
+- **Scope Traversal**: Handlebars-style `../../` traversal for accessing outer context in iterators
+- **Error Handling**: Try/throw support with stricter error handling
+- **Extended Proposals**: Implements additional JSON Logic specification proposals
+
+### Modern JavaScript
+
+- **Proper ESM & CJS Support**: Dual-build package with proper ES Modules and CommonJS support
+- Unlike json-logic-js which uses a non-standard module format (neither proper CJS nor UMD), this library works seamlessly with modern bundlers and Node.js
+
+### Security
+
+- Better safeguards when evaluating rules from untrusted sources
+
+### Bundle Size Concerns?
+
+If bundle size is critical for your use case, check out [`json-logic-engine-slim`](https://www.npmjs.com/package/json-logic-engine-slim) (~4kB gzipped) which provides core functionality with a smaller footprint.
+
+---
 
 The engine supports both synchronous & asynchronous operations, and can use function compilation to keep your logic performant at scale.
 
@@ -107,10 +141,8 @@ logic.run({
     'adder':  7
 }) // [8, 9, 10, 11]
 ```
---- 
+---
 
+## Migrating from json-logic-js
 
-This library was developed to be (for the most part) a drop-in replacement for the popular npm module [`json-logic-js`](https://github.com/jwadhams/json-logic-js).
-
-The intention of the library is to keep the functionality very similar to the original, while adding a few useful utilities.
-
+This library is designed as a drop-in replacement for `json-logic-js`. Most existing rules should work without modification, while giving you access to all the performance and feature improvements mentioned above.

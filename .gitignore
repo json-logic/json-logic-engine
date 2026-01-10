@@ -10,3 +10,7 @@ bench/node_modules/
 dist/
 *.d.ts
 .DS_Store
+
+# Claude Code
+.claude/
+
