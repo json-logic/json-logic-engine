@@ -52,7 +52,7 @@ function getMethod (logic, engine, methodName, above) {
       const singleLayer = (data) => !data || typeof data[optimizedArgs] === 'undefined' || (typeof data[optimizedArgs] === 'function' && !engine.allowFunctions) ? null : data[optimizedArgs]
       if (typeof optimizedArgs === 'function') return (data, abv) => called(optimizedArgs(data, abv), data, abv || above, engine)
       if ((methodName === 'var' || methodName === 'val') && engine.methods[methodName][OriginalImpl]) {
-        if (!optimizedArgs && methodName !== 'val') return (data) => !data || typeof data === 'undefined' || (typeof data === 'function' && !engine.allowFunctions) ? null : data
+        if (!optimizedArgs && methodName !== 'val') return (data) => (data === null || typeof data === 'undefined' || (typeof data === 'function' && !engine.allowFunctions)) ? null : data
         if (methodName === 'val' || typeof optimizedArgs === 'number' || (!optimizedArgs.includes('.') && !optimizedArgs.includes('\\'))) return singleLayer
 
         if (methodName === 'var' && !optimizedArgs.startsWith('../')) {

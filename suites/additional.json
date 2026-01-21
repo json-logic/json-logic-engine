@@ -100,5 +100,11 @@
       "rule": { "reduce": [[1,2,3], { "preserve": { "a": [] } }] },
       "error": { "type": "Exceeded Allowed Depth" },
       "data": null
+    },
+    {
+      "description": "Fixes an issue with the optimizer accidentally grabbing the wrong value",
+      "rule": {"all": [{"var": ["test", [""]]}, {"!==": [{"var": ""}, ""]}]},
+      "result": false,
+      "data": null
     }
 ]
