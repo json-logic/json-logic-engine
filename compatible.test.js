@@ -4,19 +4,15 @@ import { LogicEngine, AsyncLogicEngine } from './index.js'
 
 const tests = []
 
-// get all json files from "suites" directory, 1 layer of depth
-const files = fs.readdirSync('./suites', { withFileTypes: true }).flatMap(i => {
-  if (i.isDirectory()) return fs.readdirSync(`./suites/${i.name}`).map(j => `${i.name}/${j}`)
-  return i.name
-})
+// Load test files from index.json
+const indexContent = JSON.parse(fs.readFileSync('./suites/index.json').toString())
 
-for (const file of files) {
-  if (file.endsWith('.json')) {
-    tests.push(...JSON.parse(fs.readFileSync(`./suites/${file}`).toString()).filter(i => typeof i !== 'string').map(i => {
-      if (Array.isArray(i)) return { rule: i[0], data: i[1] || null, result: i[2], description: JSON.stringify(i[0]) }
-      return i
-    }))
-  }
+for (const file of indexContent) {
+  const testContent = JSON.parse(fs.readFileSync(`./suites/${file}`).toString())
+  tests.push(...testContent.filter(i => typeof i !== 'string').map(i => {
+    if (Array.isArray(i)) return { rule: i[0], data: i[1] || null, result: i[2], description: JSON.stringify(i[0]) }
+    return i
+  }))
 }
 
 function correction (x) {
