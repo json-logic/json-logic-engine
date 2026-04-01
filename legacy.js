@@ -37,7 +37,7 @@ const legacyMethods = {
 
         key = key.toString()
         const pieces = splitPathMemoized(key)
-        if (!chainingSupported) {
+        if (!chainingSupported()) {
           return `(((a,b) => (typeof a === 'undefined' || a === null) ? b : a)(${pieces.reduce(
                 (text, i) => `(${text}||0)[${JSON.stringify(i)}]`,
                 `(${buildString(obj, buildState)}||0)`
@@ -117,7 +117,7 @@ const legacyMethods = {
         const pieces = splitPathMemoized(key)
 
         // support older versions of node
-        if (!chainingSupported) {
+        if (!chainingSupported()) {
           const res = `((((a,b) => (typeof a === 'undefined' || a === null) ? b : a)(${pieces.reduce(
               (text, i) => `(${text}||0)[${JSON.stringify(i)}]`,
               '(context||0)'

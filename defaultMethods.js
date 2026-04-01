@@ -528,7 +528,7 @@ const defaultMethods = {
     compile: (data, buildState) => {
       function wrapNull (data) {
         let res
-        if (!chainingSupported) res = buildState.compile`(((a) => a === null || a === undefined ? null : a)(${data}))`
+        if (!chainingSupported()) res = buildState.compile`(((a) => a === null || a === undefined ? null : a)(${data}))`
         else res = buildState.compile`(${data} ?? null)`
         if (!buildState.engine.allowFunctions) res = buildState.compile`(typeof (prev = ${res}) === 'function' ? null : prev)`
         return res
@@ -547,14 +547,14 @@ const defaultMethods = {
       if (Array.isArray(data) && data.length === 1) data = data[0]
       if (data === null) return wrapNull(buildState.compile`context`)
       if (!Array.isArray(data)) {
-        if (chainingSupported) return wrapNull(buildState.compile`context?.[${data}]`)
+        if (chainingSupported()) return wrapNull(buildState.compile`context?.[${data}]`)
         return wrapNull(buildState.compile`(context || 0)[${data}]`)
       }
       if (Array.isArray(data)) {
         let res = buildState.compile`context`
         for (let i = 0; i < data.length; i++) {
           if (data[i] === null) continue
-          if (chainingSupported) res = buildState.compile`${res}?.[${data[i]}]`
+          if (chainingSupported()) res = buildState.compile`${res}?.[${data[i]}]`
           else res = buildState.compile`(${res}|| 0)[${data[i]}]`
         }
         return wrapNull(buildState.compile`(${res})`)

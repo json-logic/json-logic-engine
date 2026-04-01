@@ -5,14 +5,19 @@
  * @returns {Boolean}
  */
 const getIsOptionalChainingSupported = () => {
+  if (typeof res !== 'undefined') return res
   try {
     // eslint-disable-next-line no-unused-vars
     const test = {}
     // eslint-disable-next-line no-eval
     const isUndefined = (typeof globalThis !== 'undefined' ? globalThis : global).eval('(test) => test?.foo?.bar')(test)
-    return isUndefined === undefined
+    // eslint-disable-next-line no-return-assign
+    return res = isUndefined === undefined
   } catch (err) {
-    return false
+    // eslint-disable-next-line no-return-assign
+    return res = false
   }
 }
-export default getIsOptionalChainingSupported()
+/** @type {boolean} */
+let res
+export default getIsOptionalChainingSupported
