@@ -310,7 +310,7 @@ const defaultMethods = {
     },
     deterministic: (data, buildState) => isDeterministic(data, buildState.engine, buildState),
     compile: (data, buildState) => {
-      if (!chainingSupported) return false
+      if (!chainingSupported()) return false
 
       if (Array.isArray(data) && data.length) {
         return `(${data.map((i, x) => {
