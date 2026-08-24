@@ -168,6 +168,18 @@ const defaultMethods = {
     return min
   },
   in: ([item, array]) => (array || []).includes(item),
+  contains_all: ([array, items]) => {
+    const set = new Set(Array.isArray(array) ? array : [])
+    return (Array.isArray(items) ? items : []).every((item) => set.has(item))
+  },
+  contains_any: ([array, items]) => {
+    const set = new Set(Array.isArray(array) ? array : [])
+    return (Array.isArray(items) ? items : []).some((item) => set.has(item))
+  },
+  contains_none: ([array, items]) => {
+    const set = new Set(Array.isArray(array) ? array : [])
+    return !(Array.isArray(items) ? items : []).some((item) => set.has(item))
+  },
   preserve: {
     lazy: true,
     method: declareSync((i) => i, true),
