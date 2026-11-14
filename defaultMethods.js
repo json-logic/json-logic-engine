@@ -1033,6 +1033,14 @@ defaultMethods['%'].compile = function (data, buildState) {
 // @ts-ignore Allow custom attribute
 defaultMethods.in.compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
+  const list = data[1]
+  // A long list of literals becomes a Set, built once at compile time. Set#has hashes a string the first time it sees
+  // it, and on Node 26 that costs as much as scanning about 256 short strings, so shorter lists compile as before.
+  // Set#has and Array#includes both compare by SameValueZero, so the answer is the same.
+  if (Array.isArray(list) && list.length > 256 && list.every(i => i === null || ['string', 'number', 'boolean'].includes(typeof i))) {
+    buildState.values.push(new Set(list))
+    return buildState.compile`${{ [Compiled]: `values[${buildState.values.length - 1}].has` }}(${data[0]})`
+  }
   return buildState.compile`(${data[1]} || []).includes(${data[0]})`
 }
 
