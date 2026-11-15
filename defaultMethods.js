@@ -970,7 +970,8 @@ Object.keys(defaultMethods).forEach((item) => {
 // @ts-ignore Allow custom attribute
 defaultMethods.if.compile = function (data, buildState) {
   if (!Array.isArray(data)) return false
-  if (data.length < 3) return false
+  if (data.length === 0) return buildState.compile`null`
+  if (data.length === 1) return buildState.compile`(${data[0]})`
 
   data = [...data]
   if (data.length % 2 !== 1) data.push(null)
