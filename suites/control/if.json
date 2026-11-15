@@ -279,5 +279,96 @@
         "rule": { "if": [false, { "throw": "Not Lazy" }, false, { "throw": "Not Lazy" }, false, { "throw": "Not Lazy" }, "carrot"] },
         "data": null,
         "result": "carrot"
+    },
+    "Fewer than three arguments, from data",
+    {
+        "description": "One argument returns its value",
+        "rule": { "if": [{ "val": "x" }] },
+        "data": { "x": "apple" },
+        "result": "apple"
+    },
+    {
+        "description": "One argument returns its value, even when falsy",
+        "rule": { "if": [{ "val": "x" }] },
+        "data": { "x": 0 },
+        "result": 0
+    },
+    {
+        "description": "One argument with a missing value returns null",
+        "rule": { "if": [{ "val": "x" }] },
+        "data": {},
+        "result": null
+    },
+    {
+        "description": "Two arguments, true condition returns the then",
+        "rule": { "if": [{ "val": "x" }, { "val": "y" }] },
+        "data": { "x": true, "y": "apple" },
+        "result": "apple"
+    },
+    {
+        "description": "Two arguments, non-empty string condition returns the then",
+        "rule": { "if": [{ "val": "x" }, "apple"] },
+        "data": { "x": "0" },
+        "result": "apple"
+    },
+    {
+        "description": "Two arguments, false condition returns null",
+        "rule": { "if": [{ "val": "x" }, "apple"] },
+        "data": { "x": false },
+        "result": null
+    },
+    {
+        "description": "Two arguments, 0 condition returns null",
+        "rule": { "if": [{ "val": "x" }, "apple"] },
+        "data": { "x": 0 },
+        "result": null
+    },
+    {
+        "description": "Two arguments, empty string condition returns null",
+        "rule": { "if": [{ "val": "x" }, "apple"] },
+        "data": { "x": "" },
+        "result": null
+    },
+    {
+        "description": "Two arguments, empty array condition returns null",
+        "rule": { "if": [{ "val": "x" }, "apple"] },
+        "data": { "x": [] },
+        "result": null
+    },
+    {
+        "description": "Two arguments, null condition returns null",
+        "rule": { "if": [{ "val": "x" }, "apple"] },
+        "data": { "x": null },
+        "result": null
+    },
+    {
+        "description": "Two arguments, missing condition returns null",
+        "rule": { "if": [{ "val": "x" }, "apple"] },
+        "data": {},
+        "result": null
+    },
+    {
+        "description": "Two arguments, false condition does not evaluate the then",
+        "rule": { "if": [{ "val": "x" }, { "throw": "Not Lazy" }] },
+        "data": { "x": false },
+        "result": null
+    },
+    {
+        "description": "Nested two argument if, both conditions true",
+        "rule": { "if": [{ "val": "a" }, { "if": [{ "val": "b" }, "apple"] }] },
+        "data": { "a": true, "b": true },
+        "result": "apple"
+    },
+    {
+        "description": "Nested two argument if, inner condition false",
+        "rule": { "if": [{ "val": "a" }, { "if": [{ "val": "b" }, "apple"] }] },
+        "data": { "a": true, "b": false },
+        "result": null
+    },
+    {
+        "description": "Nested two argument if, outer condition false",
+        "rule": { "if": [{ "val": "a" }, { "if": [{ "val": "b" }, "apple"] }] },
+        "data": { "a": false, "b": true },
+        "result": null
     }
 ]
