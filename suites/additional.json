@@ -106,5 +106,11 @@
       "rule": {"all": [{"var": ["test", [""]]}, {"!==": [{"var": ""}, ""]}]},
       "result": false,
       "data": null
+    },
+    {
+      "description": "Does not crash with a non-array input for some when the argument is not an array.",
+      "rule": { "some": [{ "var": "x" }, { "var": "" }] },
+      "result": false,
+      "data": { "x": 5 }
     }
 ]
