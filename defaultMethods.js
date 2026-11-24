@@ -906,7 +906,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
       let [selector, mapper] = input
 
       selector = runOptimizedOrFallback(selector, engine, context, above) || []
-
+      if (!Array.isArray(selector)) selector = []
       return selector[name]((i, index) => {
         if (!mapper || typeof mapper !== 'object') return useTruthy ? engine.truthy(mapper) : mapper
         const result = runOptimizedOrFallback(mapper, engine, i, [{ iterator: selector, index }, context, above])
@@ -917,6 +917,7 @@ function createArrayIterativeMethod (name, useTruthy = false) {
       if (!Array.isArray(input)) throw INVALID_ARGUMENTS
       let [selector, mapper] = input
       selector = (await engine.run(selector, context, { above })) || []
+      if (!Array.isArray(selector)) selector = []
       return asyncIterators[name](selector, async (i, index) => {
         if (!mapper || typeof mapper !== 'object') return useTruthy ? engine.truthy(mapper) : mapper
         const result = await engine.run(mapper, i, {
@@ -944,11 +945,11 @@ function createArrayIterativeMethod (name, useTruthy = false) {
       if (async) {
         if (!isSync(method)) {
           buildState.asyncDetected = true
-          return buildState.compile`await asyncIterators[${name}](${selector} || [], async (i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
+          return buildState.compile`await asyncIterators[${name}](Array.isArray(prev = ${selector}) ? prev : [], async (i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
         }
       }
 
-      return buildState.compile`(${selector} || [])[${name}]((i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
+      return buildState.compile`(Array.isArray(prev = ${selector}) ? prev : [])[${name}]((i, x, z) => ${useTruthyMethod}(${method}(i, x, ${aboveArray})))`
     },
     lazy: true
   }
