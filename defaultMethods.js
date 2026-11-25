@@ -548,14 +548,16 @@ const defaultMethods = {
       if (data === null) return wrapNull(buildState.compile`context`)
       if (!Array.isArray(data)) {
         if (chainingSupported()) return wrapNull(buildState.compile`context?.[${data}]`)
-        return wrapNull(buildState.compile`(context || 0)[${data}]`)
+        // Without optional chaining, step over null/undefined only; `(context || 0)` would
+        // also replace falsy values such as '' (whose `length` is 0).
+        return wrapNull(buildState.compile`((a) => a === null || a === undefined ? undefined : a[${data}])(context)`)
       }
       if (Array.isArray(data)) {
         let res = buildState.compile`context`
         for (let i = 0; i < data.length; i++) {
           if (data[i] === null) continue
           if (chainingSupported()) res = buildState.compile`${res}?.[${data[i]}]`
-          else res = buildState.compile`(${res}|| 0)[${data[i]}]`
+          else res = buildState.compile`((a) => a === null || a === undefined ? undefined : a[${data[i]}])(${res})`
         }
         return wrapNull(buildState.compile`(${res})`)
       }

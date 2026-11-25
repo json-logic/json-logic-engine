@@ -49,6 +49,24 @@
         "result": 0
     },
     {
+        "description": "var: properties of falsy-but-valid values are still read",
+        "rule": { "var": "foo.length" },
+        "data": { "foo": "" },
+        "result": 0
+    },
+    {
+        "description": "get: properties of falsy-but-valid values are still read",
+        "rule": { "get": [{ "val": "foo" }, "length"] },
+        "data": { "foo": "" },
+        "result": 0
+    },
+    {
+        "description": "get: a default applies when the path passes through 0",
+        "rule": { "get": [{ "val": "foo" }, "bar.baz", "default"] },
+        "data": { "foo": { "bar": 0 } },
+        "result": "default"
+    },
+    {
         "description": "var: two keys through 0",
         "rule": { "var": "foo.bar" },
         "data": { "foo": 0 },
