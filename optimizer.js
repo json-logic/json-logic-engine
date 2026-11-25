@@ -57,17 +57,7 @@ function getMethod (logic, engine, methodName, above) {
 
         if (methodName === 'var' && !optimizedArgs.startsWith('../')) {
           const path = splitPathMemoized(String(optimizedArgs))
-          let prev
-
-          if (path.length === 2) {
-            const [first, second] = path
-            return (data) => (typeof (prev = (data && data[first] && data[first][second])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
-          }
-
-          if (path.length === 3) {
-            const [first, second, third] = path
-            return (data) => (typeof (prev = (data && data[first] && data[first][second] && data[first][second][third])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
-          }
+          if (path.length === 2 || path.length === 3) return pathAccessor(path, engine)
         }
       }
       return (data, abv) => called(optimizedArgs, data, abv || above, engine)
@@ -92,27 +82,45 @@ const comparisons = {
 }
 
 /**
+ * Builds a fast reader for a path of one to three keys, unrolled for speed.
+ *
+ * Only null and undefined end a path early. Testing each step for truthiness
+ * instead (`data && data[a] && data[a][b]`) returns a falsy value found along
+ * the way, such as 0, false or '', in place of the value at the end of the path.
+ * @param {(string|number)[]} path
+ * @param {*} engine
+ * @returns {(data: any) => any}
+ */
+function pathAccessor (path, engine) {
+  const finish = (value) => value === undefined || (typeof value === 'function' && !engine.allowFunctions) ? null : value
+  const [first, second, third] = path
+
+  if (path.length === 1) return (data) => data === null || data === undefined ? null : finish(data[first])
+
+  if (path.length === 2) {
+    return (data) => {
+      if (data === null || data === undefined) return null
+      const a = data[first]
+      return a === null || a === undefined ? null : finish(a[second])
+    }
+  }
+
+  return (data) => {
+    if (data === null || data === undefined) return null
+    const a = data[first]
+    if (a === null || a === undefined) return null
+    const b = a[second]
+    return b === null || b === undefined ? null : finish(b[third])
+  }
+}
+
+/**
  * Macro-type replacements to lift inefficient logic into more efficient forms.
  */
 function checkIdioms (logic, engine, above) {
   // Hyper-Optimizations for val calls.
   if (logic.val && engine.methods.val[OriginalImpl] && Array.isArray(logic.val) && logic.val.length <= 3 && logic.val.every(i => typeof i !== 'object')) {
-    let prev
-
-    if (logic.val.length === 1) {
-      const first = logic.val[0]
-      return (data) => (typeof (prev = (data && data[first])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
-    }
-
-    if (logic.val.length === 2) {
-      const [first, second] = logic.val
-      return (data) => (typeof (prev = (data && data[first] && data[first][second])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
-    }
-
-    if (logic.val.length === 3) {
-      const [first, second, third] = logic.val
-      return (data) => (typeof (prev = (data && data[first] && data[first][second] && data[first][second][third])) !== 'function' || engine.allowFunctions) && (typeof prev !== 'undefined') ? prev : null
-    }
+    if (logic.val.length >= 1) return pathAccessor(logic.val, engine)
   }
 
   if ((logic.if || logic['?:']) && engine.methods.if[OriginalImpl] && Array.isArray(logic.if || logic['?:']) && (logic.if || logic['?:']).length === 3) {

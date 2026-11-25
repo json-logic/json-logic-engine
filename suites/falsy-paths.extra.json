@@ -1,0 +1,93 @@
+[
+    "Falsy values along a path are not returned in place of the value at its end",
+    {
+        "description": "val: one key on falsy data",
+        "rule": { "val": ["x"] },
+        "data": 0,
+        "result": null
+    },
+    {
+        "description": "val: two keys through 0",
+        "rule": { "val": ["foo", "bar"] },
+        "data": { "foo": 0 },
+        "result": null
+    },
+    {
+        "description": "val: two keys through false",
+        "rule": { "val": ["foo", "bar"] },
+        "data": { "foo": false },
+        "result": null
+    },
+    {
+        "description": "val: two keys through an empty string",
+        "rule": { "val": ["foo", "bar"] },
+        "data": { "foo": "" },
+        "result": null
+    },
+    {
+        "description": "val: three keys through 0",
+        "rule": { "val": ["foo", "bar", "baz"] },
+        "data": { "foo": { "bar": 0 } },
+        "result": null
+    },
+    {
+        "description": "val: three keys through false at the first step",
+        "rule": { "val": ["foo", "bar", "baz"] },
+        "data": { "foo": false },
+        "result": null
+    },
+    {
+        "description": "val: falsy values at the end of a path are still returned",
+        "rule": [{ "val": ["foo", "bar"] }, { "val": ["foo", "baz"] }, { "val": ["a", "b", "c"] }],
+        "data": { "foo": { "bar": 0, "baz": false }, "a": { "b": { "c": "" } } },
+        "result": [0, false, ""]
+    },
+    {
+        "description": "val: properties of falsy-but-valid values are still read",
+        "rule": { "val": ["foo", "length"] },
+        "data": { "foo": "" },
+        "result": 0
+    },
+    {
+        "description": "var: properties of falsy-but-valid values are still read",
+        "rule": { "var": "foo.length" },
+        "data": { "foo": "" },
+        "result": 0
+    },
+    {
+        "description": "get: properties of falsy-but-valid values are still read",
+        "rule": { "get": [{ "val": "foo" }, "length"] },
+        "data": { "foo": "" },
+        "result": 0
+    },
+    {
+        "description": "get: a default applies when the path passes through 0",
+        "rule": { "get": [{ "val": "foo" }, "bar.baz", "default"] },
+        "data": { "foo": { "bar": 0 } },
+        "result": "default"
+    },
+    {
+        "description": "var: two keys through 0",
+        "rule": { "var": "foo.bar" },
+        "data": { "foo": 0 },
+        "result": null
+    },
+    {
+        "description": "var: three keys through false",
+        "rule": { "var": "foo.bar.baz" },
+        "data": { "foo": { "bar": false } },
+        "result": null
+    },
+    {
+        "description": "var: a default applies when the path passes through 0",
+        "rule": { "var": ["foo.bar", "default"] },
+        "data": { "foo": 0 },
+        "result": "default"
+    },
+    {
+        "description": "??: falls back when the path passes through 0",
+        "rule": { "??": [{ "val": ["foo", "bar"] }, "fallback"] },
+        "data": { "foo": 0 },
+        "result": "fallback"
+    }
+]
